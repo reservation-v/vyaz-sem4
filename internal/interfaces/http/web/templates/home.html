@@ -1,0 +1,71 @@
+{{define "content"}}
+<section class="hero">
+  <div class="shell hero-inner">
+    <div class="hero-copy reveal">
+      <p class="hero-kicker">Гибкое офисное пространство</p>
+      <h1 class="hero-title">Место для работы.<br>Переговорка для встречи.</h1>
+      <p class="hero-sub">
+        Столы, кабинеты и переговорки по часам, дням или абонементу.
+        Для тех, кто делает своё дело в одиночку или командой.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#services">Смотреть сервисы</a>
+        <a class="btn btn-ghost" href="/soon?section=Как это работает">Как это работает</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services" id="services">
+  <div class="shell">
+    <div class="section-head reveal">
+      <h2 class="section-title">Сервисы коворкинга</h2>
+      <p class="section-note">Всё, что нужно для работы, в одном месте. Каталог пополняется.</p>
+    </div>
+
+    <div class="services-grid">
+      {{range .Services}}
+      <article class="service-card{{if .Featured}} service-card-featured{{end}} reveal" style="--delay: {{.Num}}0ms">
+        <div class="service-top">
+          <span class="service-num">{{.Num}}</span>
+          <span class="tag {{.StatusClass}}">{{.StatusLabel}}</span>
+        </div>
+        <h3 class="service-name">{{.Name}}</h3>
+        <p class="service-desc">{{.Description}}</p>
+        <span class="service-group">{{.Group}}</span>
+        {{if .URL}}
+        <a class="service-link" href="{{.URL}}" rel="noopener" target="_blank">Открыть приложение →</a>
+        {{end}}
+      </article>
+      {{end}}
+    </div>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="shell">
+    <div class="section-head reveal">
+      <h2 class="section-title">Для кого этот коворкинг</h2>
+    </div>
+
+    <div class="about-grid reveal">
+      <div class="about-item">
+        <h3 class="about-name">Фрилансерам</h3>
+        <p class="about-text">Уединённое место для глубокой работы, тихие зоны и дешёвые дневные тарифы.</p>
+      </div>
+      <div class="about-item">
+        <h3 class="about-name">Стартапам</h3>
+        <p class="about-text">Кабинеты на несколько рабочих мест с переговоркой рядом, без долгих договоров.</p>
+      </div>
+      <div class="about-item">
+        <h3 class="about-name">Командам</h3>
+        <p class="about-text">Переговорки на час для встреч с клиентами, проектор и кофе-брейки по запросу.</p>
+      </div>
+      <div class="about-item">
+        <h3 class="about-name">Мероприятиям</h3>
+        <p class="about-text">Лаунж-зона и зал под митапы и мастер-классы на пару часов или на весь день.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{{end}}

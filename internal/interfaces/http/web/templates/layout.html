@@ -1,0 +1,95 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · {{.SiteTitle}}</title>
+  <meta name="description" content="Место — гибкое офисное пространство: рабочие места, переговорки и кабинеты с почасовой оплатой для фрилансеров, стартапов и команд.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='9' width='28' height='3' rx='1.5' fill='%23D96C3F'/%3E%3Crect x='6' y='12' width='3' height='13' rx='1.5' fill='%23D96C3F'/%3E%3Crect x='23' y='12' width='3' height='13' rx='1.5' fill='%23D96C3F'/%3E%3Ccircle cx='16' cy='26' r='2.4' fill='%23D96C3F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержанию</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="9" width="28" height="3" rx="1.5" fill="currentColor"/>
+          <rect x="6" y="12" width="3" height="13" rx="1.5" fill="currentColor"/>
+          <rect x="23" y="12" width="3" height="13" rx="1.5" fill="currentColor"/>
+          <circle cx="16" cy="26" r="2.4" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">{{.SiteTitle}}</span>
+      </a>
+
+      <nav class="main-nav" aria-label="Основное меню">
+        <a href="/" {{if eq .ActiveNav "home"}}class="is-active" aria-current="page"{{end}}>Главная</a>
+        <a href="/soon?section=Новости">Новости</a>
+        <a href="/soon?section=Достижения">Достижения</a>
+        <a href="/soon?section=Контакты">Контакты</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    {{template "content" .}}
+  </main>
+
+  <footer class="site-footer" id="contacts">
+    <div class="shell footer-grid">
+      <div class="footer-col footer-col-wide">
+        <p class="footer-brand">{{.SiteTitle}}</p>
+        <p class="footer-text">
+          Коворкинг для фрилансеров, стартапов и команд: столы, кабинеты и переговорки
+          с почасовой оплатой и гибкими абонементами.
+        </p>
+        <p class="footer-text footer-dev">
+          Сайт разработан в рамках учебного курса «Веб-технологии».
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">Разделы</p>
+        <ul class="footer-links">
+          <li><a href="/">Главная</a></li>
+          <li><a href="/#services">Сервисы</a></li>
+          <li><a href="/soon?section=Новости">Новости</a></li>
+          <li><a href="/soon?section=Достижения">Достижения</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">Контакты</p>
+        <ul class="footer-links footer-contacts">
+          <li>Минск, ул. Центральная, 12</li>
+          <li><a href="tel:+375291234567">+375 29 123-45-67</a></li>
+          <li><a href="mailto:hello@mesto.by">hello@mesto.by</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-heading">По теме</p>
+        <ul class="footer-links">
+          <li><a href="https://vc.ru" rel="noopener" target="_blank">vc.ru</a></li>
+          <li><a href="https://habr.com" rel="noopener" target="_blank">Хабр</a></li>
+          <li><a href="https://rb.ru" rel="noopener" target="_blank">RB.ru</a></li>
+          <li><a href="https://trends.rbc.ru" rel="noopener" target="_blank">РБК Тренды</a></li>
+          <li><a href="https://hh.ru" rel="noopener" target="_blank">hh.ru</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="shell footer-bottom">
+      <p>© {{currentYear}} {{.SiteTitle}}</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/site.js" defer></script>
+</body>
+</html>
+{{end}}
