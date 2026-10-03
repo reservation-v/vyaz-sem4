@@ -1,0 +1,19 @@
+# systemd-служба пользователя (rootless podman).
+# Установка: ~/.config/systemd/user/coworking.service
+# %h — домашний каталог пользователя, данные наружу через bind-mount каталог data.
+# Порт 49254 наружу -> 8081 внутри контейнера. Лимиты: 0.5 CPU, 512 МБ памяти.
+
+[Unit]
+Description=Coworking site (podman container)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/podman run --rm --name coworking -p 49254:8081 --cpus=0.5 --memory=512m --pids-limit=256 -e HTTP_ADDR=:8081 -v %h/projects/coworking/data:/data localhost/coworking:latest
+ExecStop=/usr/bin/podman stop -t 10 coworking
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=90
+
+[Install]
+WantedBy=default.target

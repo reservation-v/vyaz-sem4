@@ -1,0 +1,127 @@
+{{define "content"}}
+<section class="page" id="booking-app">
+  <div class="shell page-inner">
+    <p class="hero-kicker">Приложение к базе данных</p>
+    <h1 class="page-title">Бронирование мест и переговорок</h1>
+    <p class="page-lead">Выберите стол, кабинет или переговорку, тариф, дату и время — сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
+
+    {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
+
+    <div class="booking-stack">
+      <div class="plain-card">
+        <h2>Новая бронь</h2>
+        <form class="booking-form" id="booking-form" method="post" action="/booking" autocomplete="off">
+          <div class="form-field span-2">
+            <label class="form-label" for="bf-space">Пространство</label>
+            <select class="form-input" id="bf-space" name="space_id" required>
+              {{range .Spaces}}
+              <option value="{{.ID}}" data-price="{{.PricePerHour}}" data-deposit="{{.Deposit}}" data-type="{{.Type}}" {{if eq $.Form.SpaceID .ID}}selected{{end}}>
+                {{.Name}} — {{.TypeLabel}}, {{.Capacity}} чел., {{.PricePerHour | money}} ₽/ч{{if .Deposit}}, депозит {{.Deposit | money}} ₽{{end}}
+              </option>
+              {{end}}
+            </select>
+          </div>
+
+          <div class="form-field span-2">
+            <label class="form-label" for="bf-client">Клиент</label>
+            <input class="form-input" id="bf-client" type="text" name="client" value="{{.Form.Client}}" maxlength="80" placeholder="Имя или название команды" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="bf-rate">Тариф</label>
+              <select class="form-input" id="bf-rate" name="rate" required>
+                <option value="hour" {{if eq .Form.Rate "hour"}}selected{{end}}>Почасовой</option>
+                <option value="day" {{if eq .Form.Rate "day"}}selected{{end}}>На день — 900 ₽</option>
+                <option value="week" {{if eq .Form.Rate "week"}}selected{{end}}>На неделю — 3 500 ₽</option>
+                <option value="month" {{if eq .Form.Rate "month"}}selected{{end}}>На месяц — 12 000 ₽</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-date">Дата</label>
+              <input class="form-input" id="bf-date" type="date" name="date" value="{{.Form.Date}}" required>
+            </div>
+          </div>
+
+          <div class="form-row" id="bf-hour-row">
+            <div class="form-field">
+              <label class="form-label" for="bf-start">Начало</label>
+              <select class="form-input" id="bf-start" name="start_hour" required>
+                {{range .StartHours}}
+                <option value="{{.}}" {{if eq $.Form.StartHour .}}selected{{end}}>{{.}}:00</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-duration">Длительность</label>
+              <select class="form-input" id="bf-duration" name="duration" required>
+                {{range .Durations}}
+                <option value="{{.}}" {{if eq $.Form.Duration .}}selected{{end}}>{{.}} ч</option>
+                {{end}}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field span-2" id="bf-period-note" hidden>
+            <p class="widget-out">Деск-место закрепляется за вами на весь выбранный период в рабочие часы офиса (8:00–22:00).</p>
+          </div>
+
+          <div class="form-field span-2 booking-total">
+            <span class="form-label">Стоимость</span>
+            <p class="widget-out" id="bf-total">Выберите параметры — цена появится здесь.</p>
+          </div>
+
+          <button class="btn btn-primary" type="submit">Забронировать</button>
+        </form>
+      </div>
+
+      <div class="plain-card">
+        <h2>Брони и встречи</h2>
+        {{if .Rows}}
+        <div class="table-scroll">
+          <table class="data-table booking-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Время</th>
+                <th>Пространство</th>
+                <th>Клиент</th>
+                <th>Период</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Rows}}
+              <tr>
+                <td>{{.DateLabel | shortDate}}</td>
+                <td>{{.TimeLabel}}</td>
+                <td>{{.Space}}</td>
+                <td>{{.Client}}</td>
+                <td>{{.DurationLabel}}</td>
+                <td class="price">
+                  {{.Total | money}} ₽
+                  {{if .Deposit}}<span class="table-sub">({{.Price | money}} ₽ + депозит {{.Deposit | money}} ₽)</span>{{end}}
+                </td>
+                <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
+                <td>
+                  {{if .CanCancel}}
+                  <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
+                    <button class="btn-mini" type="submit">Отменить</button>
+                  </form>
+                  {{end}}
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <p class="table-note">Пока нет ни одной брони — создайте первую.</p>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</section>
+{{end}}

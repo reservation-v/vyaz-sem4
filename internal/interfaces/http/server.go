@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/fs"
 	nethttp "net/http"
+	"sync/atomic"
 
 	"coworking/internal/application"
 )
@@ -14,9 +15,11 @@ import (
 // Server — HTTP-сервер сайта коворкинга.
 type Server struct {
 	catalog       *application.ServiceCatalog
+	bookings      *application.BookingService // nil — страница /booking остаётся статической
 	siteTitle     string
 	templates     map[string]*template.Template
 	staticHandler nethttp.Handler
+	visits        atomic.Int64 // просмотры страниц (в памяти, сбрасываются при рестарте)
 }
 
 // Option настраивает Server при создании (functional options).
@@ -26,6 +29,13 @@ type Option func(*Server)
 func WithSiteTitle(title string) Option {
 	return func(s *Server) {
 		s.siteTitle = title
+	}
+}
+
+// WithBookingService включает приложение бронирования на /booking.
+func WithBookingService(bookings *application.BookingService) Option {
+	return func(s *Server) {
+		s.bookings = bookings
 	}
 }
 
@@ -64,6 +74,21 @@ func (s *Server) Router() nethttp.Handler {
 	mux := nethttp.NewServeMux()
 
 	mux.HandleFunc("GET /", s.handleHome)
+	mux.HandleFunc("GET /about", s.staticPage("about", "О коворкинге", "about"))
+	mux.HandleFunc("GET /office", s.staticPage("office", "Офис", "office"))
+	mux.HandleFunc("GET /tariffs", s.staticPage("tariffs", "Тарифы", "tariffs"))
+	mux.HandleFunc("GET /news", s.staticPage("news", "Новости", "news"))
+	mux.HandleFunc("GET /achievements", s.staticPage("achievements", "Достижения", "achievements"))
+	mux.HandleFunc("GET /contacts", s.staticPage("contacts", "Контакты", "contacts"))
+	mux.HandleFunc("GET /rules", s.staticPage("rules", "Правила", "rules"))
+	mux.HandleFunc("GET /faq", s.staticPage("faq", "Вопросы&Ответы", "faq"))
+	if s.bookings != nil {
+		mux.HandleFunc("GET /booking", s.handleBookingPage)
+		mux.HandleFunc("POST /booking", s.handleBookingCreate)
+		mux.HandleFunc("POST /booking/{id}/cancel", s.handleBookingCancel)
+	} else {
+		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))
+	}
 	mux.HandleFunc("GET /soon", s.handleSoon)
 	mux.Handle("GET /static/", nethttp.StripPrefix("/static/", s.staticHandler))
 

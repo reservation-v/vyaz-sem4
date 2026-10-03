@@ -16,7 +16,7 @@ type serviceView struct {
 	StatusLabel string
 	StatusClass string
 	URL         string
-	Featured    bool
+	Slug        string
 }
 
 // homePageData — данные главной страницы (хаб сервисов).
@@ -45,12 +45,8 @@ func (s *Server) handleHome(w nethttp.ResponseWriter, r *nethttp.Request) {
 	}
 
 	s.renderPage(w, "home", nethttp.StatusOK, homePageData{
-		basePageData: basePageData{
-			Title:     "Главная",
-			SiteTitle: s.siteTitle,
-			ActiveNav: "home",
-		},
-		Services: toServiceViews(services),
+		basePageData: s.basePage("Главная", "home"),
+		Services:     toServiceViews(services),
 	})
 }
 
@@ -62,19 +58,31 @@ func (s *Server) handleSoon(w nethttp.ResponseWriter, r *nethttp.Request) {
 	}
 
 	s.renderPage(w, "soon", nethttp.StatusOK, soonPageData{
-		basePageData: basePageData{
-			Title:     section,
-			SiteTitle: s.siteTitle,
-		},
-		Section: section,
+		basePageData: s.basePage(section, ""),
+		Section:      section,
 	})
 }
 
+// staticPage отдаёт статическую страницу раздела сайта.
+func (s *Server) staticPage(page, title, activeNav string) nethttp.HandlerFunc {
+	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		s.renderPage(w, page, nethttp.StatusOK, s.basePage(title, activeNav))
+	}
+}
+
+// basePage собирает общие данные страницы и учитывает её просмотр.
+func (s *Server) basePage(title, activeNav string) basePageData {
+	return basePageData{
+		Title:     title,
+		SiteTitle: s.siteTitle,
+		ActiveNav: activeNav,
+		Visits:    s.visits.Add(1),
+	}
+}
+
 // toServiceViews преобразует доменные сервисы в представления для шаблона.
-// Первый готовый сервис становится крупной карточкой.
 func toServiceViews(services []domain.Service) []serviceView {
 	views := make([]serviceView, 0, len(services))
-	featuredMarked := false
 
 	for i, svc := range services {
 		view := serviceView{
@@ -83,10 +91,7 @@ func toServiceViews(services []domain.Service) []serviceView {
 			Description: svc.Description,
 			Group:       svc.Group,
 			URL:         svc.URL,
-			Featured:    svc.Status == domain.ServiceStatusReady && !featuredMarked,
-		}
-		if view.Featured {
-			featuredMarked = true
+			Slug:        svc.Slug,
 		}
 
 		switch svc.Status {

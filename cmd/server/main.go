@@ -23,8 +23,12 @@ func main() {
 	repo := memory.NewServiceRepository()
 	catalog := application.NewServiceCatalog(repo)
 
+	bookingRepo := memory.NewBookingRepository()
+	bookings := application.NewBookingService(bookingRepo)
+
 	server, err := apphttp.NewServer(catalog,
 		apphttp.WithSiteTitle("Место"),
+		apphttp.WithBookingService(bookings),
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
