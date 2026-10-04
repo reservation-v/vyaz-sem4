@@ -1,165 +1,289 @@
 {{define "content"}}
 <section class="hero">
-  <div class="shell hero-inner">
-    <div class="hero-copy reveal">
-      <p class="hero-kicker">Гибкое офисное пространство</p>
-      <h1 class="hero-title">Место для работы.<br>Переговорка для встречи.</h1>
-      <p class="hero-sub">
-        Столы, кабинеты и переговорки по часам, дням или абонементу.
-        Для тех, кто делает своё дело в одиночку или командой.
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#services">Смотреть сервисы</a>
-        <a class="btn btn-ghost" href="/office">Об офисе</a>
-      </div>
+    <div class="shell hero-inner">
+        <div class="hero-copy reveal">
+            <p class="hero-kicker">Гибкое офисное пространство</p>
+            <h1 class="hero-title">
+                Место для работы.<br />Переговорка для встречи.
+            </h1>
+            <p class="hero-sub">
+                Столы, кабинеты и переговорки по часам, дням или абонементу. Для
+                тех, кто делает своё дело в одиночку или командой.
+            </p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#services">Смотреть сервисы</a>
+                <a class="btn btn-ghost" href="/office">Об офисе</a>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 
 <section class="services" id="services">
-  <div class="shell">
-    <div class="section-head reveal">
-      <h2 class="section-title">Сервисы коворкинга</h2>
-      <p class="section-note">Девять виджетов работают прямо на странице, десятый — приложение к базе данных: онлайн-бронирование открывается на отдельной странице.</p>
+    <div class="shell">
+        <div class="section-head reveal">
+            <h2 class="section-title">Сервисы коворкинга</h2>
+            <p class="section-note">
+                Девять виджетов работают прямо на странице, десятый — приложение
+                к базе данных: онлайн-бронирование открывается на отдельной
+                странице.
+            </p>
+        </div>
+
+        <div class="services-grid">
+            {{range .Services}}
+            <article
+                class="service-card reveal"
+                id="svc-{{.Slug}}"
+                style="--delay: {{.Num}}0ms"
+            >
+                <div class="service-top">
+                    <span class="service-num">{{.Num}}</span>
+                </div>
+                <h3 class="service-name">{{.Name}}</h3>
+                <p class="service-desc">{{.Description}}</p>
+
+                {{if .URL}}<a class="service-link" href="{{.URL}}">Открыть →</a
+                >{{end}} {{if eq .Slug "guest-wifi"}}
+                <div class="widget">
+                    <button class="widget-btn" id="wifi-btn">
+                        Как подключиться
+                    </button>
+                    <p class="widget-out" id="wifi-out">
+                        Нажмите — покажем доступ к гостевой сети.
+                    </p>
+                </div>
+                {{else if eq .Slug "meeting-checklist"}}
+                <div class="widget">
+                    <ul class="check-list" id="mc-list">
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Проектор и
+                                кабели</label
+                            >
+                        </li>
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Маркеры и
+                                доска</label
+                            >
+                        </li>
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Вода и стаканы</label
+                            >
+                        </li>
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Код гостевого Wi-Fi
+                                на виду</label
+                            >
+                        </li>
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Посадка по числу
+                                участников</label
+                            >
+                        </li>
+                        <li>
+                            <label class="widget-check"
+                                ><input type="checkbox" /> Телефоны на
+                                беззвучном</label
+                            >
+                        </li>
+                    </ul>
+                    <button class="widget-btn" id="mc-reset">Сбросить</button>
+                    <p class="widget-out" id="mc-out">Готово 0 из 6.</p>
+                </div>
+                {{else if eq .Slug "rent-calc"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="rc-type"
+                            >Пространство</label
+                        >
+                        <select class="widget-input" id="rc-type">
+                            <option value="desk">Деск-место</option>
+                            <option value="cabin2">Кабинет 2–3</option>
+                            <option value="cabin4">Кабинет 4–6</option>
+                            <option value="room4">Переговорка «Встреча»</option>
+                            <option value="room6">Переговорка «Проект»</option>
+                            <option value="room12">
+                                Переговорка «Амфитеатр»
+                            </option>
+                        </select>
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-label" for="rc-hours">Часов</label>
+                        <input
+                            class="widget-input"
+                            id="rc-hours"
+                            type="number"
+                            min="1"
+                            max="12"
+                            value="3"
+                        />
+                        <label class="widget-label" for="rc-days">Дней</label>
+                        <input
+                            class="widget-input"
+                            id="rc-days"
+                            type="number"
+                            min="0"
+                            max="30"
+                            value="0"
+                        />
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-check"
+                            ><input id="rc-projector" type="checkbox" />
+                            Проектор (500 ₽/ч)</label
+                        >
+                    </div>
+                    <button class="widget-btn" id="rc-btn">Рассчитать</button>
+                    <p class="widget-out" id="rc-out">
+                        Выберите параметры и нажмите «Рассчитать».
+                    </p>
+                </div>
+                {{else if eq .Slug "tariff-compare"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="tc-hours"
+                            >Часов в неделю</label
+                        >
+                        <input
+                            class="widget-input"
+                            id="tc-hours"
+                            type="number"
+                            min="1"
+                            max="80"
+                            value="20"
+                        />
+                    </div>
+                    <button class="widget-btn" id="tc-btn">Сравнить</button>
+                    <p class="widget-out" id="tc-out">
+                        Сколько часов вы работаете в офисе?
+                    </p>
+                </div>
+                {{else if eq .Slug "format-test"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="ft-meets"
+                            >Встречи</label
+                        >
+                        <select class="widget-input" id="ft-meets">
+                            <option value="1">Почти нет</option>
+                            <option value="2">Пару раз в неделю</option>
+                            <option value="3">Каждый день</option>
+                        </select>
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-label" for="ft-noise"
+                            >Обстановка</label
+                        >
+                        <select class="widget-input" id="ft-noise">
+                            <option value="1">Нужна тишина</option>
+                            <option value="2">Любое</option>
+                            <option value="3">Люблю оживление</option>
+                        </select>
+                    </div>
+                    <button class="widget-btn" id="ft-btn">
+                        Узнать формат
+                    </button>
+                    <p class="widget-out" id="ft-out">
+                        Ответьте на два вопроса.
+                    </p>
+                </div>
+                {{else if eq .Slug "coffee-station"}}
+                <div class="widget">
+                    <button class="widget-btn" id="cs-btn">
+                        Что на станции
+                    </button>
+                    <p class="widget-out" id="cs-out">
+                        Нажмите — расскажем, что сегодня варят.
+                    </p>
+                </div>
+                {{else if eq .Slug "timer"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="tm-min">Минут</label>
+                        <input
+                            class="widget-input"
+                            id="tm-min"
+                            type="number"
+                            min="1"
+                            max="180"
+                            value="25"
+                        />
+                    </div>
+                    <button class="widget-btn" id="tm-btn">Запустить</button>
+                    <p class="widget-out" id="tm-out">До конца брони.</p>
+                </div>
+                {{else if eq .Slug "quiz-day"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <button class="widget-btn" id="qz-btn">
+                            Взять вопрос
+                        </button>
+                        <button class="widget-btn" id="qz-answer" hidden>
+                            Показать ответ
+                        </button>
+                    </div>
+                    <p class="widget-out" id="qz-out">
+                        Нажмите — и получите вопрос о коворкинге.
+                    </p>
+                </div>
+                {{else if eq .Slug "weather"}}
+                <div class="widget">
+                    <button class="widget-btn" id="w-btn">
+                        Обновить прогноз
+                    </button>
+                    <p class="widget-out" id="w-out">
+                        Погода у офиса (демо-данные).
+                    </p>
+                </div>
+                {{end}}
+
+                <span class="service-group">{{.Group}}</span>
+            </article>
+            {{end}}
+        </div>
     </div>
-
-    <div class="services-grid">
-      {{range .Services}}
-      <article class="service-card reveal" id="svc-{{.Slug}}" style="--delay: {{.Num}}0ms">
-        <div class="service-top">
-          <span class="service-num">{{.Num}}</span>
-        </div>
-        <h3 class="service-name">{{.Name}}</h3>
-        <p class="service-desc">{{.Description}}</p>
-
-        {{if .URL}}<a class="service-link" href="{{.URL}}">Открыть →</a>{{end}}
-
-        {{if eq .Slug "free-now"}}
-        <div class="widget">
-          <button class="widget-btn" id="free-btn">Обновить загрузку</button>
-          <p class="widget-out" id="free-out">Нажмите, чтобы узнать, сколько мест свободно.</p>
-        </div>
-        {{else if eq .Slug "nearest-room"}}
-        <div class="widget">
-          <div class="widget-row">
-            <label class="widget-label" for="nr-people">Участников</label>
-            <input class="widget-input" id="nr-people" type="number" min="1" max="30" value="4">
-          </div>
-          <button class="widget-btn" id="nr-btn">Подобрать</button>
-          <p class="widget-out" id="nr-out">Укажите число участников.</p>
-        </div>
-        {{else if eq .Slug "rent-calc"}}
-        <div class="widget">
-          <div class="widget-row">
-            <label class="widget-label" for="rc-type">Пространство</label>
-            <select class="widget-input" id="rc-type">
-              <option value="desk">Деск-место</option>
-              <option value="cabin2">Кабинет 2–3</option>
-              <option value="cabin4">Кабинет 4–6</option>
-              <option value="room4">Переговорка «Встреча»</option>
-              <option value="room6">Переговорка «Проект»</option>
-              <option value="room12">Переговорка «Амфитеатр»</option>
-            </select>
-          </div>
-          <div class="widget-row">
-            <label class="widget-label" for="rc-hours">Часов</label>
-            <input class="widget-input" id="rc-hours" type="number" min="1" max="12" value="3">
-            <label class="widget-label" for="rc-days">Дней</label>
-            <input class="widget-input" id="rc-days" type="number" min="0" max="30" value="0">
-          </div>
-          <div class="widget-row">
-            <label class="widget-check"><input id="rc-projector" type="checkbox"> Проектор (500 ₽/ч)</label>
-          </div>
-          <button class="widget-btn" id="rc-btn">Рассчитать</button>
-          <p class="widget-out" id="rc-out">Выберите параметры и нажмите «Рассчитать».</p>
-        </div>
-        {{else if eq .Slug "tariff-compare"}}
-        <div class="widget">
-          <div class="widget-row">
-            <label class="widget-label" for="tc-hours">Часов в неделю</label>
-            <input class="widget-input" id="tc-hours" type="number" min="1" max="80" value="20">
-          </div>
-          <button class="widget-btn" id="tc-btn">Сравнить</button>
-          <p class="widget-out" id="tc-out">Сколько часов вы работаете в офисе?</p>
-        </div>
-        {{else if eq .Slug "format-test"}}
-        <div class="widget">
-          <div class="widget-row">
-            <label class="widget-label" for="ft-meets">Встречи</label>
-            <select class="widget-input" id="ft-meets">
-              <option value="1">Почти нет</option>
-              <option value="2">Пару раз в неделю</option>
-              <option value="3">Каждый день</option>
-            </select>
-          </div>
-          <div class="widget-row">
-            <label class="widget-label" for="ft-noise">Обстановка</label>
-            <select class="widget-input" id="ft-noise">
-              <option value="1">Нужна тишина</option>
-              <option value="2">Любое</option>
-              <option value="3">Люблю оживление</option>
-            </select>
-          </div>
-          <button class="widget-btn" id="ft-btn">Узнать формат</button>
-          <p class="widget-out" id="ft-out">Ответьте на два вопроса.</p>
-        </div>
-        {{else if eq .Slug "office-load"}}
-        <div class="widget">
-          <div class="load-bars" id="load-bars" aria-hidden="true"></div>
-          <p class="widget-out" id="load-out">Пик загрузки — 12:00–14:00.</p>
-        </div>
-        {{else if eq .Slug "timer"}}
-        <div class="widget">
-          <div class="widget-row">
-            <label class="widget-label" for="tm-min">Минут</label>
-            <input class="widget-input" id="tm-min" type="number" min="1" max="180" value="25">
-          </div>
-          <button class="widget-btn" id="tm-btn">Запустить</button>
-          <p class="widget-out" id="tm-out">До конца брони.</p>
-        </div>
-        {{else if eq .Slug "desk-of-the-day"}}
-        <div class="widget">
-          <button class="widget-btn" id="dd-btn">Показать место</button>
-          <p class="widget-out" id="dd-out">Случайное место — нажмите кнопку.</p>
-        </div>
-        {{else if eq .Slug "weather"}}
-        <div class="widget">
-          <button class="widget-btn" id="w-btn">Обновить прогноз</button>
-          <p class="widget-out" id="w-out">Погода у офиса (демо-данные).</p>
-        </div>
-        {{end}}
-
-        <span class="service-group">{{.Group}}</span>
-      </article>
-      {{end}}
-    </div>
-  </div>
 </section>
 
 <section class="about" id="about">
-  <div class="shell">
-    <div class="section-head reveal">
-      <h2 class="section-title">Для кого этот коворкинг</h2>
-    </div>
+    <div class="shell">
+        <div class="section-head reveal">
+            <h2 class="section-title">Для кого этот коворкинг</h2>
+        </div>
 
-    <div class="about-grid reveal">
-      <div class="about-item">
-        <h3 class="about-name">Фрилансерам</h3>
-        <p class="about-text">Уединённое место для глубокой работы, тихие зоны и дешёвые дневные тарифы.</p>
-      </div>
-      <div class="about-item">
-        <h3 class="about-name">Стартапам</h3>
-        <p class="about-text">Кабинеты на несколько рабочих мест с переговоркой рядом, без долгих договоров.</p>
-      </div>
-      <div class="about-item">
-        <h3 class="about-name">Командам</h3>
-        <p class="about-text">Переговорки на час для встреч с клиентами, проектор и кофе-брейки по запросу.</p>
-      </div>
-      <div class="about-item">
-        <h3 class="about-name">Мероприятиям</h3>
-        <p class="about-text">Лаунж-зона и зал под митапы и мастер-классы на пару часов или на весь день.</p>
-      </div>
+        <div class="about-grid reveal">
+            <div class="about-item">
+                <h3 class="about-name">Фрилансерам</h3>
+                <p class="about-text">
+                    Уединённое место для глубокой работы, тихие зоны и дешёвые
+                    дневные тарифы.
+                </p>
+            </div>
+            <div class="about-item">
+                <h3 class="about-name">Стартапам</h3>
+                <p class="about-text">
+                    Кабинеты на несколько рабочих мест с переговоркой рядом, без
+                    долгих договоров.
+                </p>
+            </div>
+            <div class="about-item">
+                <h3 class="about-name">Командам</h3>
+                <p class="about-text">
+                    Переговорки на час для встреч с клиентами, проектор и
+                    кофе-брейки по запросу.
+                </p>
+            </div>
+            <div class="about-item">
+                <h3 class="about-name">Мероприятиям</h3>
+                <p class="about-text">
+                    Лаунж-зона и зал под митапы и мастер-классы на пару часов
+                    или на весь день.
+                </p>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 {{end}}

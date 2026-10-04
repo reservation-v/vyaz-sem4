@@ -6,7 +6,7 @@
   "use strict";
 
   var prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
+    "(prefers-reduced-motion: reduce)",
   ).matches;
 
   /* ---------- Бургер-меню ---------- */
@@ -32,7 +32,10 @@
     });
 
     document.addEventListener("click", function (event) {
-      if (!burger.contains(event.target) && !burgerMenu.contains(event.target)) {
+      if (
+        !burger.contains(event.target) &&
+        !burgerMenu.contains(event.target)
+      ) {
         closeBurger();
       }
     });
@@ -49,26 +52,107 @@
   /* ---------- Поиск по сайту ---------- */
 
   var pages = [
-    { title: "Главная", url: "/", keywords: "коворкинг сервисы столы переговорки кабинеты" },
-    { title: "О коворкинге", url: "/about", keywords: "идея для кого фрилансеры стартапы команды мероприятия" },
-    { title: "Офис", url: "/office", keywords: "план этаж зоны деск место кабинет переговорка лаунж москва сити" },
-    { title: "Тарифы", url: "/tariffs", keywords: "цены час день неделя месяц абонемент депозит опции проектор" },
-    { title: "Новости", url: "/news", keywords: "анонсы события митапы скидка открытие" },
-    { title: "Достижения", url: "/achievements", keywords: "резиденты бронирования мероприятия рейтинг" },
-    { title: "Контакты", url: "/contacts", keywords: "адрес телефон почта метро парковка часы работы" },
-    { title: "Правила", url: "/rules", keywords: "правила посещения тишина оплата безопасность гости" },
-    { title: "Вопросы&Ответы", url: "/faq", keywords: "вопросы ответы faq бронь отмена депозит абонемент" },
-    { title: "Бронирование", url: "/booking", keywords: "приложение база данных бронь оплата" },
-    { title: "Онлайн-бронирование", url: "/#svc-booking", keywords: "сервис приложение расчёт стоимость оплата" },
-    { title: "Свободно сейчас", url: "/#svc-free-now", keywords: "сервис загрузка зоны свободные места демо" },
-    { title: "Ближайшая переговорка", url: "/#svc-nearest-room", keywords: "сервис переговорка подбор участники" },
-    { title: "Калькулятор аренды", url: "/#svc-rent-calc", keywords: "сервис калькулятор стоимость часы дни проектор" },
-    { title: "Сравнение тарифов", url: "/#svc-tariff-compare", keywords: "сервис тарифы сравнение выгода неделя месяц" },
-    { title: "Тест «Формат работы»", url: "/#svc-format-test", keywords: "сервис тест формат подбор вопросы" },
-    { title: "Загрузка офиса по часам", url: "/#svc-office-load", keywords: "сервис загрузка часы пик нагрузка" },
-    { title: "Таймер до конца брони", url: "/#svc-timer", keywords: "сервис таймер отсчёт минуты" },
-    { title: "Стол дня", url: "/#svc-desk-of-the-day", keywords: "сервис стол место случайное" },
-    { title: "Погода", url: "/#svc-weather", keywords: "сервис погода прогноз температура" }
+    {
+      title: "Главная",
+      url: "/",
+      keywords: "коворкинг сервисы столы переговорки кабинеты",
+    },
+    {
+      title: "О коворкинге",
+      url: "/about",
+      keywords: "идея для кого фрилансеры стартапы команды мероприятия",
+    },
+    {
+      title: "Офис",
+      url: "/office",
+      keywords:
+        "план этаж зоны деск место кабинет переговорка лаунж москва сити",
+    },
+    {
+      title: "Тарифы",
+      url: "/tariffs",
+      keywords: "цены час день неделя месяц абонемент депозит опции проектор",
+    },
+    {
+      title: "Новости",
+      url: "/news",
+      keywords: "анонсы события митапы скидка открытие",
+    },
+    {
+      title: "Достижения",
+      url: "/achievements",
+      keywords: "резиденты бронирования мероприятия рейтинг",
+    },
+    {
+      title: "Контакты",
+      url: "/contacts",
+      keywords: "адрес телефон почта метро парковка часы работы",
+    },
+    {
+      title: "Правила",
+      url: "/rules",
+      keywords: "правила посещения тишина оплата безопасность гости",
+    },
+    {
+      title: "Вопросы&Ответы",
+      url: "/faq",
+      keywords: "вопросы ответы faq бронь отмена депозит абонемент",
+    },
+    {
+      title: "Бронирование",
+      url: "/booking",
+      keywords: "приложение база данных бронь оплата",
+    },
+    {
+      title: "Онлайн-бронирование",
+      url: "/#svc-booking",
+      keywords: "сервис приложение расчёт стоимость оплата",
+    },
+    {
+      title: "Гостевой Wi-Fi",
+      url: "/#svc-guest-wifi",
+      keywords: "сервис wi-fi гостевой сеть интернет подключение",
+    },
+    {
+      title: "Чек-лист подготовки переговорки",
+      url: "/#svc-meeting-checklist",
+      keywords: "сервис чек-лист переговорка подготовка встреча техника",
+    },
+    {
+      title: "Калькулятор аренды",
+      url: "/#svc-rent-calc",
+      keywords: "сервис калькулятор стоимость часы дни проектор",
+    },
+    {
+      title: "Сравнение тарифов",
+      url: "/#svc-tariff-compare",
+      keywords: "сервис тарифы сравнение выгода неделя месяц",
+    },
+    {
+      title: "Тест «Формат работы»",
+      url: "/#svc-format-test",
+      keywords: "сервис тест формат подбор вопросы",
+    },
+    {
+      title: "Кофе-станция",
+      url: "/#svc-coffee-station",
+      keywords: "сервис кофе станция напитки меню капучино",
+    },
+    {
+      title: "Таймер до конца брони",
+      url: "/#svc-timer",
+      keywords: "сервис таймер отсчёт минуты",
+    },
+    {
+      title: "Квиз дня",
+      url: "/#svc-quiz-day",
+      keywords: "сервис квиз вопрос викторина ответ",
+    },
+    {
+      title: "Погода",
+      url: "/#svc-weather",
+      keywords: "сервис погода прогноз температура",
+    },
   ];
 
   var input = document.getElementById("site-search");
@@ -163,7 +247,7 @@
         observer.unobserve(entry.target);
       });
     },
-    { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
   );
 
   document.querySelectorAll(".reveal").forEach(function (el) {

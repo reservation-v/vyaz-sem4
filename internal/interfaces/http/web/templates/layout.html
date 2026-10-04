@@ -39,6 +39,7 @@
             </button>
             <nav class="burger-menu" id="burger-menu" aria-label="Все страницы" hidden>
               <a href="/" {{if eq .ActiveNav "home"}}class="is-active" aria-current="page"{{end}}>Главная</a>
+              <a href="/#services">Сервисы</a>
               <a href="/about" {{if eq .ActiveNav "about"}}class="is-active" aria-current="page"{{end}}>О коворкинге</a>
               <a href="/office" {{if eq .ActiveNav "office"}}class="is-active" aria-current="page"{{end}}>Офис</a>
               <a href="/tariffs" {{if eq .ActiveNav "tariffs"}}class="is-active" aria-current="page"{{end}}>Тарифы</a>

@@ -21,7 +21,7 @@
       cabin4: { hour: 500, day: 4000 },
       room4: { hour: 700, day: 4000 },
       room6: { hour: 1000, day: 6000 },
-      room12: { hour: 1800, day: 10000 }
+      room12: { hour: 1800, day: 10000 },
     };
 
     btn.addEventListener("click", function () {
@@ -45,7 +45,8 @@
         total += hours * 500;
         parts.push("проектор " + money(hours * 500) + " ₽");
       }
-      out.innerHTML = parts.join(" + ") + " = <strong>" + money(total) + " ₽</strong>";
+      out.innerHTML =
+        parts.join(" + ") + " = <strong>" + money(total) + " ₽</strong>";
     });
   })();
 
@@ -65,69 +66,73 @@
         { label: "почасово", cost: hours * 200 },
         { label: "по дням", cost: Math.ceil(hours / 8) * 900 },
         { label: "неделями", cost: Math.ceil(hours / 40) * 3500 },
-        { label: "месячный абонемент", cost: 12000 }
+        { label: "месячный абонемент", cost: 12000 },
       ];
       options.sort(function (a, b) {
         return a.cost - b.cost;
       });
       var best = options[0];
       out.innerHTML =
-        "При " + hours + " ч/нед выгоднее " + best.label +
-        " — <strong>" + money(best.cost) + " ₽</strong>";
+        "При " +
+        hours +
+        " ч/нед выгоднее " +
+        best.label +
+        " — <strong>" +
+        money(best.cost) +
+        " ₽</strong>";
     });
   })();
 
-  /* 3. Свободно сейчас (демо-данные) */
+  /* 3. Гостевой Wi-Fi */
   (function () {
-    var btn = byId("free-btn");
+    var btn = byId("wifi-btn");
     if (!btn) return;
-    var out = byId("free-out");
-    var zones = [
-      { name: "Окна", total: 6 },
-      { name: "Атриум", total: 6 },
-      { name: "Тишина", total: 6 },
-      { name: "Терраса", total: 6 }
-    ];
+    var out = byId("wifi-out");
 
     btn.addEventListener("click", function () {
-      var free = 0;
-      var parts = zones.map(function (zone) {
-        var f = 1 + Math.floor(Math.random() * zone.total);
-        free += f;
-        return zone.name + " " + f + "/" + zone.total;
-      });
-      out.textContent =
-        parts.join(" · ") + ". Всего свободно " + free + " из 24 (демо-данные).";
-    });
-  })();
-
-  /* 4. Ближайшая переговорка */
-  (function () {
-    var btn = byId("nr-btn");
-    if (!btn) return;
-    var out = byId("nr-out");
-    var rooms = [
-      { name: "«Встреча»", cap: 4, price: 700 },
-      { name: "«Проект»", cap: 6, price: 1000 },
-      { name: "«Амфитеатр»", cap: 12, price: 1800 }
-    ];
-
-    btn.addEventListener("click", function () {
-      var people = parseInt(byId("nr-people").value, 10) || 0;
-      if (people < 1) {
-        out.textContent = "Укажите число участников.";
-        return;
-      }
-      var room = rooms.filter(function (r) {
-        return r.cap >= people;
-      })[0];
-      if (!room) {
-        out.textContent = "Для такой компании подойдёт зал на мероприятие — спросите на ресепшене.";
-        return;
-      }
       out.innerHTML =
-        "Ближе всего: " + room.name + " — " + room.cap +
-        " мест, <strong>" + money(room.price) + " ₽/час</strong>.";
+        "Сеть <strong>MESTO-Guest</strong> · код доступа выдаёт ресепшен или приходит в подтверждении брони. " +
+        "Сессия 3 часа, до 50 Мбит/с. Продлить доступ — на ресепшене.";
+    });
+  })();
+
+  /* 4. Чек-лист подготовки переговорки */
+  (function () {
+    var list = byId("mc-list");
+    if (!list) return;
+    var out = byId("mc-out");
+    var reset = byId("mc-reset");
+    var boxes = Array.prototype.slice.call(
+      list.querySelectorAll("input[type=checkbox]"),
+    );
+
+    function update() {
+      var done = boxes.filter(function (box) {
+        return box.checked;
+      }).length;
+      if (done === boxes.length) {
+        out.innerHTML =
+          "<strong>Переговорка готова</strong> — все " +
+          boxes.length +
+          " пунктов отмечены.";
+      } else {
+        out.textContent =
+          "Готово " +
+          done +
+          " из " +
+          boxes.length +
+          ". Осталось пунктов: " +
+          (boxes.length - done) +
+          ".";
+      }
+    }
+
+    list.addEventListener("change", update);
+    reset.addEventListener("click", function () {
+      boxes.forEach(function (box) {
+        box.checked = false;
+      });
+      update();
     });
   })();
 
@@ -166,41 +171,75 @@
     });
   })();
 
-  /* 6. Стол дня */
+  /* 6. Квиз дня */
   (function () {
-    var btn = byId("dd-btn");
+    var btn = byId("qz-btn");
     if (!btn) return;
-    var out = byId("dd-out");
-    var desks = [
-      "Деск 1 · зона «Окна», у кабинета",
-      "Деск 3 · зона «Окна», вид на Москва-Сити",
-      "Деск 7 · зона «Тишина», у стены",
-      "Деск 9 · зона «Атриум», центр",
-      "Деск 12 · зона «Атриум», у колонны",
-      "Деск 16 · зона «Тишина», у окна",
-      "Деск 19 · зона «Терраса», у лаунжа",
-      "Деск 24 · зона «Терраса», в углу"
+    var out = byId("qz-out");
+    var answerBtn = byId("qz-answer");
+    var questions = [
+      {
+        q: "Какая минимальная бронь деск-места?",
+        a: "Один час — 200 ₽. Дальше день, неделя или месяц с доплатой по разнице тарифов.",
+      },
+      {
+        q: "За сколько отменяют бронь без штрафа?",
+        a: "За 2 часа до начала отмена бесплатна, позже — удержание одной оплаченной ставки.",
+      },
+      {
+        q: "Что входит в стоимость деск-места?",
+        a: "Стол, стул, быстрый Wi-Fi, кофе и чай, лаунж. Проектор и кофе-брейк — по дополнительному тарифу.",
+      },
+      {
+        q: "Какой депозит у переговорки «Встреча»?",
+        a: "2 000 ₽ — возвращаются в течение часа после брони, если переговорка в порядке.",
+      },
+      {
+        q: "Сколько стоит гостевой доступ на день?",
+        a: "500 ₽; до 30 минут гость — бесплатно, но его нужно зарегистрировать на ресепшене.",
+      },
+      {
+        q: "Сколько мест в переговорке «Амфитеатр»?",
+        a: "12 — это самая большая переговорка «Места».",
+      },
     ];
+    var current = -1;
 
     btn.addEventListener("click", function () {
-      var desk = desks[Math.floor(Math.random() * desks.length)];
-      out.textContent = "Попробуйте: " + desk + ". Свободен — проверьте на ресепшене.";
+      var next = Math.floor(Math.random() * questions.length);
+      if (next === current) {
+        next = (next + 1) % questions.length;
+      }
+      current = next;
+      out.textContent = questions[current].q;
+      answerBtn.hidden = false;
+    });
+
+    answerBtn.addEventListener("click", function () {
+      if (current < 0) return;
+      out.textContent = questions[current].a;
+      answerBtn.hidden = true;
     });
   })();
 
-  /* 7. Загрузка офиса по часам */
+  /* 7. Кофе-станция */
   (function () {
-    var wrap = byId("load-bars");
-    if (!wrap) return;
-    var hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-    var load = [15, 30, 50, 70, 90, 85, 75, 65, 55, 45, 35, 25, 15];
+    var btn = byId("cs-btn");
+    if (!btn) return;
+    var out = byId("cs-out");
+    var brews = [
+      "Бразилия Серрадо — шоколад и орех",
+      "Эфиопия Иргачефф — цитрус и ягоды",
+      "Колумбия Уила — карамель",
+      "Коста-Рика Тарраззу — мёд и ваниль",
+    ];
 
-    hours.forEach(function (hour, i) {
-      var bar = document.createElement("span");
-      bar.className = "load-bar";
-      bar.style.height = Math.max(8, load[i]) + "%";
-      bar.title = hour + ":00 — загрузка " + load[i] + "%";
-      wrap.appendChild(bar);
+    btn.addEventListener("click", function () {
+      var brew = brews[Math.floor(Math.random() * brews.length)];
+      out.innerHTML =
+        "Сегодня варят: <strong>" +
+        brew +
+        "</strong>. Кофе и чай к деск-месту включены, кофе-брейк на человека — 300 ₽. Кофемашина работает, зерно свежее с утра.";
     });
   })();
 
@@ -239,8 +278,13 @@
       var wind = 2 + Math.floor(Math.random() * 6);
       var note = Math.random() < 0.25 ? "мокрый снег к вечеру" : "без осадков";
       out.textContent =
-        "Сейчас у башни «Око»: +" + temp + " °C, ветер " + wind +
-        " м/с, " + note + " (демо-данные).";
+        "Сейчас у башни «Око»: +" +
+        temp +
+        " °C, ветер " +
+        wind +
+        " м/с, " +
+        note +
+        " (демо-данные).";
     });
   })();
 })();
