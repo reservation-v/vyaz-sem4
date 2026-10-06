@@ -138,11 +138,6 @@
       url: "/#svc-world-time",
       keywords: "сервис время часовой пояс москва пекин лондон timeapi",
     },
-    {
-      title: "Форма обратной связи",
-      url: "/#svc-feedback",
-      keywords: "сервис форма обратная связь заявка вопрос formsubmit",
-    },
   ];
 
   var input = document.getElementById("site-search");

@@ -85,12 +85,5 @@ func seedServices() []domain.Service {
 			Group:       "Расписание",
 			Status:      domain.ServiceStatusReady,
 		},
-		{
-			Slug:        "feedback",
-			Name:        "Форма обратной связи",
-			Description: "Оставить заявку или вопрос администратору: письмо уходит напрямую на почту через сервис FormSubmit, без собственного бэкенда.",
-			Group:       "Обратная связь",
-			Status:      domain.ServiceStatusReady,
-		},
 	}
 }

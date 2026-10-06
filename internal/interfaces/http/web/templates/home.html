@@ -123,50 +123,6 @@
                         Время в Москве, Пекине и Лондоне.
                     </p>
                 </div>
-                {{else if eq .Slug "feedback"}}
-                <form class="widget" id="fb-form">
-                    <div class="widget-row">
-                        <label class="widget-label" for="fb-name">Имя</label>
-                        <input
-                            class="widget-input"
-                            id="fb-name"
-                            type="text"
-                            name="name"
-                            maxlength="80"
-                            required
-                        />
-                    </div>
-                    <div class="widget-row">
-                        <label class="widget-label" for="fb-email">Почта</label>
-                        <input
-                            class="widget-input"
-                            id="fb-email"
-                            type="email"
-                            name="email"
-                            maxlength="80"
-                            required
-                        />
-                    </div>
-                    <div class="widget-row">
-                        <label class="widget-label" for="fb-message"
-                            >Вопрос</label
-                        >
-                        <input
-                            class="widget-input"
-                            id="fb-message"
-                            type="text"
-                            name="message"
-                            maxlength="300"
-                            required
-                        />
-                    </div>
-                    <button class="widget-btn" id="fb-btn" type="submit">
-                        Отправить
-                    </button>
-                    <p class="widget-out" id="fb-out">
-                        Ответим на вашу почту в течение дня.
-                    </p>
-                </form>
                 {{end}}
 
                 <span class="service-group">{{.Group}}</span>

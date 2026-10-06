@@ -2,8 +2,8 @@
 // Каждый виджет — интеграция с внешним готовым сервисом стороннего
 // разработчика: погода (wttr.in), курсы ЦБ (cbr-xml-daily.ru),
 // перевод (MyMemory), QR-коды (goqr.me), рабочий день (isdayoff.ru),
-// время в филиалах (timeapi.io), обратная связь (FormSubmit).
-// Подходы разные: JSON через fetch, простой текст, картинка, POST-форма.
+// время в филиалах (timeapi.io).
+// Подходы разные: JSON через fetch, простой текст, изображение.
 (function () {
   "use strict";
 
@@ -225,67 +225,6 @@
         })
         .catch(function () {
           out.textContent = "Время недоступно — сервис timeapi.io не ответил.";
-        });
-    });
-  })();
-
-  /* 7. Форма обратной связи — FormSubmit (POST на чужой бэкенд) */
-  (function () {
-    var form = byId("fb-form");
-    if (!form) return;
-    var out = byId("fb-out");
-    var btn = byId("fb-btn");
-
-    // Адрес получателя заявок: замените на свою почту.
-    // Первая отправка на новый адрес активируется письмом от FormSubmit
-    // (одна кнопка в письме) — после этого форма работает без настройки.
-    var ENDPOINT = "https://formsubmit.co/ajax/CHANGE_ME@example.com";
-
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      btn.disabled = true;
-      out.textContent = "Отправляем…";
-
-      fetch(ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: byId("fb-name").value,
-          email: byId("fb-email").value,
-          message: byId("fb-message").value,
-          _subject: "Заявка с сайта «Место»",
-        }),
-      })
-        .then(function (r) {
-          return r.json().catch(function () {
-            return {};
-          });
-        })
-        .then(function (data) {
-          if (String(data.success) === "true") {
-            out.textContent =
-              "Спасибо! Заявка отправлена — ответим на вашу почту.";
-            form.reset();
-          } else if (
-            data.message &&
-            data.message.indexOf("Activation") !== -1
-          ) {
-            out.textContent =
-              "Форма ещё не активирована: подтвердите адрес по ссылке в письме от FormSubmit.";
-          } else {
-            out.textContent =
-              "Не удалось отправить. Проверьте поля и попробуйте снова.";
-          }
-        })
-        .catch(function () {
-          out.textContent =
-            "Не удалось отправить — сервис FormSubmit недоступен.";
-        })
-        .then(function () {
-          btn.disabled = false;
         });
     });
   })();
