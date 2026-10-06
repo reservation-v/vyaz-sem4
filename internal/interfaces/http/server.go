@@ -89,6 +89,7 @@ func (s *Server) Router() nethttp.Handler {
 	} else {
 		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))
 	}
+	mux.HandleFunc("GET /residents", s.staticPage("residents", "Резиденты из XML", "residents"))
 	mux.HandleFunc("GET /soon", s.handleSoon)
 	mux.Handle("GET /static/", nethttp.StripPrefix("/static/", s.staticHandler))
 

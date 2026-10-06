@@ -1,0 +1,34 @@
+{{define "content"}}
+<section class="page residents-page">
+  <div class="shell page-inner page-inner-wide">
+    <p class="hero-kicker">Лабораторная работа №2 · XML</p>
+    <h1 class="page-title">Резиденты коворкинга</h1>
+    <p class="page-lead">Эта страница загружает данные из отдельного XML-файла, преобразует записи в таблицу и позволяет искать по значениям XML-тегов.</p>
+
+    <div class="xml-toolbar">
+      <label class="xml-search-label" for="resident-search">Поиск по XML-данным</label>
+      <input class="widget-input xml-search" id="resident-search" type="search" placeholder="Фамилия, город, профессия, компания или ключевое слово" autocomplete="off">
+      <p class="xml-result-count" id="resident-result-count" aria-live="polite">Загрузка данных…</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table residents-table">
+        <thead><tr><th>ФИО</th><th>Дата и место рождения</th><th>Профессия</th><th>Компания</th><th>Абонемент</th><th>Ключевые слова</th></tr></thead>
+        <tbody id="residents-list"><tr><td colspan="6">Загрузка данных из residents.xml…</td></tr></tbody>
+      </table>
+    </div>
+
+    <section class="xml-source" aria-labelledby="xml-source-title">
+      <div class="xml-source-head">
+        <div><p class="hero-kicker">Исходные данные</p><h2 id="xml-source-title">Посмотреть исходный XML</h2></div>
+        <a class="btn btn-ghost" href="/static/data/residents.xml" target="_blank" rel="noopener">Открыть XML отдельно ↗</a>
+      </div>
+      <details id="xml-details">
+        <summary><span class="xml-open-label">Развернуть исходный XML</span><span class="xml-close-label">Свернуть исходный XML</span></summary>
+        <pre class="xml-source-code" id="xml-source-code">Загрузка исходного файла…</pre>
+      </details>
+    </section>
+  </div>
+</section>
+<script src="/static/js/residents.js" defer></script>
+{{end}}

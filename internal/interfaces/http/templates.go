@@ -54,7 +54,7 @@ func layoutFuncs() template.FuncMap {
 
 // loadTemplates разбирает layout и все страницы сайта.
 func loadTemplates() (map[string]*template.Template, error) {
-	pages := []string{"home", "soon", "about", "office", "tariffs", "news", "achievements", "contacts", "rules", "faq", "booking"}
+	pages := []string{"home", "soon", "about", "office", "tariffs", "news", "achievements", "contacts", "rules", "faq", "booking", "residents"}
 	result := make(map[string]*template.Template, len(pages))
 
 	for _, page := range pages {
