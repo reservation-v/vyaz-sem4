@@ -17,7 +17,7 @@ type ServiceRepository struct {
 	services []domain.Service
 }
 
-// NewServiceRepository создаёт хранилище с демонстрационными данными.
+// NewServiceRepository создаёт хранилище с каталогом сервисов сайта.
 func NewServiceRepository() *ServiceRepository {
 	return &ServiceRepository{services: seedServices()}
 }
@@ -27,78 +27,69 @@ func (r *ServiceRepository) ListServices(_ context.Context) ([]domain.Service, e
 	return append([]domain.Service(nil), r.services...), nil
 }
 
-// seedServices — стартовый набор сервисов сайта коворкинга.
+// seedServices — каталог сервисов сайта «Место».
+//
+// Первый сервис — собственное приложение к базе данных коворкинга (Лаба 3).
+// Остальные — интеграции с внешними готовыми сервисами сторонних разработчиков.
+// У каждого свой провайдер, формат ответа и способ подключения: JSON через fetch,
+// простой текст, изображение, POST-форма — чтобы показать разные подходы интеграции.
 func seedServices() []domain.Service {
 	return []domain.Service{
 		{
 			Slug:        "booking",
 			Name:        "Онлайн-бронирование",
-			Description: "Выбор стола или переговорки, расчёт стоимости, проверка свободных часов и оплата брони — приложение к базе данных коворкинга.",
-			Group:       "Бронирование",
+			Description: "Наше приложение к базе данных коворкинга: выбор стола или переговорки, проверка свободных часов, расчёт стоимости с депозитом и отмена брони.",
+			Group:       "База данных",
 			Status:      domain.ServiceStatusReady,
 			URL:         "/booking",
 		},
 		{
-			Slug:        "guest-wifi",
-			Name:        "Гостевой Wi-Fi",
-			Description: "Подключение гостей к сети офиса: код доступа, время сессии и лимиты.",
-			Group:       "Инфраструктура",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "meeting-checklist",
-			Name:        "Чек-лист подготовки переговорки",
-			Description: "Пункты подготовки к встрече: техника, вода и посадка — отмечайте перед стартом.",
-			Group:       "Планирование",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "rent-calc",
-			Name:        "Калькулятор аренды",
-			Description: "Стоимость брони: часы, дни и доп. опции.",
-			Group:       "Тарифы",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "tariff-compare",
-			Name:        "Сравнение тарифов",
-			Description: "День, неделя или месяц: что выгоднее.",
-			Group:       "Тарифы",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "format-test",
-			Name:        "Тест «Формат работы»",
-			Description: "Два вопроса — и понятно, какой формат подходит.",
-			Group:       "Планирование",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "coffee-station",
-			Name:        "Кофе-станция",
-			Description: "Что сегодня варят, меню напитков и статус кофемашины.",
-			Group:       "Инфраструктура",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "timer",
-			Name:        "Таймер до конца брони",
-			Description: "Обратный отсчёт до завершения аренды.",
-			Group:       "Бронирование",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
-			Slug:        "quiz-day",
-			Name:        "Квиз дня",
-			Description: "Вопрос о коворкинге с ответом — проверьте, как знаете «Место».",
-			Group:       "Досуг",
-			Status:      domain.ServiceStatusReady,
-		},
-		{
 			Slug:        "weather",
-			Name:        "Погода",
-			Description: "Прогноз у офиса: идти пешком или остаться дома.",
+			Name:        "Погода у офиса",
+			Description: "Текущая погода в Москва-Сити от сервиса wttr.in: температура, ветер и осадки. Помогает решить, идти пешком или остаться работать дома.",
 			Group:       "Инфраструктура",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "currency",
+			Name:        "Курс валют",
+			Description: "Официальные курсы доллара, евро и юаня к рублю от Банка России (cbr-xml-daily.ru). Нужно гостям и командам, которые платят в валюте.",
+			Group:       "Финансы",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "translate",
+			Name:        "Переводчик RU↔EN",
+			Description: "Перевод фразы с русского на английский и обратно через сервис MyMemory. Выручает в общении с иностранными резидентами и гостями.",
+			Group:       "Коммуникации",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "qr-code",
+			Name:        "QR-код",
+			Description: "Генератор QR-кодов (goqr.me): закодируйте ссылку на бронь, адрес офиса или пароль от гостевого Wi-Fi и покажите гостю с телефона.",
+			Group:       "Инфраструктура",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "workday",
+			Name:        "Рабочий день или выходной",
+			Description: "Быстрая проверка, рабочий сегодня день или выходной, через сервис isdayoff.ru: показываем статус и ближайшее изменение графика.",
+			Group:       "Расписание",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "world-time",
+			Name:        "Время в филиалах",
+			Description: "Точное местное время в Москве, Пекине и Лондоне (timeapi.io) — удобно, если клиенты заказывают переговорку из другого часового пояса.",
+			Group:       "Расписание",
+			Status:      domain.ServiceStatusReady,
+		},
+		{
+			Slug:        "feedback",
+			Name:        "Форма обратной связи",
+			Description: "Оставить заявку или вопрос администратору: письмо уходит напрямую на почту через сервис FormSubmit, без собственного бэкенда.",
+			Group:       "Обратная связь",
 			Status:      domain.ServiceStatusReady,
 		},
 	}

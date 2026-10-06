@@ -395,11 +395,15 @@ a {
     gap: 16px;
 }
 
+/* Все карточки одного размера: одна строка сетки каждая, высота строк равна
+   (grid-auto-rows: 1fr), а min-height задаёт единый нижний порог. */
 .service-card {
     grid-column: span 2;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    height: 100%;
+    min-height: 340px;
     padding: 26px;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -421,11 +425,7 @@ a {
     padding: 34px;
 }
 
-/* Чек-лист переговорки — карточка двойного размера: две строки в правой части сетки,
-   слева от неё встают четыре обычные карточки. */
-#svc-meeting-checklist {
-    grid-row: span 2;
-}
+/* Ни одна карточка не занимает больше одной строки — размеры блоков совпадают. */
 
 .service-top {
     display: flex;
@@ -477,6 +477,7 @@ a {
 
 .service-desc {
     margin: 0;
+    flex-grow: 1;
     color: var(--muted);
     font-size: 0.95rem;
 }
@@ -689,11 +690,6 @@ a {
 
     .service-card {
         grid-column: span 1;
-    }
-
-    #svc-meeting-checklist {
-        grid-column: 1 / -1;
-        grid-row: auto;
     }
 
     .service-card-featured {
@@ -1309,6 +1305,7 @@ a {
 
 .widget-out {
     margin: 0;
+    min-height: 48px;
     font-size: 0.85rem;
     line-height: 1.5;
 }
@@ -1318,15 +1315,17 @@ a {
     font-weight: 700;
 }
 
-.check-list {
-    margin: 0;
-    padding: 10px 12px;
-    list-style: none;
-    display: grid;
-    gap: 6px;
+.widget-qr {
+    display: block;
     border: 1px solid var(--line);
     border-radius: var(--radius-btn);
     background: var(--surface);
+}
+
+.widget-qr-note {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
 }
 
 /* ---------- Подсветка карточки из поиска ---------- */

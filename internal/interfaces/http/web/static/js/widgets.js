@@ -1,4 +1,9 @@
 // Виджеты сервисов на главной странице.
+// Каждый виджет — интеграция с внешним готовым сервисом стороннего
+// разработчика: погода (wttr.in), курсы ЦБ (cbr-xml-daily.ru),
+// перевод (MyMemory), QR-коды (goqr.me), рабочий день (isdayoff.ru),
+// время в филиалах (timeapi.io), обратная связь (FormSubmit).
+// Подходы разные: JSON через fetch, простой текст, картинка, POST-форма.
 (function () {
   "use strict";
 
@@ -6,285 +11,282 @@
     return document.getElementById(id);
   }
 
-  function money(n) {
-    return n.toLocaleString("ru-RU");
+  // Число с двумя знаками и разделителем тысяч: 84.9309 → «84,93».
+  function money2(n) {
+    return Number(n).toLocaleString("ru-RU", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
-  /* 1. Калькулятор аренды */
-  (function () {
-    var btn = byId("rc-btn");
-    if (!btn) return;
-    var out = byId("rc-out");
-    var rates = {
-      desk: { hour: 200, day: 900 },
-      cabin2: { hour: 350, day: 2500 },
-      cabin4: { hour: 500, day: 4000 },
-      room4: { hour: 700, day: 4000 },
-      room6: { hour: 1000, day: 6000 },
-      room12: { hour: 1800, day: 10000 },
-    };
+  function pad(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
 
-    btn.addEventListener("click", function () {
-      var hours = parseInt(byId("rc-hours").value, 10) || 0;
-      var days = parseInt(byId("rc-days").value, 10) || 0;
-      if (hours < 1 && days < 1) {
-        out.textContent = "Укажите часы или дни.";
-        return;
-      }
-      var rate = rates[byId("rc-type").value];
-      var projector = byId("rc-projector").checked;
-      var total = hours * rate.hour + days * rate.day;
-      var parts = [];
-      if (hours) {
-        parts.push(hours + " ч × " + money(rate.hour) + " ₽");
-      }
-      if (days) {
-        parts.push(days + " дн × " + money(rate.day) + " ₽");
-      }
-      if (projector && hours) {
-        total += hours * 500;
-        parts.push("проектор " + money(hours * 500) + " ₽");
-      }
-      out.innerHTML =
-        parts.join(" + ") + " = <strong>" + money(total) + " ₽</strong>";
-    });
-  })();
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 
-  /* 2. Сравнение тарифов */
-  (function () {
-    var btn = byId("tc-btn");
-    if (!btn) return;
-    var out = byId("tc-out");
-
-    btn.addEventListener("click", function () {
-      var hours = parseInt(byId("tc-hours").value, 10) || 0;
-      if (hours < 1 || hours > 80) {
-        out.textContent = "Укажите от 1 до 80 часов.";
-        return;
-      }
-      var options = [
-        { label: "почасово", cost: hours * 200 },
-        { label: "по дням", cost: Math.ceil(hours / 8) * 900 },
-        { label: "неделями", cost: Math.ceil(hours / 40) * 3500 },
-        { label: "месячный абонемент", cost: 12000 },
-      ];
-      options.sort(function (a, b) {
-        return a.cost - b.cost;
-      });
-      var best = options[0];
-      out.innerHTML =
-        "При " +
-        hours +
-        " ч/нед выгоднее " +
-        best.label +
-        " — <strong>" +
-        money(best.cost) +
-        " ₽</strong>";
-    });
-  })();
-
-  /* 3. Гостевой Wi-Fi */
-  (function () {
-    var btn = byId("wifi-btn");
-    if (!btn) return;
-    var out = byId("wifi-out");
-
-    btn.addEventListener("click", function () {
-      out.innerHTML =
-        "Сеть <strong>MESTO-Guest</strong> · код доступа выдаёт ресепшен или приходит в подтверждении брони. " +
-        "Сессия 3 часа, до 50 Мбит/с. Продлить доступ — на ресепшене.";
-    });
-  })();
-
-  /* 4. Чек-лист подготовки переговорки */
-  (function () {
-    var list = byId("mc-list");
-    if (!list) return;
-    var out = byId("mc-out");
-    var reset = byId("mc-reset");
-    var boxes = Array.prototype.slice.call(
-      list.querySelectorAll("input[type=checkbox]"),
-    );
-
-    function update() {
-      var done = boxes.filter(function (box) {
-        return box.checked;
-      }).length;
-      if (done === boxes.length) {
-        out.innerHTML =
-          "<strong>Переговорка готова</strong> — все " +
-          boxes.length +
-          " пунктов отмечены.";
-      } else {
-        out.textContent =
-          "Готово " +
-          done +
-          " из " +
-          boxes.length +
-          ". Осталось пунктов: " +
-          (boxes.length - done) +
-          ".";
-      }
-    }
-
-    list.addEventListener("change", update);
-    reset.addEventListener("click", function () {
-      boxes.forEach(function (box) {
-        box.checked = false;
-      });
-      update();
-    });
-  })();
-
-  /* 5. Таймер до конца брони */
-  (function () {
-    var btn = byId("tm-btn");
-    if (!btn) return;
-    var out = byId("tm-out");
-    var timerId = null;
-
-    btn.addEventListener("click", function () {
-      var minutes = parseInt(byId("tm-min").value, 10) || 0;
-      if (minutes < 1 || minutes > 180) {
-        out.textContent = "Укажите от 1 до 180 минут.";
-        return;
-      }
-      if (timerId) {
-        clearInterval(timerId);
-      }
-      var left = minutes * 60;
-      var render = function () {
-        var m = Math.floor(left / 60);
-        var s = left % 60;
-        out.textContent = "Осталось " + m + ":" + (s < 10 ? "0" : "") + s;
-      };
-      render();
-      timerId = setInterval(function () {
-        left -= 1;
-        if (left <= 0) {
-          clearInterval(timerId);
-          out.textContent = "Бронь завершена. Продление — на ресепшене.";
-          return;
-        }
-        render();
-      }, 1000);
-    });
-  })();
-
-  /* 6. Квиз дня */
-  (function () {
-    var btn = byId("qz-btn");
-    if (!btn) return;
-    var out = byId("qz-out");
-    var answerBtn = byId("qz-answer");
-    var questions = [
-      {
-        q: "Какая минимальная бронь деск-места?",
-        a: "Один час — 200 ₽. Дальше день, неделя или месяц с доплатой по разнице тарифов.",
-      },
-      {
-        q: "За сколько отменяют бронь без штрафа?",
-        a: "За 2 часа до начала отмена бесплатна, позже — удержание одной оплаченной ставки.",
-      },
-      {
-        q: "Что входит в стоимость деск-места?",
-        a: "Стол, стул, быстрый Wi-Fi, кофе и чай, лаунж. Проектор и кофе-брейк — по дополнительному тарифу.",
-      },
-      {
-        q: "Какой депозит у переговорки «Встреча»?",
-        a: "2 000 ₽ — возвращаются в течение часа после брони, если переговорка в порядке.",
-      },
-      {
-        q: "Сколько стоит гостевой доступ на день?",
-        a: "500 ₽; до 30 минут гость — бесплатно, но его нужно зарегистрировать на ресепшене.",
-      },
-      {
-        q: "Сколько мест в переговорке «Амфитеатр»?",
-        a: "12 — это самая большая переговорка «Места».",
-      },
-    ];
-    var current = -1;
-
-    btn.addEventListener("click", function () {
-      var next = Math.floor(Math.random() * questions.length);
-      if (next === current) {
-        next = (next + 1) % questions.length;
-      }
-      current = next;
-      out.textContent = questions[current].q;
-      answerBtn.hidden = false;
-    });
-
-    answerBtn.addEventListener("click", function () {
-      if (current < 0) return;
-      out.textContent = questions[current].a;
-      answerBtn.hidden = true;
-    });
-  })();
-
-  /* 7. Кофе-станция */
-  (function () {
-    var btn = byId("cs-btn");
-    if (!btn) return;
-    var out = byId("cs-out");
-    var brews = [
-      "Бразилия Серрадо — шоколад и орех",
-      "Эфиопия Иргачефф — цитрус и ягоды",
-      "Колумбия Уила — карамель",
-      "Коста-Рика Тарраззу — мёд и ваниль",
-    ];
-
-    btn.addEventListener("click", function () {
-      var brew = brews[Math.floor(Math.random() * brews.length)];
-      out.innerHTML =
-        "Сегодня варят: <strong>" +
-        brew +
-        "</strong>. Кофе и чай к деск-месту включены, кофе-брейк на человека — 300 ₽. Кофемашина работает, зерно свежее с утра.";
-    });
-  })();
-
-  /* 8. Тест «Формат работы» */
-  (function () {
-    var btn = byId("ft-btn");
-    if (!btn) return;
-    var out = byId("ft-out");
-
-    btn.addEventListener("click", function () {
-      var score =
-        parseInt(byId("ft-meets").value, 10) +
-        parseInt(byId("ft-noise").value, 10);
-      var text;
-      if (score <= 3) {
-        text = "Деск-место в зоне «Тишина»: минимум отвлечений.";
-      } else if (score === 4) {
-        text = "Деск-место в зоне «Атриум»: работа и лёгкое общение.";
-      } else if (score === 5) {
-        text = "Кабинет на 2–3: звонки и встречи без помех.";
-      } else {
-        text = "Переговорка или лаунж: вам нужно пространство для людей.";
-      }
-      out.textContent = "Ваш формат — " + text;
-    });
-  })();
-
-  /* 9. Погода у офиса (демо-данные) */
+  /* 1. Погода у офиса — wttr.in (JSON, без ключа) */
   (function () {
     var btn = byId("w-btn");
     if (!btn) return;
     var out = byId("w-out");
 
     btn.addEventListener("click", function () {
-      var temp = 14 + Math.floor(Math.random() * 11);
-      var wind = 2 + Math.floor(Math.random() * 6);
-      var note = Math.random() < 0.25 ? "мокрый снег к вечеру" : "без осадков";
-      out.textContent =
-        "Сейчас у башни «Око»: +" +
-        temp +
-        " °C, ветер " +
-        wind +
-        " м/с, " +
-        note +
-        " (демо-данные).";
+      out.textContent = "Загружаем прогноз…";
+      fetch("https://wttr.in/Moscow?format=j1&lang=ru")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          var c = data.current_condition[0];
+          var desc =
+            c.lang_ru && c.lang_ru[0]
+              ? c.lang_ru[0].value
+              : c.weatherDesc[0].value;
+          out.innerHTML =
+            "Сейчас у башни «Око»: <strong>" +
+            c.temp_C +
+            " °C</strong>, ощущается как " +
+            c.FeelsLikeC +
+            " °C, ветер " +
+            c.windspeedKmph +
+            " км/ч (" +
+            c.winddir16Point +
+            "), " +
+            escapeHtml(desc.toLowerCase()) +
+            ".";
+        })
+        .catch(function () {
+          out.textContent = "Погода недоступна — сервис wttr.in не ответил.";
+        });
+    });
+  })();
+
+  /* 2. Курс валют — cbr-xml-daily.ru (JSON ЦБ РФ, без ключа) */
+  (function () {
+    var btn = byId("cur-btn");
+    if (!btn) return;
+    var out = byId("cur-out");
+
+    btn.addEventListener("click", function () {
+      out.textContent = "Загружаем курсы…";
+      fetch("https://www.cbr-xml-daily.ru/daily_json.js")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          var parts = ["USD", "EUR", "CNY"].map(function (code) {
+            var v = data.Valute[code];
+            return v.Name + " — <strong>" + money2(v.Value) + " ₽</strong>";
+          });
+          out.innerHTML = "Курсы ЦБ РФ: " + parts.join("; ") + ".";
+        })
+        .catch(function () {
+          out.textContent = "Курсы недоступны — сервис ЦБ не ответил.";
+        });
+    });
+  })();
+
+  /* 3. Переводчик RU↔EN — MyMemory (JSON, без ключа) */
+  (function () {
+    var btn = byId("tr-btn");
+    if (!btn) return;
+    var out = byId("tr-out");
+
+    btn.addEventListener("click", function () {
+      var text = byId("tr-text").value.trim();
+      var dir = byId("tr-dir").value;
+      if (!text) {
+        out.textContent = "Введите фразу для перевода.";
+        return;
+      }
+      out.textContent = "Переводим…";
+      var url =
+        "https://api.mymemory.translated.net/get?q=" +
+        encodeURIComponent(text) +
+        "&langpair=" +
+        encodeURIComponent(dir);
+      fetch(url)
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          var translated =
+            data.responseData && data.responseData.translatedText;
+          if (!translated) throw new Error("нет перевода");
+          out.textContent = "Перевод: " + translated;
+        })
+        .catch(function () {
+          out.textContent = "Перевод недоступен — сервис MyMemory не ответил.";
+        });
+    });
+  })();
+
+  /* 4. QR-код — goqr.me (картинка, без ключа) */
+  (function () {
+    var btn = byId("qr-btn");
+    if (!btn) return;
+    var out = byId("qr-out");
+
+    btn.addEventListener("click", function () {
+      var text = byId("qr-text").value.trim();
+      if (!text) {
+        out.textContent = "Введите текст или ссылку для QR-кода.";
+        return;
+      }
+      var src =
+        "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" +
+        encodeURIComponent(text);
+      out.innerHTML =
+        '<img class="widget-qr" width="140" height="140" alt="QR-код" src="' +
+        src +
+        '"><span class="widget-qr-note">QR-код готов — наведите камеру телефона.</span>';
+    });
+  })();
+
+  /* 5. Рабочий день или выходной — isdayoff.ru (простой текст, без ключа) */
+  (function () {
+    var btn = byId("wd-btn");
+    if (!btn) return;
+    var out = byId("wd-out");
+
+    btn.addEventListener("click", function () {
+      out.textContent = "Проверяем…";
+      fetch("https://isdayoff.ru/today")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.text();
+        })
+        .then(function (code) {
+          var t = code.trim();
+          var text;
+          if (t === "0") {
+            text =
+              "Сегодня рабочий день — офис работает по обычному графику (8:00–22:00).";
+          } else if (t === "1") {
+            text =
+              "Сегодня нерабочий день — офис закрыт или работает по праздничному графику.";
+          } else if (t === "2") {
+            text =
+              "Сегодня сокращённый рабочий день — уточните график на ресепшене.";
+          } else if (t === "4") {
+            text = "Сегодня выходной — офис работает по праздничному графику.";
+          } else {
+            text = "Не удалось распознать статус дня (код «" + t + "»).";
+          }
+          out.innerHTML = "<strong>" + text + "</strong>";
+        })
+        .catch(function () {
+          out.textContent =
+            "Не удалось проверить день — сервис isdayoff.ru не ответил.";
+        });
+    });
+  })();
+
+  /* 6. Время в филиалах — timeapi.io (JSON, без ключа) */
+  (function () {
+    var btn = byId("wt-btn");
+    if (!btn) return;
+    var out = byId("wt-out");
+
+    var zones = [
+      { label: "Москва", zone: "Europe/Moscow" },
+      { label: "Пекин", zone: "Asia/Shanghai" },
+      { label: "Лондон", zone: "Europe/London" },
+    ];
+
+    btn.addEventListener("click", function () {
+      out.textContent = "Загружаем время…";
+      Promise.all(
+        zones.map(function (z) {
+          return fetch(
+            "https://timeapi.io/api/Time/current/zone?timeZone=" +
+              encodeURIComponent(z.zone),
+          )
+            .then(function (r) {
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.json();
+            })
+            .then(function (d) {
+              return z.label + " — " + pad(d.hour) + ":" + pad(d.minute);
+            });
+        }),
+      )
+        .then(function (rows) {
+          out.innerHTML = rows.join("<br>");
+        })
+        .catch(function () {
+          out.textContent = "Время недоступно — сервис timeapi.io не ответил.";
+        });
+    });
+  })();
+
+  /* 7. Форма обратной связи — FormSubmit (POST на чужой бэкенд) */
+  (function () {
+    var form = byId("fb-form");
+    if (!form) return;
+    var out = byId("fb-out");
+    var btn = byId("fb-btn");
+
+    // Адрес получателя заявок: замените на свою почту.
+    // Первая отправка на новый адрес активируется письмом от FormSubmit
+    // (одна кнопка в письме) — после этого форма работает без настройки.
+    var ENDPOINT = "https://formsubmit.co/ajax/CHANGE_ME@example.com";
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      btn.disabled = true;
+      out.textContent = "Отправляем…";
+
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: byId("fb-name").value,
+          email: byId("fb-email").value,
+          message: byId("fb-message").value,
+          _subject: "Заявка с сайта «Место»",
+        }),
+      })
+        .then(function (r) {
+          return r.json().catch(function () {
+            return {};
+          });
+        })
+        .then(function (data) {
+          if (String(data.success) === "true") {
+            out.textContent =
+              "Спасибо! Заявка отправлена — ответим на вашу почту.";
+            form.reset();
+          } else if (
+            data.message &&
+            data.message.indexOf("Activation") !== -1
+          ) {
+            out.textContent =
+              "Форма ещё не активирована: подтвердите адрес по ссылке в письме от FormSubmit.";
+          } else {
+            out.textContent =
+              "Не удалось отправить. Проверьте поля и попробуйте снова.";
+          }
+        })
+        .catch(function () {
+          out.textContent =
+            "Не удалось отправить — сервис FormSubmit недоступен.";
+        })
+        .then(function () {
+          btn.disabled = false;
+        });
     });
   })();
 })();

@@ -23,9 +23,10 @@
         <div class="section-head reveal">
             <h2 class="section-title">Сервисы коворкинга</h2>
             <p class="section-note">
-                Девять виджетов работают прямо на странице, десятый — приложение
-                к базе данных: онлайн-бронирование открывается на отдельной
-                странице.
+                Один сервис — наше приложение к базе данных
+                (онлайн-бронирование), остальные девять — интеграции с внешними
+                готовыми решениями сторонних разработчиков: погода, курсы,
+                перевод и другие.
             </p>
         </div>
 
@@ -43,202 +44,129 @@
                 <p class="service-desc">{{.Description}}</p>
 
                 {{if .URL}}<a class="service-link" href="{{.URL}}">Открыть →</a
-                >{{end}} {{if eq .Slug "guest-wifi"}}
-                <div class="widget">
-                    <button class="widget-btn" id="wifi-btn">
-                        Как подключиться
-                    </button>
-                    <p class="widget-out" id="wifi-out">
-                        Нажмите — покажем доступ к гостевой сети.
-                    </p>
-                </div>
-                {{else if eq .Slug "meeting-checklist"}}
-                <div class="widget">
-                    <ul class="check-list" id="mc-list">
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Проектор и
-                                кабели</label
-                            >
-                        </li>
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Маркеры и
-                                доска</label
-                            >
-                        </li>
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Вода и стаканы</label
-                            >
-                        </li>
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Код гостевого Wi-Fi
-                                на виду</label
-                            >
-                        </li>
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Посадка по числу
-                                участников</label
-                            >
-                        </li>
-                        <li>
-                            <label class="widget-check"
-                                ><input type="checkbox" /> Телефоны на
-                                беззвучном</label
-                            >
-                        </li>
-                    </ul>
-                    <button class="widget-btn" id="mc-reset">Сбросить</button>
-                    <p class="widget-out" id="mc-out">Готово 0 из 6.</p>
-                </div>
-                {{else if eq .Slug "rent-calc"}}
-                <div class="widget">
-                    <div class="widget-row">
-                        <label class="widget-label" for="rc-type"
-                            >Пространство</label
-                        >
-                        <select class="widget-input" id="rc-type">
-                            <option value="desk">Деск-место</option>
-                            <option value="cabin2">Кабинет 2–3</option>
-                            <option value="cabin4">Кабинет 4–6</option>
-                            <option value="room4">Переговорка «Встреча»</option>
-                            <option value="room6">Переговорка «Проект»</option>
-                            <option value="room12">
-                                Переговорка «Амфитеатр»
-                            </option>
-                        </select>
-                    </div>
-                    <div class="widget-row">
-                        <label class="widget-label" for="rc-hours">Часов</label>
-                        <input
-                            class="widget-input"
-                            id="rc-hours"
-                            type="number"
-                            min="1"
-                            max="12"
-                            value="3"
-                        />
-                        <label class="widget-label" for="rc-days">Дней</label>
-                        <input
-                            class="widget-input"
-                            id="rc-days"
-                            type="number"
-                            min="0"
-                            max="30"
-                            value="0"
-                        />
-                    </div>
-                    <div class="widget-row">
-                        <label class="widget-check"
-                            ><input id="rc-projector" type="checkbox" />
-                            Проектор (500 ₽/ч)</label
-                        >
-                    </div>
-                    <button class="widget-btn" id="rc-btn">Рассчитать</button>
-                    <p class="widget-out" id="rc-out">
-                        Выберите параметры и нажмите «Рассчитать».
-                    </p>
-                </div>
-                {{else if eq .Slug "tariff-compare"}}
-                <div class="widget">
-                    <div class="widget-row">
-                        <label class="widget-label" for="tc-hours"
-                            >Часов в неделю</label
-                        >
-                        <input
-                            class="widget-input"
-                            id="tc-hours"
-                            type="number"
-                            min="1"
-                            max="80"
-                            value="20"
-                        />
-                    </div>
-                    <button class="widget-btn" id="tc-btn">Сравнить</button>
-                    <p class="widget-out" id="tc-out">
-                        Сколько часов вы работаете в офисе?
-                    </p>
-                </div>
-                {{else if eq .Slug "format-test"}}
-                <div class="widget">
-                    <div class="widget-row">
-                        <label class="widget-label" for="ft-meets"
-                            >Встречи</label
-                        >
-                        <select class="widget-input" id="ft-meets">
-                            <option value="1">Почти нет</option>
-                            <option value="2">Пару раз в неделю</option>
-                            <option value="3">Каждый день</option>
-                        </select>
-                    </div>
-                    <div class="widget-row">
-                        <label class="widget-label" for="ft-noise"
-                            >Обстановка</label
-                        >
-                        <select class="widget-input" id="ft-noise">
-                            <option value="1">Нужна тишина</option>
-                            <option value="2">Любое</option>
-                            <option value="3">Люблю оживление</option>
-                        </select>
-                    </div>
-                    <button class="widget-btn" id="ft-btn">
-                        Узнать формат
-                    </button>
-                    <p class="widget-out" id="ft-out">
-                        Ответьте на два вопроса.
-                    </p>
-                </div>
-                {{else if eq .Slug "coffee-station"}}
-                <div class="widget">
-                    <button class="widget-btn" id="cs-btn">
-                        Что на станции
-                    </button>
-                    <p class="widget-out" id="cs-out">
-                        Нажмите — расскажем, что сегодня варят.
-                    </p>
-                </div>
-                {{else if eq .Slug "timer"}}
-                <div class="widget">
-                    <div class="widget-row">
-                        <label class="widget-label" for="tm-min">Минут</label>
-                        <input
-                            class="widget-input"
-                            id="tm-min"
-                            type="number"
-                            min="1"
-                            max="180"
-                            value="25"
-                        />
-                    </div>
-                    <button class="widget-btn" id="tm-btn">Запустить</button>
-                    <p class="widget-out" id="tm-out">До конца брони.</p>
-                </div>
-                {{else if eq .Slug "quiz-day"}}
-                <div class="widget">
-                    <div class="widget-row">
-                        <button class="widget-btn" id="qz-btn">
-                            Взять вопрос
-                        </button>
-                        <button class="widget-btn" id="qz-answer" hidden>
-                            Показать ответ
-                        </button>
-                    </div>
-                    <p class="widget-out" id="qz-out">
-                        Нажмите — и получите вопрос о коворкинге.
-                    </p>
-                </div>
-                {{else if eq .Slug "weather"}}
+                >{{else if eq .Slug "weather"}}
                 <div class="widget">
                     <button class="widget-btn" id="w-btn">
-                        Обновить прогноз
+                        Показать погоду
                     </button>
                     <p class="widget-out" id="w-out">
-                        Погода у офиса (демо-данные).
+                        Нажмите — загрузим свежий прогноз у башни «Око».
                     </p>
                 </div>
+                {{else if eq .Slug "currency"}}
+                <div class="widget">
+                    <button class="widget-btn" id="cur-btn">
+                        Показать курсы
+                    </button>
+                    <p class="widget-out" id="cur-out">
+                        Официальные курсы ЦБ РФ на сегодня.
+                    </p>
+                </div>
+                {{else if eq .Slug "translate"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="tr-text">Фраза</label>
+                        <input
+                            class="widget-input"
+                            id="tr-text"
+                            type="text"
+                            maxlength="160"
+                            value="Доброе утро"
+                        />
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-label" for="tr-dir">Языки</label>
+                        <select class="widget-input" id="tr-dir">
+                            <option value="ru|en">RU → EN</option>
+                            <option value="en|ru">EN → RU</option>
+                        </select>
+                    </div>
+                    <button class="widget-btn" id="tr-btn">Перевести</button>
+                    <p class="widget-out" id="tr-out">
+                        Результат перевода появится здесь.
+                    </p>
+                </div>
+                {{else if eq .Slug "qr-code"}}
+                <div class="widget">
+                    <div class="widget-row">
+                        <label class="widget-label" for="qr-text">Текст</label>
+                        <input
+                            class="widget-input"
+                            id="qr-text"
+                            type="text"
+                            maxlength="300"
+                            value="https://mesto.ru/booking"
+                        />
+                    </div>
+                    <button class="widget-btn" id="qr-btn">
+                        Сделать QR-код
+                    </button>
+                    <p class="widget-out" id="qr-out">
+                        Введите текст и нажмите кнопку — получите QR-код.
+                    </p>
+                </div>
+                {{else if eq .Slug "workday"}}
+                <div class="widget">
+                    <button class="widget-btn" id="wd-btn">
+                        Проверить сегодня
+                    </button>
+                    <p class="widget-out" id="wd-out">
+                        Рабочий сегодня день или выходной?
+                    </p>
+                </div>
+                {{else if eq .Slug "world-time"}}
+                <div class="widget">
+                    <button class="widget-btn" id="wt-btn">
+                        Показать время
+                    </button>
+                    <p class="widget-out" id="wt-out">
+                        Время в Москве, Пекине и Лондоне.
+                    </p>
+                </div>
+                {{else if eq .Slug "feedback"}}
+                <form class="widget" id="fb-form">
+                    <div class="widget-row">
+                        <label class="widget-label" for="fb-name">Имя</label>
+                        <input
+                            class="widget-input"
+                            id="fb-name"
+                            type="text"
+                            name="name"
+                            maxlength="80"
+                            required
+                        />
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-label" for="fb-email">Почта</label>
+                        <input
+                            class="widget-input"
+                            id="fb-email"
+                            type="email"
+                            name="email"
+                            maxlength="80"
+                            required
+                        />
+                    </div>
+                    <div class="widget-row">
+                        <label class="widget-label" for="fb-message"
+                            >Вопрос</label
+                        >
+                        <input
+                            class="widget-input"
+                            id="fb-message"
+                            type="text"
+                            name="message"
+                            maxlength="300"
+                            required
+                        />
+                    </div>
+                    <button class="widget-btn" id="fb-btn" type="submit">
+                        Отправить
+                    </button>
+                    <p class="widget-out" id="fb-out">
+                        Ответим на вашу почту в течение дня.
+                    </p>
+                </form>
                 {{end}}
 
                 <span class="service-group">{{.Group}}</span>
