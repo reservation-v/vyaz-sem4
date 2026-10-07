@@ -13,6 +13,7 @@
 
   const value = (node, field) => node.querySelector(field)?.textContent.trim() || '';
   const fullName = (resident) => `${resident.surname} ${resident.name} ${resident.patronymic}`;
+  const sortValue = (resident, field) => (field === 'name' ? fullName(resident) : resident[field]) || '';
   const render = () => {
     const terms = search.value.trim().toLocaleLowerCase('ru').split(/\s+/).filter(Boolean);
     const visible = residents.filter((resident) => {
@@ -21,11 +22,7 @@
     });
     if (sort) {
       const collator = new Intl.Collator('ru', { sensitivity: 'base' });
-      visible.sort((a, b) => {
-        const left = sort.field === 'name' ? fullName(a) : a.birthDate;
-        const right = sort.field === 'name' ? fullName(b) : b.birthDate;
-        return collator.compare(left, right) * sort.direction;
-      });
+      visible.sort((a, b) => collator.compare(sortValue(a, sort.field), sortValue(b, sort.field)) * sort.direction);
     }
     list.innerHTML = visible.length ? visible.map((resident) => `
       <tr><td><strong>${resident.surname} ${resident.name} ${resident.patronymic}</strong></td>
@@ -37,7 +34,7 @@
       const header = button.closest('th');
       button.classList.toggle('is-active', active);
       button.querySelector('.sort-arrow').classList.toggle('is-ascending', active && sort.direction === 1);
-      button.setAttribute('aria-label', `Сортировать по ${button.dataset.sort === 'name' ? 'ФИО' : 'дате рождения'}${active ? (sort.direction === 1 ? ', по возрастанию' : ', по убыванию') : ''}`);
+      button.setAttribute('aria-label', `Сортировать по ${button.dataset.label || button.dataset.sort}${active ? (sort.direction === 1 ? ', по возрастанию' : ', по убыванию') : ''}`);
       header.setAttribute('aria-sort', active ? (sort.direction === 1 ? 'ascending' : 'descending') : 'none');
     });
   };

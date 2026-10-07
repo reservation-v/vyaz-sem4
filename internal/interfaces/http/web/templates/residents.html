@@ -15,15 +15,18 @@
       </div>
       <p class="xml-result-count" id="resident-result-count" aria-live="polite">Загрузка данных…</p>
     </div>
-    <p class="table-guide">Введите текст для поиска. Нажмите «ФИО» или «Дата рождения», чтобы отсортировать; повторное нажатие изменит направление. «Сбросить фильтры» очистит поиск и сортировку.</p>
+    <p class="table-guide">Введите текст для поиска. Нажмите на заголовок любого столбца, чтобы отсортировать таблицу; повторное нажатие изменит направление сортировки. «Сбросить фильтры» очистит поиск и сортировку.</p>
   </div>
 
   <div class="table-scroll">
     <table class="data-table residents-table">
       <thead><tr>
-        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="name" aria-label="Сортировать по ФИО">ФИО <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
-        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="birthDate" aria-label="Сортировать по дате рождения">Дата и место рождения <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
-        <th scope="col">Профессия</th><th scope="col">Компания</th><th scope="col">Абонемент</th><th scope="col">Ключевые слова</th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="name" data-label="ФИО" aria-label="Сортировать по ФИО">ФИО <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="birthDate" data-label="дате рождения" aria-label="Сортировать по дате рождения">Дата и место рождения <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="profession" data-label="профессии" aria-label="Сортировать по профессии">Профессия <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="company" data-label="компании" aria-label="Сортировать по компании">Компания <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="membership" data-label="абонементу" aria-label="Сортировать по абонементу">Абонемент <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="keywords" data-label="ключевым словам" aria-label="Сортировать по ключевым словам">Ключевые слова <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
       </tr></thead>
       <tbody id="residents-list"><tr><td colspan="6">Загрузка данных из residents.xml…</td></tr></tbody>
     </table>
