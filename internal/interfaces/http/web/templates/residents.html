@@ -1,23 +1,35 @@
 {{define "content"}}
 <section class="page residents-page">
-  <div class="shell page-inner page-inner-wide">
+  <div class="residents-content">
     <p class="hero-kicker">Лабораторная работа №2 · XML</p>
     <h1 class="page-title">Резиденты коворкинга</h1>
     <p class="page-lead">Эта страница загружает данные из отдельного XML-файла, преобразует записи в таблицу и позволяет искать по значениям XML-тегов.</p>
 
     <div class="xml-toolbar">
-      <label class="xml-search-label" for="resident-search">Поиск по XML-данным</label>
-      <input class="widget-input xml-search" id="resident-search" type="search" placeholder="Фамилия, город, профессия, компания или ключевое слово" autocomplete="off">
+      <div class="xml-toolbar-row">
+        <div class="xml-search-field">
+          <label class="xml-search-label" for="resident-search">Поиск по XML-данным</label>
+          <input class="widget-input xml-search" id="resident-search" type="search" placeholder="Фамилия, город, профессия, компания или ключевое слово" autocomplete="off">
+        </div>
+        <button class="btn btn-reset-filters" id="resident-reset" type="button">Сбросить фильтры</button>
+      </div>
       <p class="xml-result-count" id="resident-result-count" aria-live="polite">Загрузка данных…</p>
     </div>
+    <p class="table-guide">Введите текст для поиска. Нажмите «ФИО» или «Дата рождения», чтобы отсортировать; повторное нажатие изменит направление. «Сбросить фильтры» очистит поиск и сортировку.</p>
+  </div>
 
-    <div class="table-scroll">
-      <table class="data-table residents-table">
-        <thead><tr><th>ФИО</th><th>Дата и место рождения</th><th>Профессия</th><th>Компания</th><th>Абонемент</th><th>Ключевые слова</th></tr></thead>
-        <tbody id="residents-list"><tr><td colspan="6">Загрузка данных из residents.xml…</td></tr></tbody>
-      </table>
-    </div>
+  <div class="table-scroll">
+    <table class="data-table residents-table">
+      <thead><tr>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="name" aria-label="Сортировать по ФИО">ФИО <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col" aria-sort="none"><button class="sort-button" type="button" data-sort="birthDate" aria-label="Сортировать по дате рождения">Дата и место рождения <span class="sort-arrow" aria-hidden="true">↓</span></button></th>
+        <th scope="col">Профессия</th><th scope="col">Компания</th><th scope="col">Абонемент</th><th scope="col">Ключевые слова</th>
+      </tr></thead>
+      <tbody id="residents-list"><tr><td colspan="6">Загрузка данных из residents.xml…</td></tr></tbody>
+    </table>
+  </div>
 
+  <div class="residents-content">
     <section class="xml-source" aria-labelledby="xml-source-title">
       <div class="xml-source-head">
         <div><p class="hero-kicker">Исходные данные</p><h2 id="xml-source-title">Посмотреть исходный XML</h2></div>
