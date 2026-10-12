@@ -17,11 +17,38 @@ import (
 type BookingRepository interface {
 	ListSpaces(ctx context.Context) ([]domain.Space, error)
 	ListBookings(ctx context.Context) ([]domain.Booking, error)
+	SearchBookings(ctx context.Context, filter BookingFilter) ([]domain.Booking, error)
+	BookingStatistics(ctx context.Context, filter BookingFilter) (BookingStatistics, error)
 	// SaveBooking сохраняет новую бронь и возвращает её с присвоенным ID.
 	SaveBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error)
 	BookingByID(ctx context.Context, id int) (domain.Booking, error)
-	// DeleteBooking удаляет бронь (отмена = удаление записи).
+	// DeleteBooking отменяет бронь, сохраняя запись для истории и отчётов.
 	DeleteBooking(ctx context.Context, id int) error
+}
+
+// BookingFilter ограничивает список броней и расчёт отчёта.
+type BookingFilter struct {
+	Search    string
+	SpaceType domain.SpaceType
+	Status    domain.BookingStatus
+	DateFrom  string
+	DateTo    string
+}
+
+// BookingStatistics содержит агрегаты по отфильтрованным данным БД.
+type BookingStatistics struct {
+	TotalBookings     int
+	ConfirmedBookings int
+	CancelledBookings int
+	Revenue           int
+	BySpaceType       []BookingTypeStatistics
+}
+
+// BookingTypeStatistics содержит показатели для одного типа пространства.
+type BookingTypeStatistics struct {
+	SpaceType domain.SpaceType
+	Count     int
+	Revenue   int
 }
 
 // Ошибки сценария бронирования (handler превращает их в сообщения на странице).
@@ -33,6 +60,7 @@ var (
 	ErrOverlap           = errors.New("space already booked")
 	ErrBookingNotFound   = errors.New("booking not found")
 	ErrRateNotAvailable  = errors.New("rate not available for this space")
+	ErrInvalidFilter     = errors.New("invalid booking filter")
 )
 
 const (
@@ -63,14 +91,45 @@ func NewBookingService(repo BookingRepository) *BookingService {
 	return &BookingService{repo: repo, now: time.Now}
 }
 
-// Spaces возвращает все пространства, доступные для брони.
+// Spaces возвращает пространства для брони: деск-места первыми, кабинеты в конце.
 func (s *BookingService) Spaces(ctx context.Context) ([]domain.Space, error) {
-	return s.repo.ListSpaces(ctx)
+	spaces, err := s.repo.ListSpaces(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	slices.SortStableFunc(spaces, func(a, b domain.Space) int {
+		return spaceTypeOrder(a.Type) - spaceTypeOrder(b.Type)
+	})
+	return spaces, nil
+}
+
+// spaceTypeOrder задаёт порядок типов в списках: деск-места, переговорки, кабинеты.
+func spaceTypeOrder(spaceType domain.SpaceType) int {
+	switch spaceType {
+	case domain.SpaceTypeDesk:
+		return 0
+	case domain.SpaceTypeRoom:
+		return 1
+	case domain.SpaceTypeCabin:
+		return 2
+	default:
+		return 3
+	}
 }
 
 // Bookings возвращает брони, отсортированные по дате и времени начала.
 func (s *BookingService) Bookings(ctx context.Context) ([]domain.Booking, error) {
-	bookings, err := s.repo.ListBookings(ctx)
+	return s.BookingsFiltered(ctx, BookingFilter{})
+}
+
+// BookingsFiltered возвращает подходящие под фильтр брони по дате и времени.
+func (s *BookingService) BookingsFiltered(ctx context.Context, filter BookingFilter) ([]domain.Booking, error) {
+	if err := validateBookingFilter(filter); err != nil {
+		return nil, err
+	}
+
+	bookings, err := s.repo.SearchBookings(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +145,43 @@ func (s *BookingService) Bookings(ctx context.Context) ([]domain.Booking, error)
 	})
 
 	return bookings, nil
+}
+
+// Statistics рассчитывает отчёт по данным бронирования, применяя те же фильтры, что и к списку.
+func (s *BookingService) Statistics(ctx context.Context, filter BookingFilter) (BookingStatistics, error) {
+	if err := validateBookingFilter(filter); err != nil {
+		return BookingStatistics{}, err
+	}
+	return s.repo.BookingStatistics(ctx, filter)
+}
+
+func validateBookingFilter(filter BookingFilter) error {
+	if filter.SpaceType != "" && filter.SpaceType != domain.SpaceTypeDesk &&
+		filter.SpaceType != domain.SpaceTypeCabin && filter.SpaceType != domain.SpaceTypeRoom {
+		return fmt.Errorf("%w: неизвестный тип пространства", ErrInvalidFilter)
+	}
+	if filter.Status != "" && filter.Status != domain.BookingStatusConfirmed && filter.Status != domain.BookingStatusCancelled {
+		return fmt.Errorf("%w: неизвестный статус брони", ErrInvalidFilter)
+	}
+
+	var from, to time.Time
+	var err error
+	if filter.DateFrom != "" {
+		from, err = time.Parse("2006-01-02", filter.DateFrom)
+		if err != nil {
+			return fmt.Errorf("%w: дата начала должна быть в формате ГГГГ-ММ-ДД", ErrInvalidFilter)
+		}
+	}
+	if filter.DateTo != "" {
+		to, err = time.Parse("2006-01-02", filter.DateTo)
+		if err != nil {
+			return fmt.Errorf("%w: дата окончания должна быть в формате ГГГГ-ММ-ДД", ErrInvalidFilter)
+		}
+	}
+	if !from.IsZero() && !to.IsZero() && from.After(to) {
+		return fmt.Errorf("%w: дата начала позже даты окончания", ErrInvalidFilter)
+	}
+	return nil
 }
 
 // CreateBooking создаёт бронь после проверок имени, периода, тарифа и занятости пространства.
@@ -175,7 +271,7 @@ func (s *BookingService) CreateBooking(
 	}
 
 	for _, existing := range bookings {
-		if existing.SpaceID != spaceID {
+		if existing.SpaceID != spaceID || existing.Status != domain.BookingStatusConfirmed {
 			continue
 		}
 		if bookingsOverlap(existing, booking) {
@@ -186,7 +282,7 @@ func (s *BookingService) CreateBooking(
 	return s.repo.SaveBooking(ctx, booking)
 }
 
-// CancelBooking отменяет бронь: запись удаляется из списка.
+// CancelBooking отменяет бронь, сохраняя запись в истории.
 func (s *BookingService) CancelBooking(ctx context.Context, id int) error {
 	return s.repo.DeleteBooking(ctx, id)
 }
@@ -203,7 +299,13 @@ func bookingDays(booking domain.Booking) (start, end time.Time) {
 	case domain.BookingRateWeek:
 		end = day.AddDate(0, 0, 7)
 	case domain.BookingRateMonth:
-		end = day.AddDate(0, 1, 0)
+		nextMonth := time.Date(day.Year(), day.Month()+1, 1, 0, 0, 0, 0, day.Location())
+		lastDay := nextMonth.AddDate(0, 1, -1).Day()
+		if day.Day() > lastDay {
+			end = time.Date(nextMonth.Year(), nextMonth.Month(), lastDay, 0, 0, 0, 0, day.Location())
+		} else {
+			end = time.Date(nextMonth.Year(), nextMonth.Month(), day.Day(), 0, 0, 0, 0, day.Location())
+		}
 	default: // hour и day занимают свою календарную дату
 		end = day.AddDate(0, 0, 1)
 	}

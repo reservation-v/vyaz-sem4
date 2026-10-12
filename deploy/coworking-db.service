@@ -1,0 +1,20 @@
+# Rootless Podman PostgreSQL container for coworking.
+# Install as ~/.config/systemd/user/coworking-db.service.
+
+[Unit]
+Description=Coworking PostgreSQL database (Podman container)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/coworking/database.env
+ExecStartPre=-/usr/bin/podman network create coworking-net
+ExecStartPre=/usr/bin/mkdir -p %h/projects/vyaz-sem4/data/postgres
+ExecStart=/usr/bin/podman run --rm --name coworking-db --network coworking-net --network-alias db --cpus=0.5 --memory=512m --pids-limit=256 -e POSTGRES_DB=coworking -e POSTGRES_USER=coworking -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} -p 127.0.0.1:49733:5432 -v %h/projects/vyaz-sem4/data/postgres:/var/lib/postgresql localhost/coworking-postgres:18-alpine
+ExecStop=/usr/bin/podman stop -t 20 coworking-db
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

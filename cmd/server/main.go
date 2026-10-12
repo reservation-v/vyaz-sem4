@@ -13,6 +13,7 @@ import (
 
 	"coworking/internal/application"
 	"coworking/internal/infrastructure/memory"
+	"coworking/internal/infrastructure/postgres"
 	apphttp "coworking/internal/interfaces/http"
 )
 
@@ -20,10 +21,22 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	repo := memory.NewServiceRepository()
-	catalog := application.NewServiceCatalog(repo)
+	serviceRepo := memory.NewServiceRepository()
+	catalog := application.NewServiceCatalog(serviceRepo)
 
-	bookingRepo := memory.NewBookingRepository()
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+	if err := postgres.RunMigrations(databaseURL); err != nil {
+		log.Fatalf("database migrations: %v", err)
+	}
+
+	bookingRepo, err := postgres.NewBookingRepository(ctx, databaseURL)
+	if err != nil {
+		log.Fatalf("connect to PostgreSQL: %v", err)
+	}
+	defer bookingRepo.Close()
 	bookings := application.NewBookingService(bookingRepo)
 
 	server, err := apphttp.NewServer(catalog,

@@ -5,11 +5,12 @@ FROM golang:1.24-alpine AS build
 
 WORKDIR /src
 
-COPY go.mod ./
+COPY go.mod go.sum ./
+COPY db ./db
 COPY cmd ./cmd
 COPY internal ./internal
 
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/coworking-server ./cmd/server
+RUN go mod download && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/coworking-server ./cmd/server
 
 FROM alpine:3.20
 
@@ -20,6 +21,7 @@ USER app
 COPY --from=build /out/coworking-server /usr/local/bin/coworking-server
 
 ENV HTTP_ADDR=:8081
+ENV DATABASE_URL=""
 EXPOSE 8081
 
 ENTRYPOINT ["/usr/local/bin/coworking-server"]

@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -44,12 +45,81 @@ func (r *BookingRepository) ListSpaces(_ context.Context) ([]domain.Space, error
 	return append([]domain.Space(nil), r.spaces...), nil
 }
 
-// ListBookings возвращает копию списка броней.
-func (r *BookingRepository) ListBookings(_ context.Context) ([]domain.Booking, error) {
+// ListBookings возвращает брони через тот же механизм фильтрации, что и PostgreSQL.
+func (r *BookingRepository) ListBookings(ctx context.Context) ([]domain.Booking, error) {
+	return r.SearchBookings(ctx, application.BookingFilter{})
+}
+
+// SearchBookings возвращает копию списка броней с применёнными фильтрами.
+func (r *BookingRepository) SearchBookings(_ context.Context, filter application.BookingFilter) ([]domain.Booking, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	return append([]domain.Booking(nil), r.bookings...), nil
+	spaceByID := make(map[int]domain.Space, len(r.spaces))
+	for _, space := range r.spaces {
+		spaceByID[space.ID] = space
+	}
+
+	bookings := make([]domain.Booking, 0, len(r.bookings))
+	for _, booking := range r.bookings {
+		space := spaceByID[booking.SpaceID]
+		if filter.Search != "" && !strings.Contains(strings.ToLower(booking.ClientName+" "+space.Name), strings.ToLower(filter.Search)) {
+			continue
+		}
+		if filter.SpaceType != "" && space.Type != filter.SpaceType {
+			continue
+		}
+		if filter.Status != "" && booking.Status != filter.Status {
+			continue
+		}
+		if filter.DateFrom != "" && booking.Date < filter.DateFrom {
+			continue
+		}
+		if filter.DateTo != "" && booking.Date > filter.DateTo {
+			continue
+		}
+		bookings = append(bookings, booking)
+	}
+	return bookings, nil
+}
+
+// BookingStatistics считает отчёт в тестовой реализации репозитория.
+func (r *BookingRepository) BookingStatistics(ctx context.Context, filter application.BookingFilter) (application.BookingStatistics, error) {
+	bookings, err := r.SearchBookings(ctx, filter)
+	if err != nil {
+		return application.BookingStatistics{}, err
+	}
+	spaces, err := r.ListSpaces(ctx)
+	if err != nil {
+		return application.BookingStatistics{}, err
+	}
+	spaceByID := make(map[int]domain.Space, len(spaces))
+	for _, space := range spaces {
+		spaceByID[space.ID] = space
+	}
+
+	stats := application.BookingStatistics{TotalBookings: len(bookings)}
+	byType := make(map[domain.SpaceType]*application.BookingTypeStatistics)
+	for _, booking := range bookings {
+		spaceType := spaceByID[booking.SpaceID].Type
+		entry := byType[spaceType]
+		if entry == nil {
+			entry = &application.BookingTypeStatistics{SpaceType: spaceType}
+			byType[spaceType] = entry
+		}
+		entry.Count++
+		if booking.Status == domain.BookingStatusConfirmed {
+			stats.ConfirmedBookings++
+			stats.Revenue += booking.Price
+			entry.Revenue += booking.Price
+		} else {
+			stats.CancelledBookings++
+		}
+	}
+	for _, entry := range byType {
+		stats.BySpaceType = append(stats.BySpaceType, *entry)
+	}
+	return stats, nil
 }
 
 // SaveBooking присваивает брони ID и сохраняет её.
@@ -79,14 +149,14 @@ func (r *BookingRepository) BookingByID(_ context.Context, id int) (domain.Booki
 	return domain.Booking{}, application.ErrBookingNotFound
 }
 
-// DeleteBooking удаляет бронь по идентификатору.
+// DeleteBooking отменяет бронь, сохраняя её для истории.
 func (r *BookingRepository) DeleteBooking(_ context.Context, id int) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	for i, booking := range r.bookings {
-		if booking.ID == id {
-			r.bookings = append(r.bookings[:i], r.bookings[i+1:]...)
+	for i := range r.bookings {
+		if r.bookings[i].ID == id && r.bookings[i].Status == domain.BookingStatusConfirmed {
+			r.bookings[i].Status = domain.BookingStatusCancelled
 			return nil
 		}
 	}

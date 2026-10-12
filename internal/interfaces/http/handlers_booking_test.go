@@ -54,6 +54,27 @@ func TestBookingPageRendersFormAndSeeds(t *testing.T) {
 	}
 }
 
+func TestBookingSearchFilterAndDatabaseStatistics(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/booking?search=Мария&space_type=desk&status=confirmed", nil)
+	rec := httptest.NewRecorder()
+	srv.Router().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET filtered /booking code = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "Мария Соколова") {
+		t.Error("matching booking is missing from filtered table")
+	}
+	if strings.Contains(body, "Студия «Волна»") {
+		t.Error("non-matching booking is present in filtered table")
+	}
+	if !strings.Contains(body, "name=\"search\" value=\"Мария\"") {
+		t.Error("search filter value was not kept in the form")
+	}
+}
+
 func TestBookingCreateRedirectsAndShows(t *testing.T) {
 	srv := newTestBookingServer(t)
 
@@ -156,8 +177,11 @@ func TestBookingCancelFlow(t *testing.T) {
 	srv.Router().ServeHTTP(rec, req)
 
 	body := rec.Body.String()
-	if strings.Contains(body, "Отменяемый клиент") {
-		t.Error("cancelled booking still visible in the table")
+	if !strings.Contains(body, "Отменяемый клиент") {
+		t.Error("cancelled booking missing from history table")
+	}
+	if !strings.Contains(body, "Отменена") {
+		t.Error("cancelled booking status missing from table")
 	}
 	if strings.Contains(body, "/booking/3/cancel") {
 		t.Error("cancelled booking still has a cancel button")

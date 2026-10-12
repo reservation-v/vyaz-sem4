@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -57,8 +58,32 @@ type bookingPageData struct {
 	StartHours []int
 	Durations  []int
 	Form       bookingFormData
+	Filter     bookingFilterView
+	Statistics bookingStatisticsView
 	Flash      string
 	FlashKind  string // "ok" или "err"
+}
+
+type bookingFilterView struct {
+	Search    string
+	SpaceType string
+	Status    string
+	DateFrom  string
+	DateTo    string
+}
+
+type bookingStatisticsView struct {
+	TotalBookings     int
+	ConfirmedBookings int
+	CancelledBookings int
+	Revenue           int
+	BySpaceType       []bookingTypeStatisticsView
+}
+
+type bookingTypeStatisticsView struct {
+	Label   string
+	Count   int
+	Revenue int
 }
 
 var spaceTypeLabels = map[domain.SpaceType]string{
@@ -77,15 +102,26 @@ const (
 
 // handleBookingPage показывает форму новой брони и список броней.
 func (s *Server) handleBookingPage(w http.ResponseWriter, r *http.Request) {
+	filter := bookingFilterFromRequest(r)
 	spaces, err := s.bookings.Spaces(r.Context())
 	if err != nil {
 		http.Error(w, "не удалось загрузить пространства", http.StatusInternalServerError)
 		return
 	}
 
-	bookings, err := s.bookings.Bookings(r.Context())
+	bookings, err := s.bookings.BookingsFiltered(r.Context(), filter)
 	if err != nil {
+		if errors.Is(err, application.ErrInvalidFilter) {
+			http.Error(w, "проверьте параметры фильтра бронирования", http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "не удалось загрузить брони", http.StatusInternalServerError)
+		return
+	}
+
+	statistics, err := s.bookings.Statistics(r.Context(), filter)
+	if err != nil {
+		http.Error(w, "не удалось рассчитать статистику", http.StatusInternalServerError)
 		return
 	}
 
@@ -107,6 +143,8 @@ func (s *Server) handleBookingPage(w http.ResponseWriter, r *http.Request) {
 		StartHours:   hourRange(bookingMinStartHour, bookingMaxStartHour),
 		Durations:    hourRange(1, bookingMaxHours),
 		Form:         form,
+		Filter:       toBookingFilterView(filter),
+		Statistics:   toBookingStatisticsView(statistics),
 		Flash:        flash,
 		FlashKind:    kind,
 	})
@@ -135,6 +173,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 
 	booking, err := s.bookings.CreateBooking(r.Context(), spaceID, r.FormValue("client"), r.FormValue("date"), rate, startHour, duration)
 	if err != nil {
+		log.Printf("create booking failed: %v", err)
 		s.renderBookingError(w, r, spaceID, string(rate), startHour, duration, err)
 		return
 	}
@@ -142,7 +181,7 @@ func (s *Server) handleBookingCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/booking?notice=created&id=%d", booking.ID), http.StatusSeeOther)
 }
 
-// handleBookingCancel отменяет бронь по её id (запись удаляется).
+// handleBookingCancel отменяет бронь по её id, сохраняя запись в истории.
 func (s *Server) handleBookingCancel(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -163,11 +202,22 @@ func (s *Server) handleBookingCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 // renderBookingError повторно показывает страницу с ошибкой и введёнными данными.
-func (s *Server) renderBookingError(w http.ResponseWriter, r *http.Request, spaceID int, rate string, startHour, duration int, err error) {
-	spaces, errSpaces := s.bookings.Spaces(r.Context())
-	bookings, errBookings := s.bookings.Bookings(r.Context())
-	if errSpaces != nil || errBookings != nil {
+func (s *Server) renderBookingError(w http.ResponseWriter, r *http.Request, spaceID int, rate string, startHour, duration int, cause error) {
+	spaces, err := s.bookings.Spaces(r.Context())
+	if err != nil {
+		http.Error(w, "не удалось загрузить пространства", http.StatusInternalServerError)
+		return
+	}
+
+	filter := bookingFilterFromRequest(r)
+	bookings, err := s.bookings.BookingsFiltered(r.Context(), filter)
+	if err != nil {
 		http.Error(w, "не удалось загрузить данные", http.StatusInternalServerError)
+		return
+	}
+	statistics, errStatistics := s.bookings.Statistics(r.Context(), filter)
+	if errStatistics != nil {
+		http.Error(w, "не удалось загрузить статистику", http.StatusInternalServerError)
 		return
 	}
 
@@ -187,7 +237,9 @@ func (s *Server) renderBookingError(w http.ResponseWriter, r *http.Request, spac
 		StartHours:   hourRange(bookingMinStartHour, bookingMaxStartHour),
 		Durations:    hourRange(1, bookingMaxHours),
 		Form:         form,
-		Flash:        bookingErrorMessage(err),
+		Filter:       toBookingFilterView(filter),
+		Statistics:   toBookingStatisticsView(statistics),
+		Flash:        bookingErrorMessage(cause),
 		FlashKind:    "err",
 	})
 }
@@ -218,7 +270,7 @@ func flashFromQuery(r *http.Request) (string, string) {
 	case "created":
 		return "Бронь создана. Оплата — на ресепшене при входе.", "ok"
 	case "cancelled":
-		return "Бронь отменена и удалена из списка. Депозит за переговорку вернётся в течение дня.", "ok"
+		return "Бронь отменена. Запись сохранена в истории, депозит за переговорку вернётся в течение дня.", "ok"
 	case "cancel-error":
 		return "Не удалось отменить бронь. Обновите страницу и попробуйте снова.", "err"
 	default:
@@ -232,6 +284,45 @@ func defaultDate(r *http.Request) string {
 		return date
 	}
 	return time.Now().Format("2006-01-02")
+}
+
+func bookingFilterFromRequest(r *http.Request) application.BookingFilter {
+	query := r.URL.Query()
+	return application.BookingFilter{
+		Search:    strings.TrimSpace(query.Get("search")),
+		SpaceType: domain.SpaceType(query.Get("space_type")),
+		Status:    domain.BookingStatus(query.Get("status")),
+		DateFrom:  query.Get("date_from"),
+		DateTo:    query.Get("date_to"),
+	}
+}
+
+func toBookingFilterView(filter application.BookingFilter) bookingFilterView {
+	return bookingFilterView{
+		Search: filter.Search, SpaceType: string(filter.SpaceType), Status: string(filter.Status),
+		DateFrom: filter.DateFrom, DateTo: filter.DateTo,
+	}
+}
+
+func toBookingStatisticsView(stats application.BookingStatistics) bookingStatisticsView {
+	view := bookingStatisticsView{
+		TotalBookings:     stats.TotalBookings,
+		ConfirmedBookings: stats.ConfirmedBookings,
+		CancelledBookings: stats.CancelledBookings,
+		Revenue:           stats.Revenue,
+		BySpaceType:       make([]bookingTypeStatisticsView, 0, len(stats.BySpaceType)),
+	}
+	labels := map[domain.SpaceType]string{
+		domain.SpaceTypeDesk:  "Деск-места",
+		domain.SpaceTypeCabin: "Кабинеты",
+		domain.SpaceTypeRoom:  "Переговорки",
+	}
+	for _, item := range stats.BySpaceType {
+		view.BySpaceType = append(view.BySpaceType, bookingTypeStatisticsView{
+			Label: labels[item.SpaceType], Count: item.Count, Revenue: item.Revenue,
+		})
+	}
+	return view
 }
 
 func toBookingSpaceViews(spaces []domain.Space) []bookingSpaceView {
@@ -268,7 +359,7 @@ func toBookingRowViews(spaces []domain.Space, bookings []domain.Booking) []booki
 			Price:         booking.Price,
 			Deposit:       booking.Deposit,
 			Total:         booking.Price + booking.Deposit,
-			CanCancel:     true,
+			CanCancel:     booking.Status == domain.BookingStatusConfirmed,
 		}
 
 		switch booking.Status {

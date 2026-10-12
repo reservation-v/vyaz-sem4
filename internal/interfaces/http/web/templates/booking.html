@@ -75,8 +75,65 @@
         </form>
       </div>
 
+      <div class="plain-card booking-stats">
+        <div class="booking-stats-head">
+          <div>
+            <h2>Отчёт по бронированиям</h2>
+            <p>Статистика рассчитана по записям PostgreSQL с учётом выбранных фильтров.</p>
+          </div>
+          <strong class="booking-revenue">{{.Statistics.Revenue | money}} ₽</strong>
+        </div>
+        <div class="booking-stat-grid">
+          <div><span>Всего записей</span><strong>{{.Statistics.TotalBookings}}</strong></div>
+          <div><span>Подтверждено</span><strong>{{.Statistics.ConfirmedBookings}}</strong></div>
+          <div><span>Отменено</span><strong>{{.Statistics.CancelledBookings}}</strong></div>
+        </div>
+        {{if .Statistics.BySpaceType}}
+        <ul class="booking-type-stats">
+          {{range .Statistics.BySpaceType}}
+          <li><span>{{.Label}}</span><span>{{.Count}} брон. · {{.Revenue | money}} ₽ подтверждённой выручки</span></li>
+          {{end}}
+        </ul>
+        {{end}}
+      </div>
+
       <div class="plain-card">
         <h2>Брони и встречи</h2>
+        <form class="booking-filter" method="get" action="/booking">
+          <div class="form-field">
+            <label class="form-label" for="bf-search">Клиент или пространство</label>
+            <input class="form-input" id="bf-search" type="search" name="search" value="{{.Filter.Search}}" placeholder="Например, Мария или переговорка">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="bf-type">Тип пространства</label>
+            <select class="form-input" id="bf-type" name="space_type">
+              <option value="">Все типы</option>
+              <option value="desk" {{if eq .Filter.SpaceType "desk"}}selected{{end}}>Деск-место</option>
+              <option value="cabin" {{if eq .Filter.SpaceType "cabin"}}selected{{end}}>Кабинет</option>
+              <option value="room" {{if eq .Filter.SpaceType "room"}}selected{{end}}>Переговорка</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="bf-status">Статус</label>
+            <select class="form-input" id="bf-status" name="status">
+              <option value="">Все статусы</option>
+              <option value="confirmed" {{if eq .Filter.Status "confirmed"}}selected{{end}}>Подтверждена</option>
+              <option value="cancelled" {{if eq .Filter.Status "cancelled"}}selected{{end}}>Отменена</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="bf-date-from">Дата с</label>
+            <input class="form-input" id="bf-date-from" type="date" name="date_from" value="{{.Filter.DateFrom}}">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="bf-date-to">Дата по</label>
+            <input class="form-input" id="bf-date-to" type="date" name="date_to" value="{{.Filter.DateTo}}">
+          </div>
+          <div class="booking-filter-actions">
+            <button class="btn btn-primary" type="submit">Найти</button>
+            <a class="btn btn-ghost" href="/booking">Сбросить</a>
+          </div>
+        </form>
         {{if .Rows}}
         <div class="table-scroll">
           <table class="data-table booking-table">
@@ -118,7 +175,7 @@
           </table>
         </div>
         {{else}}
-        <p class="table-note">Пока нет ни одной брони — создайте первую.</p>
+        <p class="table-note">По выбранным условиям записи не найдены.</p>
         {{end}}
       </div>
     </div>

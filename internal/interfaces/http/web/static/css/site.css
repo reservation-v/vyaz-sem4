@@ -333,7 +333,7 @@ a {
     transform: scale(0.98);
 }
 
-.btn-xml-featured {
+.btn-featured {
     padding: 15px 22px;
     border: 1px solid var(--accent);
     background: var(--surface-tint);
@@ -341,7 +341,7 @@ a {
     font-weight: 700;
 }
 
-.btn-xml-featured:hover {
+.btn-featured:hover {
     background: var(--accent);
     color: var(--accent-ink);
 }
@@ -1511,7 +1511,23 @@ a {
     color: var(--tag-soon-ink);
 }
 
-/* Статус брони — обычный текст без цветной плашки. */
+/* ---------- Отчёт и фильтры бронирования ---------- */
+.booking-stats-head { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
+.booking-stats-head h2 { margin: 0 0 4px; }
+.booking-stats-head p { margin: 0; color: var(--muted); font-size: .9rem; }
+.booking-revenue { color: var(--accent-strong); font-size: clamp(1.4rem, 3vw, 2rem); white-space: nowrap; }
+.booking-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.booking-stat-grid > div { display: grid; gap: 4px; padding: 14px; background: var(--bg); border-radius: 8px; }
+.booking-stat-grid span { color: var(--muted); font-size: .82rem; }
+.booking-stat-grid strong { font-size: 1.35rem; }
+.booking-type-stats { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.booking-type-stats li { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 8px; font-size: .88rem; }
+.booking-type-stats li span:last-child { color: var(--muted); text-align: right; }
+.booking-filter { display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); align-items: end; gap: 12px; margin: 16px 0 22px; }
+.booking-filter-actions { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; }
+.booking-filter-actions .btn { min-height: 42px; padding: 8px 16px; font-size: .9rem; }
+.booking-filter-actions a { display: inline-flex; align-items: center; text-decoration: none; }
+
 .status-text {
     font-size: 0.85rem;
     font-weight: 600;
@@ -1568,12 +1584,20 @@ a {
     .booking-form {
         grid-template-columns: 1fr;
     }
+
+    .booking-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
     .booking-form {
         grid-template-columns: 1fr;
     }
+
+    .booking-filter { grid-template-columns: 1fr; }
+    .booking-stats-head { flex-direction: column; }
+    .booking-stat-grid { grid-template-columns: 1fr; }
+    .booking-type-stats li { flex-direction: column; gap: 2px; }
+    .booking-type-stats li span:last-child { text-align: left; }
 
     .form-row {
         grid-template-columns: 1fr;
