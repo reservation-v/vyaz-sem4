@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"slices"
 	"strings"
 	"time"
@@ -12,27 +13,60 @@ import (
 	"coworking/internal/domain"
 )
 
-// BookingRepository — порт хранилища броней (DIP:
+// BookingRepository — порт хранилища пространств и броней (DIP:
 // интерфейс принадлежит application, реализация — infrastructure).
 type BookingRepository interface {
 	ListSpaces(ctx context.Context) ([]domain.Space, error)
-	ListBookings(ctx context.Context) ([]domain.Booking, error)
-	SearchBookings(ctx context.Context, filter BookingFilter) ([]domain.Booking, error)
+	ListSpaceTypes(ctx context.Context) ([]domain.SpaceType, error)
+
+	// SearchBookings возвращает брони с подтянутыми клиентом и пространством.
+	SearchBookings(ctx context.Context, filter BookingFilter) ([]BookingDetails, error)
+	BookingByID(ctx context.Context, id int) (BookingDetails, error)
 	BookingStatistics(ctx context.Context, filter BookingFilter) (BookingStatistics, error)
+	// DatabaseSummary возвращает краткое содержание всей БД для постоянной панели.
+	DatabaseSummary(ctx context.Context) (DatabaseSummary, error)
+
 	// SaveBooking сохраняет новую бронь и возвращает её с присвоенным ID.
 	SaveBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error)
-	BookingByID(ctx context.Context, id int) (domain.Booking, error)
-	// DeleteBooking отменяет бронь, сохраняя запись для истории и отчётов.
-	DeleteBooking(ctx context.Context, id int) error
+	// UpdateBooking сохраняет изменённую бронь (редактирование).
+	UpdateBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error)
+	// CancelBooking отменяет бронь, сохраняя запись для истории и отчётов.
+	CancelBooking(ctx context.Context, id int) error
+}
+
+// ClientRepository — порт хранилища клиентов.
+type ClientRepository interface {
+	ListClients(ctx context.Context) ([]domain.Client, error)
+	ClientByID(ctx context.Context, id int) (domain.Client, error)
+	SaveClient(ctx context.Context, client domain.Client) (domain.Client, error)
+	UpdateClient(ctx context.Context, client domain.Client) (domain.Client, error)
+}
+
+// BookingDetails — бронь с подтянутыми для показа данными клиента и пространства.
+type BookingDetails struct {
+	Booking        domain.Booking
+	ClientName     string
+	ClientCompany  string
+	SpaceName      string
+	SpaceTypeCode  domain.SpaceTypeCode
+	SpaceTypeTitle string
 }
 
 // BookingFilter ограничивает список броней и расчёт отчёта.
+//
+// Search — поиск по одному значению (совпадение с именем клиента,
+// компанией или названием пространства).
+// ClientName и SpaceType — поиск по двум синхронизированным значениям
+// из двух таблиц: клиенты (clients) и типы пространств (space_types).
+// SpaceID используется внутри для проверки занятости пространства.
 type BookingFilter struct {
-	Search    string
-	SpaceType domain.SpaceType
-	Status    domain.BookingStatus
-	DateFrom  string
-	DateTo    string
+	Search     string
+	ClientName string
+	SpaceType  domain.SpaceTypeCode
+	Status     domain.BookingStatus
+	DateFrom   string
+	DateTo     string
+	SpaceID    int
 }
 
 // BookingStatistics содержит агрегаты по отфильтрованным данным БД.
@@ -46,21 +80,56 @@ type BookingStatistics struct {
 
 // BookingTypeStatistics содержит показатели для одного типа пространства.
 type BookingTypeStatistics struct {
-	SpaceType domain.SpaceType
+	SpaceType domain.SpaceTypeCode
+	Title     string
 	Count     int
 	Revenue   int
 }
 
-// Ошибки сценария бронирования (handler превращает их в сообщения на странице).
+// DatabaseSummary — краткое содержание всей БД (агрегация для постоянной панели).
+type DatabaseSummary struct {
+	Offices           int
+	SpaceTypes        int
+	Spaces            int
+	Clients           int
+	Bookings          int
+	Confirmed         int
+	Cancelled         int
+	Revenue           int
+	TopSpaceTypeTitle string
+	TopSpaceTypeCount int
+}
+
+// BookingInput — данные формы брони для ввода и редактирования.
+type BookingInput struct {
+	SpaceID   int
+	ClientID  int
+	Date      string
+	Rate      domain.BookingRate
+	StartHour int
+	Duration  int
+}
+
+// ClientInput — данные формы клиента для ввода и редактирования.
+type ClientInput struct {
+	FullName string
+	Phone    string
+	Email    string
+	Company  string
+}
+
+// Ошибки сценариев (handler превращает их в сообщения на странице).
 var (
-	ErrInvalidClientName = errors.New("invalid client name")
-	ErrInvalidDate       = errors.New("invalid date")
-	ErrInvalidHours      = errors.New("invalid hours")
-	ErrSpaceNotFound     = errors.New("space not found")
-	ErrOverlap           = errors.New("space already booked")
-	ErrBookingNotFound   = errors.New("booking not found")
-	ErrRateNotAvailable  = errors.New("rate not available for this space")
-	ErrInvalidFilter     = errors.New("invalid booking filter")
+	ErrInvalidClientName    = errors.New("invalid client name")
+	ErrInvalidClientContact = errors.New("invalid client contact")
+	ErrInvalidDate          = errors.New("invalid date")
+	ErrInvalidHours         = errors.New("invalid hours")
+	ErrSpaceNotFound        = errors.New("space not found")
+	ErrClientNotFound       = errors.New("client not found")
+	ErrOverlap              = errors.New("space already booked")
+	ErrBookingNotFound      = errors.New("booking not found")
+	ErrRateNotAvailable     = errors.New("rate not available for this space")
+	ErrInvalidFilter        = errors.New("invalid booking filter")
 )
 
 const (
@@ -80,32 +149,44 @@ var periodPrices = map[domain.BookingRate]int{
 	domain.BookingRateMonth: 12000,
 }
 
-// BookingService — use case: создание, показ и отмена броней.
+// BookingService — use case: ввод, показ, редактирование и отмена броней,
+// а также ввод клиентов, поиск и агрегация по данным БД.
 type BookingService struct {
-	repo BookingRepository
-	now  func() time.Time // переопределяется в тестах
+	bookings BookingRepository
+	clients  ClientRepository
+	now      func() time.Time // переопределяется в тестах
 }
 
-// NewBookingService создаёт сценарий бронирования с переданным хранилищем.
-func NewBookingService(repo BookingRepository) *BookingService {
-	return &BookingService{repo: repo, now: time.Now}
+// NewBookingService создаёт сценарий бронирования с переданными хранилищами.
+func NewBookingService(bookings BookingRepository, clients ClientRepository) *BookingService {
+	return &BookingService{bookings: bookings, clients: clients, now: time.Now}
 }
 
 // Spaces возвращает пространства для брони: деск-места первыми, кабинеты в конце.
 func (s *BookingService) Spaces(ctx context.Context) ([]domain.Space, error) {
-	spaces, err := s.repo.ListSpaces(ctx)
+	spaces, err := s.bookings.ListSpaces(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	slices.SortStableFunc(spaces, func(a, b domain.Space) int {
-		return spaceTypeOrder(a.Type) - spaceTypeOrder(b.Type)
+		return spaceTypeOrder(a.Type.Code) - spaceTypeOrder(b.Type.Code)
 	})
 	return spaces, nil
 }
 
+// BookingByID возвращает одну бронь с данными клиента и пространства (для формы редактирования).
+func (s *BookingService) BookingByID(ctx context.Context, id int) (BookingDetails, error) {
+	return s.bookings.BookingByID(ctx, id)
+}
+
+// SpaceTypes возвращает классификатор типов пространств.
+func (s *BookingService) SpaceTypes(ctx context.Context) ([]domain.SpaceType, error) {
+	return s.bookings.ListSpaceTypes(ctx)
+}
+
 // spaceTypeOrder задаёт порядок типов в списках: деск-места, переговорки, кабинеты.
-func spaceTypeOrder(spaceType domain.SpaceType) int {
+func spaceTypeOrder(spaceType domain.SpaceTypeCode) int {
 	switch spaceType {
 	case domain.SpaceTypeDesk:
 		return 0
@@ -119,32 +200,32 @@ func spaceTypeOrder(spaceType domain.SpaceType) int {
 }
 
 // Bookings возвращает брони, отсортированные по дате и времени начала.
-func (s *BookingService) Bookings(ctx context.Context) ([]domain.Booking, error) {
+func (s *BookingService) Bookings(ctx context.Context) ([]BookingDetails, error) {
 	return s.BookingsFiltered(ctx, BookingFilter{})
 }
 
-// BookingsFiltered возвращает подходящие под фильтр брони по дате и времени.
-func (s *BookingService) BookingsFiltered(ctx context.Context, filter BookingFilter) ([]domain.Booking, error) {
+// BookingsFiltered возвращает подходящие под фильтр брони, отсортированные по времени.
+func (s *BookingService) BookingsFiltered(ctx context.Context, filter BookingFilter) ([]BookingDetails, error) {
 	if err := validateBookingFilter(filter); err != nil {
 		return nil, err
 	}
 
-	bookings, err := s.repo.SearchBookings(ctx, filter)
+	details, err := s.bookings.SearchBookings(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	slices.SortFunc(bookings, func(a, b domain.Booking) int {
-		if a.Date != b.Date {
-			return strings.Compare(a.Date, b.Date)
+	slices.SortFunc(details, func(a, b BookingDetails) int {
+		if a.Booking.Date != b.Booking.Date {
+			return strings.Compare(a.Booking.Date, b.Booking.Date)
 		}
-		if a.StartHour != b.StartHour {
-			return a.StartHour - b.StartHour
+		if a.Booking.StartHour != b.Booking.StartHour {
+			return a.Booking.StartHour - b.Booking.StartHour
 		}
-		return a.CreatedAt.Compare(b.CreatedAt)
+		return a.Booking.CreatedAt.Compare(b.Booking.CreatedAt)
 	})
 
-	return bookings, nil
+	return details, nil
 }
 
 // Statistics рассчитывает отчёт по данным бронирования, применяя те же фильтры, что и к списку.
@@ -152,7 +233,39 @@ func (s *BookingService) Statistics(ctx context.Context, filter BookingFilter) (
 	if err := validateBookingFilter(filter); err != nil {
 		return BookingStatistics{}, err
 	}
-	return s.repo.BookingStatistics(ctx, filter)
+	return s.bookings.BookingStatistics(ctx, filter)
+}
+
+// Summary возвращает краткое содержание всей БД для постоянной панели агрегации.
+func (s *BookingService) Summary(ctx context.Context) (DatabaseSummary, error) {
+	return s.bookings.DatabaseSummary(ctx)
+}
+
+// Clients возвращает список клиентов для выпадающего списка и таблицы.
+func (s *BookingService) Clients(ctx context.Context) ([]domain.Client, error) {
+	return s.clients.ListClients(ctx)
+}
+
+// CreateClient выполняет ввод нового клиента после контроля значений.
+func (s *BookingService) CreateClient(ctx context.Context, input ClientInput) (domain.Client, error) {
+	client, err := validateClientInput(input)
+	if err != nil {
+		return domain.Client{}, err
+	}
+	return s.clients.SaveClient(ctx, client)
+}
+
+// UpdateClient редактирует существующего клиента после контроля значений.
+func (s *BookingService) UpdateClient(ctx context.Context, id int, input ClientInput) (domain.Client, error) {
+	if _, err := s.clients.ClientByID(ctx, id); err != nil {
+		return domain.Client{}, err
+	}
+	client, err := validateClientInput(input)
+	if err != nil {
+		return domain.Client{}, err
+	}
+	client.ID = id
+	return s.clients.UpdateClient(ctx, client)
 }
 
 func validateBookingFilter(filter BookingFilter) error {
@@ -184,20 +297,49 @@ func validateBookingFilter(filter BookingFilter) error {
 	return nil
 }
 
-// CreateBooking создаёт бронь после проверок имени, периода, тарифа и занятости пространства.
-func (s *BookingService) CreateBooking(
-	ctx context.Context,
-	spaceID int,
-	clientName, date string,
-	rate domain.BookingRate,
-	startHour, duration int,
-) (domain.Booking, error) {
-	clientName = strings.TrimSpace(clientName)
-	if clientName == "" || utf8.RuneCountInString(clientName) > maxClientNameRunes {
-		return domain.Booking{}, fmt.Errorf("%w: имя клиента от 1 до %d символов", ErrInvalidClientName, maxClientNameRunes)
+// CreateBooking создаёт бронь после проверок пространства, клиента, периода,
+// тарифа и занятости пространства (ввод).
+func (s *BookingService) CreateBooking(ctx context.Context, input BookingInput) (domain.Booking, error) {
+	booking, err := s.prepareBooking(ctx, input)
+	if err != nil {
+		return domain.Booking{}, err
+	}
+	booking.Status = domain.BookingStatusConfirmed
+
+	if err := s.ensureNoOverlap(ctx, booking, 0); err != nil {
+		return domain.Booking{}, err
+	}
+	return s.bookings.SaveBooking(ctx, booking)
+}
+
+// UpdateBooking редактирует бронь: меняет пространство, клиента, дату, тариф и время.
+func (s *BookingService) UpdateBooking(ctx context.Context, id int, input BookingInput) (domain.Booking, error) {
+	existing, err := s.bookings.BookingByID(ctx, id)
+	if err != nil {
+		return domain.Booking{}, err
 	}
 
-	bookDate, err := time.Parse("2006-01-02", date)
+	booking, err := s.prepareBooking(ctx, input)
+	if err != nil {
+		return domain.Booking{}, err
+	}
+	booking.ID = id
+	booking.Status = existing.Booking.Status // статус меняется отдельно (отмена)
+
+	if err := s.ensureNoOverlap(ctx, booking, id); err != nil {
+		return domain.Booking{}, err
+	}
+	return s.bookings.UpdateBooking(ctx, booking)
+}
+
+// CancelBooking отменяет бронь, сохраняя запись в истории.
+func (s *BookingService) CancelBooking(ctx context.Context, id int) error {
+	return s.bookings.CancelBooking(ctx, id)
+}
+
+// prepareBooking проверяет входные данные и рассчитывает стоимость и депозит.
+func (s *BookingService) prepareBooking(ctx context.Context, input BookingInput) (domain.Booking, error) {
+	bookDate, err := time.Parse("2006-01-02", input.Date)
 	if err != nil {
 		return domain.Booking{}, fmt.Errorf("%w: дата в формате ГГГГ-ММ-ДД", ErrInvalidDate)
 	}
@@ -207,84 +349,116 @@ func (s *BookingService) CreateBooking(
 		return domain.Booking{}, fmt.Errorf("%w: дата не может быть в прошлом", ErrInvalidDate)
 	}
 
-	spaces, err := s.repo.ListSpaces(ctx)
+	space, err := s.spaceByID(ctx, input.SpaceID)
 	if err != nil {
 		return domain.Booking{}, err
 	}
-
-	var space domain.Space
-	for _, candidate := range spaces {
-		if candidate.ID == spaceID {
-			space = candidate
-			break
-		}
-	}
-	if space.ID == 0 {
-		return domain.Booking{}, fmt.Errorf("%w: id %d", ErrSpaceNotFound, spaceID)
+	if !space.IsActive {
+		return domain.Booking{}, fmt.Errorf("%w: пространство %q больше не доступно", ErrSpaceNotFound, space.Name)
 	}
 
-	// Периодные тарифы доступны только деск-местам.
-	if rate != domain.BookingRateHour && space.Type != domain.SpaceTypeDesk {
-		return domain.Booking{}, fmt.Errorf("%w: тариф %q для пространства %q", ErrRateNotAvailable, rate, space.Name)
+	if _, err := s.clients.ClientByID(ctx, input.ClientID); err != nil {
+		return domain.Booking{}, err
+	}
+
+	if input.Rate != domain.BookingRateHour && space.Type.Code != domain.SpaceTypeDesk {
+		return domain.Booking{}, fmt.Errorf("%w: тариф %q для пространства %q", ErrRateNotAvailable, input.Rate, space.Name)
 	}
 
 	booking := domain.Booking{
-		SpaceID:    spaceID,
-		ClientName: clientName,
-		Date:       date,
-		Rate:       rate,
-		Status:     domain.BookingStatusConfirmed,
+		SpaceID:  input.SpaceID,
+		ClientID: input.ClientID,
+		Date:     input.Date,
+		Rate:     input.Rate,
+		Deposit:  space.Deposit,
 	}
 
-	switch rate {
+	switch input.Rate {
 	case domain.BookingRateHour:
-		if startHour < minStartHour || startHour > maxStartHour ||
-			duration < 1 || duration > maxBookingHours ||
-			startHour+duration > maxEndHour {
+		if input.StartHour < minStartHour || input.StartHour > maxStartHour ||
+			input.Duration < 1 || input.Duration > maxBookingHours ||
+			input.StartHour+input.Duration > maxEndHour {
 			return domain.Booking{}, fmt.Errorf(
 				"%w: начало с %d:00 до %d:00, длительность от 1 до %d часов, конец брони не позже %d:00",
 				ErrInvalidHours, minStartHour, maxStartHour, maxBookingHours, maxEndHour,
 			)
 		}
-		booking.StartHour = startHour
-		booking.Duration = duration
-		booking.Price = space.PricePerHour * duration
-
+		booking.StartHour = input.StartHour
+		booking.Duration = input.Duration
+		booking.Price = space.PricePerHour * input.Duration
 	case domain.BookingRateDay:
+		booking.StartHour = minStartHour
 		booking.Duration = 1
-		booking.Price = periodPrices[rate]
+		booking.Price = periodPrices[input.Rate]
 	case domain.BookingRateWeek:
+		booking.StartHour = minStartHour
 		booking.Duration = 7
-		booking.Price = periodPrices[rate]
+		booking.Price = periodPrices[input.Rate]
 	case domain.BookingRateMonth:
+		booking.StartHour = minStartHour
 		booking.Duration = 1
-		booking.Price = periodPrices[rate]
+		booking.Price = periodPrices[input.Rate]
 	default:
-		return domain.Booking{}, fmt.Errorf("%w: неизвестный тариф %q", ErrInvalidHours, rate)
+		return domain.Booking{}, fmt.Errorf("%w: неизвестный тариф %q", ErrInvalidHours, input.Rate)
 	}
 
-	booking.Deposit = space.Deposit
+	return booking, nil
+}
 
-	bookings, err := s.repo.ListBookings(ctx)
+// spaceByID находит пространство по идентификатору.
+func (s *BookingService) spaceByID(ctx context.Context, id int) (domain.Space, error) {
+	spaces, err := s.bookings.ListSpaces(ctx)
 	if err != nil {
-		return domain.Booking{}, err
+		return domain.Space{}, err
+	}
+	for _, space := range spaces {
+		if space.ID == id {
+			return space, nil
+		}
+	}
+	return domain.Space{}, fmt.Errorf("%w: id %d", ErrSpaceNotFound, id)
+}
+
+// ensureNoOverlap проверяет, что пространство не занято другой действующей бронью.
+// excludeID исключает из проверки саму редактируемую бронь.
+func (s *BookingService) ensureNoOverlap(ctx context.Context, booking domain.Booking, excludeID int) error {
+	details, err := s.bookings.SearchBookings(ctx, BookingFilter{SpaceID: booking.SpaceID})
+	if err != nil {
+		return err
 	}
 
-	for _, existing := range bookings {
-		if existing.SpaceID != spaceID || existing.Status != domain.BookingStatusConfirmed {
+	for _, detail := range details {
+		existing := detail.Booking
+		if existing.ID == excludeID || existing.Status != domain.BookingStatusConfirmed {
 			continue
 		}
 		if bookingsOverlap(existing, booking) {
-			return domain.Booking{}, fmt.Errorf("%w: %s уже занят в эти даты", ErrOverlap, space.Name)
+			return fmt.Errorf("%w: пространство занято в выбранное время", ErrOverlap)
+		}
+	}
+	return nil
+}
+
+// validateClientInput контролирует значения атрибутов клиента.
+func validateClientInput(input ClientInput) (domain.Client, error) {
+	fullName := strings.TrimSpace(input.FullName)
+	if fullName == "" || utf8.RuneCountInString(fullName) > maxClientNameRunes {
+		return domain.Client{}, fmt.Errorf("%w: имя от 1 до %d символов", ErrInvalidClientName, maxClientNameRunes)
+	}
+
+	email := strings.TrimSpace(input.Email)
+	if email != "" {
+		if _, err := mail.ParseAddress(email); err != nil {
+			return domain.Client{}, fmt.Errorf("%w: укажите корректный e-mail", ErrInvalidClientContact)
 		}
 	}
 
-	return s.repo.SaveBooking(ctx, booking)
-}
-
-// CancelBooking отменяет бронь, сохраняя запись в истории.
-func (s *BookingService) CancelBooking(ctx context.Context, id int) error {
-	return s.repo.DeleteBooking(ctx, id)
+	return domain.Client{
+		FullName: fullName,
+		Phone:    strings.TrimSpace(input.Phone),
+		Email:    email,
+		Company:  strings.TrimSpace(input.Company),
+	}, nil
 }
 
 // bookingDays возвращает календарный охват брони — полуинтервал [start, end).

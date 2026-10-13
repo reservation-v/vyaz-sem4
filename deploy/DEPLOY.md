@@ -118,4 +118,4 @@ systemctl --user restart coworking
 - Диск: `df -h`, `du -sh ~/projects`.
 - Журнал systemd самограничен, в бесконечный файл ничего не пишем.
 - Не занимаем чужие порты; свой порт держим в одном месте — `deploy/coworking.service`.
-- БД (Лаба 3): PostgreSQL поднимем вторым контейнером, том `~/projects/coworking/data` уже примонтирован.
+- БД (Лаба 3): PostgreSQL поднимем вторым контейнером, том `~/projects/coworking/data` уже примонтирован. Хост-порт БД — `49733` (нестандартный, чтобы не занимать чужие; см. `deploy/coworking-db.service`).

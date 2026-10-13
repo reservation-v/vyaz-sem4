@@ -85,6 +85,9 @@ func (s *Server) Router() nethttp.Handler {
 	if s.bookings != nil {
 		mux.HandleFunc("GET /booking", s.handleBookingPage)
 		mux.HandleFunc("POST /booking", s.handleBookingCreate)
+		mux.HandleFunc("POST /booking/clients", s.handleClientCreate)
+		mux.HandleFunc("POST /booking/clients/{id}/edit", s.handleClientUpdate)
+		mux.HandleFunc("POST /booking/{id}", s.handleBookingUpdate)
 		mux.HandleFunc("POST /booking/{id}/cancel", s.handleBookingCancel)
 	} else {
 		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))

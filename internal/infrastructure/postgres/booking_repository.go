@@ -12,19 +12,21 @@ import (
 	"coworking/internal/domain"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var _ application.BookingRepository = (*BookingRepository)(nil)
+var (
+	_ application.BookingRepository = (*Repository)(nil)
+	_ application.ClientRepository  = (*Repository)(nil)
+)
 
-// BookingRepository реализует хранение каталога и броней в PostgreSQL.
-type BookingRepository struct {
+// Repository реализует хранение пространств, клиентов и броней в PostgreSQL.
+type Repository struct {
 	pool *pgxpool.Pool
 }
 
-// NewBookingRepository открывает пул подключений PostgreSQL.
-func NewBookingRepository(ctx context.Context, databaseURL string) (*BookingRepository, error) {
+// NewRepository открывает пул подключений PostgreSQL.
+func NewRepository(ctx context.Context, databaseURL string) (*Repository, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse database URL: %w", err)
@@ -42,19 +44,23 @@ func NewBookingRepository(ctx context.Context, databaseURL string) (*BookingRepo
 		pool.Close()
 		return nil, fmt.Errorf("ping PostgreSQL: %w", err)
 	}
-	return &BookingRepository{pool: pool}, nil
+	return &Repository{pool: pool}, nil
 }
 
 // Close освобождает подключения к базе данных.
-func (r *BookingRepository) Close() {
+func (r *Repository) Close() {
 	r.pool.Close()
 }
 
-func (r *BookingRepository) ListSpaces(ctx context.Context) ([]domain.Space, error) {
+const spaceColumns = `s.id, s.office_id, s.name, s.capacity, s.price_per_hour, s.deposit, s.is_active,
+	t.id, t.code, t.title, t.description`
+
+func (r *Repository) ListSpaces(ctx context.Context) ([]domain.Space, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, name, type, capacity, price_per_hour, deposit
-		FROM spaces
-		ORDER BY type, name, id`)
+		SELECT `+spaceColumns+`
+		FROM spaces s
+		JOIN space_types t ON t.id = s.space_type_id
+		ORDER BY s.name, s.id`)
 	if err != nil {
 		return nil, fmt.Errorf("query spaces: %w", err)
 	}
@@ -62,9 +68,9 @@ func (r *BookingRepository) ListSpaces(ctx context.Context) ([]domain.Space, err
 
 	spaces := make([]domain.Space, 0)
 	for rows.Next() {
-		var space domain.Space
-		if err := rows.Scan(&space.ID, &space.Name, &space.Type, &space.Capacity, &space.PricePerHour, &space.Deposit); err != nil {
-			return nil, fmt.Errorf("scan space: %w", err)
+		space, err := scanSpace(rows)
+		if err != nil {
+			return nil, err
 		}
 		spaces = append(spaces, space)
 	}
@@ -74,47 +80,168 @@ func (r *BookingRepository) ListSpaces(ctx context.Context) ([]domain.Space, err
 	return spaces, nil
 }
 
-func (r *BookingRepository) ListBookings(ctx context.Context) ([]domain.Booking, error) {
-	return r.SearchBookings(ctx, application.BookingFilter{})
+func (r *Repository) ListSpaceTypes(ctx context.Context) ([]domain.SpaceType, error) {
+	rows, err := r.pool.Query(ctx, `SELECT id, code, title, description FROM space_types ORDER BY id`)
+	if err != nil {
+		return nil, fmt.Errorf("query space types: %w", err)
+	}
+	defer rows.Close()
+
+	types := make([]domain.SpaceType, 0)
+	for rows.Next() {
+		var (
+			item     domain.SpaceType
+			codeText string
+		)
+		if err := rows.Scan(&item.ID, &codeText, &item.Title, &item.Description); err != nil {
+			return nil, fmt.Errorf("scan space type: %w", err)
+		}
+		item.Code = domain.SpaceTypeCode(codeText)
+		types = append(types, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate space types: %w", err)
+	}
+	return types, nil
 }
 
-func (r *BookingRepository) SearchBookings(ctx context.Context, filter application.BookingFilter) ([]domain.Booking, error) {
-	query := `
-		SELECT b.id, b.space_id, b.client_name, b.book_date::text, b.rate,
-		       b.start_hour, b.duration, b.price, b.deposit, b.status, b.created_at
-		FROM bookings b
-		JOIN spaces s ON s.id = b.space_id
-		WHERE ($1 = '' OR b.client_name ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
-		  AND ($2 = '' OR s.type = $2)
-		  AND ($3 = '' OR b.status = $3)
-		  AND ($4::date IS NULL OR b.book_date >= $4::date)
-		  AND ($5::date IS NULL OR b.book_date <= $5::date)
-		ORDER BY b.book_date, b.start_hour, b.created_at`
-	rows, err := r.pool.Query(ctx, query,
+func (r *Repository) ListClients(ctx context.Context) ([]domain.Client, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, full_name, phone, email, company, created_at
+		FROM clients
+		ORDER BY full_name, id`)
+	if err != nil {
+		return nil, fmt.Errorf("query clients: %w", err)
+	}
+	defer rows.Close()
+
+	clients := make([]domain.Client, 0)
+	for rows.Next() {
+		client, err := scanClient(rows)
+		if err != nil {
+			return nil, err
+		}
+		clients = append(clients, client)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate clients: %w", err)
+	}
+	return clients, nil
+}
+
+func (r *Repository) ClientByID(ctx context.Context, id int) (domain.Client, error) {
+	const query = `SELECT id, full_name, phone, email, company, created_at FROM clients WHERE id = $1`
+	client, err := scanClient(r.pool.QueryRow(ctx, query, id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Client{}, application.ErrClientNotFound
+		}
+		return domain.Client{}, fmt.Errorf("query client %d: %w", id, err)
+	}
+	return client, nil
+}
+
+func (r *Repository) SaveClient(ctx context.Context, client domain.Client) (domain.Client, error) {
+	const query = `
+		INSERT INTO clients (full_name, phone, email, company)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at`
+	if err := r.pool.QueryRow(ctx, query, client.FullName, client.Phone, client.Email, client.Company).
+		Scan(&client.ID, &client.CreatedAt); err != nil {
+		return domain.Client{}, fmt.Errorf("insert client: %w", err)
+	}
+	return client, nil
+}
+
+func (r *Repository) UpdateClient(ctx context.Context, client domain.Client) (domain.Client, error) {
+	const query = `
+		UPDATE clients
+		SET full_name = $2, phone = $3, email = $4, company = $5
+		WHERE id = $1
+		RETURNING created_at`
+	if err := r.pool.QueryRow(ctx, query, client.ID, client.FullName, client.Phone, client.Email, client.Company).
+		Scan(&client.CreatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Client{}, application.ErrClientNotFound
+		}
+		return domain.Client{}, fmt.Errorf("update client %d: %w", client.ID, err)
+	}
+	return client, nil
+}
+
+// bookingColumns — общий список полей с соединением клиентов и пространств.
+const bookingColumns = `b.id, b.space_id, b.client_id, b.book_date::text, b.rate, b.start_hour,
+	b.duration, b.price, b.deposit, b.status, b.created_at,
+	c.full_name, c.company, s.name, t.code, t.title`
+
+// bookingFilterClause — общие условия поиска по двум таблицам (clients и space_types).
+const bookingFilterClause = `
+	WHERE ($1 = '' OR c.full_name ILIKE '%' || $1 || '%' OR c.company ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
+	  AND ($2 = '' OR c.full_name ILIKE '%' || $2 || '%')
+	  AND ($3 = '' OR t.code = $3)
+	  AND ($4 = '' OR b.status = $4)
+	  AND ($5::date IS NULL OR b.book_date >= $5::date)
+	  AND ($6::date IS NULL OR b.book_date <= $6::date)`
+
+func bookingFilterArgs(filter application.BookingFilter) []any {
+	return []any{
 		filter.Search,
+		filter.ClientName,
 		string(filter.SpaceType),
 		string(filter.Status),
 		emptyToNil(filter.DateFrom),
 		emptyToNil(filter.DateTo),
-	)
+	}
+}
+
+func (r *Repository) SearchBookings(ctx context.Context, filter application.BookingFilter) ([]application.BookingDetails, error) {
+	query := `
+		SELECT ` + bookingColumns + `
+		FROM bookings b
+		JOIN clients c ON c.id = b.client_id
+		JOIN spaces s ON s.id = b.space_id
+		JOIN space_types t ON t.id = s.space_type_id` + bookingFilterClause + `
+		  AND ($7 = 0 OR b.space_id = $7)
+		ORDER BY b.book_date, b.start_hour, b.created_at`
+	rows, err := r.pool.Query(ctx, query, append(bookingFilterArgs(filter), filter.SpaceID)...)
 	if err != nil {
 		return nil, fmt.Errorf("search bookings: %w", err)
 	}
 	defer rows.Close()
-	return scanBookings(rows)
+	return scanBookingDetails(rows)
 }
 
-func (r *BookingRepository) BookingStatistics(ctx context.Context, filter application.BookingFilter) (application.BookingStatistics, error) {
-	const query = `
+func (r *Repository) BookingByID(ctx context.Context, id int) (application.BookingDetails, error) {
+	query := `SELECT ` + bookingColumns + `
+		FROM bookings b
+		JOIN clients c ON c.id = b.client_id
+		JOIN spaces s ON s.id = b.space_id
+		JOIN space_types t ON t.id = s.space_type_id
+		WHERE b.id = $1`
+	rows, err := r.pool.Query(ctx, query, id)
+	if err != nil {
+		return application.BookingDetails{}, fmt.Errorf("query booking %d: %w", id, err)
+	}
+	defer rows.Close()
+
+	details, err := scanBookingDetails(rows)
+	if err != nil {
+		return application.BookingDetails{}, fmt.Errorf("query booking %d: %w", id, err)
+	}
+	if len(details) == 0 {
+		return application.BookingDetails{}, application.ErrBookingNotFound
+	}
+	return details[0], nil
+}
+
+func (r *Repository) BookingStatistics(ctx context.Context, filter application.BookingFilter) (application.BookingStatistics, error) {
+	summaryQuery := `
 		WITH filtered AS (
-			SELECT b.status, b.price, s.type
+			SELECT b.status, b.price
 			FROM bookings b
+			JOIN clients c ON c.id = b.client_id
 			JOIN spaces s ON s.id = b.space_id
-			WHERE ($1 = '' OR b.client_name ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
-			  AND ($2 = '' OR s.type = $2)
-			  AND ($3 = '' OR b.status = $3)
-			  AND ($4::date IS NULL OR b.book_date >= $4::date)
-			  AND ($5::date IS NULL OR b.book_date <= $5::date)
+			JOIN space_types t ON t.id = s.space_type_id` + bookingFilterClause + `
 		)
 		SELECT COUNT(*),
 		       COUNT(*) FILTER (WHERE status = 'confirmed'),
@@ -122,71 +249,88 @@ func (r *BookingRepository) BookingStatistics(ctx context.Context, filter applic
 		       COALESCE(SUM(price) FILTER (WHERE status = 'confirmed'), 0)
 		FROM filtered`
 	var stats application.BookingStatistics
-	if err := r.pool.QueryRow(ctx, query,
-		filter.Search,
-		string(filter.SpaceType),
-		string(filter.Status),
-		emptyToNil(filter.DateFrom),
-		emptyToNil(filter.DateTo),
-	).Scan(&stats.TotalBookings, &stats.ConfirmedBookings, &stats.CancelledBookings, &stats.Revenue); err != nil {
+	if err := r.pool.QueryRow(ctx, summaryQuery, bookingFilterArgs(filter)...).
+		Scan(&stats.TotalBookings, &stats.ConfirmedBookings, &stats.CancelledBookings, &stats.Revenue); err != nil {
 		return application.BookingStatistics{}, fmt.Errorf("query booking statistics: %w", err)
 	}
 
-	byTypeRows, err := r.pool.Query(ctx, `
-		SELECT s.type, COUNT(*), COALESCE(SUM(b.price) FILTER (WHERE b.status = 'confirmed'), 0)
+	byTypeQuery := `
+		SELECT t.code, t.title, COUNT(*), COALESCE(SUM(b.price) FILTER (WHERE b.status = 'confirmed'), 0)
 		FROM bookings b
+		JOIN clients c ON c.id = b.client_id
 		JOIN spaces s ON s.id = b.space_id
-		WHERE ($1 = '' OR b.client_name ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
-		  AND ($2 = '' OR s.type = $2)
-		  AND ($3 = '' OR b.status = $3)
-		  AND ($4::date IS NULL OR b.book_date >= $4::date)
-		  AND ($5::date IS NULL OR b.book_date <= $5::date)
-		GROUP BY s.type
-		ORDER BY s.type`,
-		filter.Search,
-		string(filter.SpaceType),
-		string(filter.Status),
-		emptyToNil(filter.DateFrom),
-		emptyToNil(filter.DateTo),
-	)
+		JOIN space_types t ON t.id = s.space_type_id` + bookingFilterClause + `
+		GROUP BY t.code, t.title
+		ORDER BY t.code`
+	rows, err := r.pool.Query(ctx, byTypeQuery, bookingFilterArgs(filter)...)
 	if err != nil {
 		return application.BookingStatistics{}, fmt.Errorf("query booking statistics by type: %w", err)
 	}
-	defer byTypeRows.Close()
+	defer rows.Close()
+
 	stats.BySpaceType = make([]application.BookingTypeStatistics, 0)
-	for byTypeRows.Next() {
-		var item application.BookingTypeStatistics
-		if err := byTypeRows.Scan(&item.SpaceType, &item.Count, &item.Revenue); err != nil {
+	for rows.Next() {
+		var (
+			item     application.BookingTypeStatistics
+			codeText string
+		)
+		if err := rows.Scan(&codeText, &item.Title, &item.Count, &item.Revenue); err != nil {
 			return application.BookingStatistics{}, fmt.Errorf("scan booking statistics by type: %w", err)
 		}
+		item.SpaceType = domain.SpaceTypeCode(codeText)
 		stats.BySpaceType = append(stats.BySpaceType, item)
 	}
-	if err := byTypeRows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return application.BookingStatistics{}, fmt.Errorf("iterate booking statistics by type: %w", err)
 	}
 	return stats, nil
 }
 
-func (r *BookingRepository) SaveBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error) {
+func (r *Repository) DatabaseSummary(ctx context.Context) (application.DatabaseSummary, error) {
+	const query = `
+		SELECT (SELECT COUNT(*) FROM offices),
+		       (SELECT COUNT(*) FROM space_types),
+		       (SELECT COUNT(*) FROM spaces),
+		       (SELECT COUNT(*) FROM clients),
+		       (SELECT COUNT(*) FROM bookings),
+		       (SELECT COUNT(*) FROM bookings WHERE status = 'confirmed'),
+		       (SELECT COUNT(*) FROM bookings WHERE status = 'cancelled'),
+		       (SELECT COALESCE(SUM(price), 0) FROM bookings WHERE status = 'confirmed')`
+	var summary application.DatabaseSummary
+	if err := r.pool.QueryRow(ctx, query).Scan(
+		&summary.Offices, &summary.SpaceTypes, &summary.Spaces, &summary.Clients,
+		&summary.Bookings, &summary.Confirmed, &summary.Cancelled, &summary.Revenue,
+	); err != nil {
+		return application.DatabaseSummary{}, fmt.Errorf("query database summary: %w", err)
+	}
+
+	const topQuery = `
+		SELECT t.title, COUNT(*)
+		FROM bookings b
+		JOIN spaces s ON s.id = b.space_id
+		JOIN space_types t ON t.id = s.space_type_id
+		WHERE b.status = 'confirmed'
+		GROUP BY t.title
+		ORDER BY COUNT(*) DESC, t.title
+		LIMIT 1`
+	if err := r.pool.QueryRow(ctx, topQuery).Scan(&summary.TopSpaceTypeTitle, &summary.TopSpaceTypeCount); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return application.DatabaseSummary{}, fmt.Errorf("query top space type: %w", err)
+	}
+	return summary, nil
+}
+
+func (r *Repository) SaveBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error) {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		return domain.Booking{}, fmt.Errorf("begin save booking transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	var exists bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM spaces WHERE id = $1)`, booking.SpaceID).Scan(&exists); err != nil {
-		return domain.Booking{}, fmt.Errorf("check booking space: %w", err)
-	}
-	if !exists {
-		return domain.Booking{}, fmt.Errorf("%w: id %d", application.ErrSpaceNotFound, booking.SpaceID)
-	}
-	var lockedSpaceID int
-	if err := tx.QueryRow(ctx, `SELECT id FROM spaces WHERE id = $1 FOR UPDATE`, booking.SpaceID).Scan(&lockedSpaceID); err != nil {
-		return domain.Booking{}, fmt.Errorf("lock booking space: %w", err)
+	if err := lockSpace(ctx, tx, booking.SpaceID); err != nil {
+		return domain.Booking{}, err
 	}
 
-	conflict, err := hasOverlappingBooking(ctx, tx, booking)
+	conflict, err := hasOverlappingBooking(ctx, tx, booking, 0)
 	if err != nil {
 		return domain.Booking{}, err
 	}
@@ -194,11 +338,11 @@ func (r *BookingRepository) SaveBooking(ctx context.Context, booking domain.Book
 		return domain.Booking{}, fmt.Errorf("%w: space id %d", application.ErrOverlap, booking.SpaceID)
 	}
 
-	query := `INSERT INTO bookings (space_id, client_name, book_date, rate, start_hour, duration, price, deposit, status)
+	const query = `INSERT INTO bookings (space_id, client_id, book_date, rate, start_hour, duration, price, deposit, status)
 		VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9)
 		RETURNING id, created_at`
 	if err := tx.QueryRow(ctx, query,
-		booking.SpaceID, booking.ClientName, booking.Date, string(booking.Rate), booking.StartHour,
+		booking.SpaceID, booking.ClientID, booking.Date, string(booking.Rate), booking.StartHour,
 		booking.Duration, booking.Price, booking.Deposit, string(booking.Status),
 	).Scan(&booking.ID, &booking.CreatedAt); err != nil {
 		return domain.Booking{}, fmt.Errorf("insert booking: %w", err)
@@ -209,13 +353,79 @@ func (r *BookingRepository) SaveBooking(ctx context.Context, booking domain.Book
 	return booking, nil
 }
 
-func hasOverlappingBooking(ctx context.Context, tx pgx.Tx, booking domain.Booking) (bool, error) {
+func (r *Repository) UpdateBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error) {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return domain.Booking{}, fmt.Errorf("begin update booking transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if err := lockSpace(ctx, tx, booking.SpaceID); err != nil {
+		return domain.Booking{}, err
+	}
+
+	conflict, err := hasOverlappingBooking(ctx, tx, booking, booking.ID)
+	if err != nil {
+		return domain.Booking{}, err
+	}
+	if conflict {
+		return domain.Booking{}, fmt.Errorf("%w: space id %d", application.ErrOverlap, booking.SpaceID)
+	}
+
+	const query = `UPDATE bookings
+		SET space_id = $2, client_id = $3, book_date = $4::date, rate = $5,
+		    start_hour = $6, duration = $7, price = $8, deposit = $9, status = $10
+		WHERE id = $1
+		RETURNING created_at`
+	if err := tx.QueryRow(ctx, query,
+		booking.ID, booking.SpaceID, booking.ClientID, booking.Date, string(booking.Rate), booking.StartHour,
+		booking.Duration, booking.Price, booking.Deposit, string(booking.Status),
+	).Scan(&booking.CreatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Booking{}, application.ErrBookingNotFound
+		}
+		return domain.Booking{}, fmt.Errorf("update booking %d: %w", booking.ID, err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return domain.Booking{}, fmt.Errorf("commit update booking transaction: %w", err)
+	}
+	return booking, nil
+}
+
+func (r *Repository) CancelBooking(ctx context.Context, id int) error {
+	command, err := r.pool.Exec(ctx, `UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'confirmed'`, id)
+	if err != nil {
+		return fmt.Errorf("cancel booking %d: %w", id, err)
+	}
+	if command.RowsAffected() == 0 {
+		return application.ErrBookingNotFound
+	}
+	return nil
+}
+
+// lockSpace проверяет, что пространство существует, активно, и берёт по нему блокировку.
+func lockSpace(ctx context.Context, tx pgx.Tx, spaceID int) error {
+	var isActive bool
+	if err := tx.QueryRow(ctx, `SELECT is_active FROM spaces WHERE id = $1 FOR UPDATE`, spaceID).Scan(&isActive); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("%w: id %d", application.ErrSpaceNotFound, spaceID)
+		}
+		return fmt.Errorf("lock booking space: %w", err)
+	}
+	if !isActive {
+		return fmt.Errorf("%w: id %d", application.ErrSpaceNotFound, spaceID)
+	}
+	return nil
+}
+
+func hasOverlappingBooking(ctx context.Context, tx pgx.Tx, booking domain.Booking, excludeID int) (bool, error) {
 	const query = `
 		SELECT EXISTS (
 			SELECT 1
 			FROM bookings b
 			WHERE b.space_id = $1
 			  AND b.status = 'confirmed'
+			  AND b.id <> $7
 			  AND b.book_date < $3::date
 			  AND $2::date < CASE b.rate
 				WHEN 'week' THEN b.book_date + 7
@@ -230,51 +440,76 @@ func hasOverlappingBooking(ctx context.Context, tx pgx.Tx, booking domain.Bookin
 				ELSE TRUE
 			  END
 		)`
-	var conflict bool
-	endDate := booking.Date
 	parsedDate, err := time.Parse("2006-01-02", booking.Date)
 	if err != nil {
 		return false, fmt.Errorf("parse booking date: %w", err)
 	}
+
+	endDate := parsedDate.AddDate(0, 0, 1)
 	switch booking.Rate {
 	case domain.BookingRateWeek:
-		endDate = parsedDate.AddDate(0, 0, 7).Format("2006-01-02")
+		endDate = parsedDate.AddDate(0, 0, 7)
 	case domain.BookingRateMonth:
-		endDate = parsedDate.AddDate(0, 1, 0).Format("2006-01-02")
-	default:
-		endDate = parsedDate.AddDate(0, 0, 1).Format("2006-01-02")
+		endDate = parsedDate.AddDate(0, 1, 0)
 	}
-	if err := tx.QueryRow(ctx, query, booking.SpaceID, booking.Date, endDate, string(booking.Rate), booking.StartHour, booking.Duration).Scan(&conflict); err != nil {
+
+	var conflict bool
+	if err := tx.QueryRow(ctx, query, booking.SpaceID, booking.Date, endDate.Format("2006-01-02"),
+		string(booking.Rate), booking.StartHour, booking.Duration, excludeID).Scan(&conflict); err != nil {
 		return false, fmt.Errorf("check booking overlap: %w", err)
 	}
 	return conflict, nil
 }
 
-func (r *BookingRepository) BookingByID(ctx context.Context, id int) (domain.Booking, error) {
-	const query = `SELECT id, space_id, client_name, book_date::text, rate, start_hour, duration,
-		price, deposit, status, created_at FROM bookings WHERE id = $1`
-	var booking domain.Booking
-	if err := r.pool.QueryRow(ctx, query, id).Scan(
-		&booking.ID, &booking.SpaceID, &booking.ClientName, &booking.Date, &booking.Rate,
-		&booking.StartHour, &booking.Duration, &booking.Price, &booking.Deposit, &booking.Status, &booking.CreatedAt,
+func scanSpace(row pgx.Row) (domain.Space, error) {
+	var (
+		space    domain.Space
+		codeText string
+	)
+	if err := row.Scan(
+		&space.ID, &space.OfficeID, &space.Name, &space.Capacity, &space.PricePerHour, &space.Deposit, &space.IsActive,
+		&space.Type.ID, &codeText, &space.Type.Title, &space.Type.Description,
 	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Booking{}, application.ErrBookingNotFound
-		}
-		return domain.Booking{}, fmt.Errorf("query booking %d: %w", id, err)
+		return domain.Space{}, fmt.Errorf("scan space: %w", err)
 	}
-	return booking, nil
+	space.Type.Code = domain.SpaceTypeCode(codeText)
+	return space, nil
 }
 
-func (r *BookingRepository) DeleteBooking(ctx context.Context, id int) error {
-	command, err := r.pool.Exec(ctx, `UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'confirmed'`, id)
-	if err != nil {
-		return fmt.Errorf("cancel booking %d: %w", id, err)
+func scanClient(row pgx.Row) (domain.Client, error) {
+	var client domain.Client
+	if err := row.Scan(&client.ID, &client.FullName, &client.Phone, &client.Email, &client.Company, &client.CreatedAt); err != nil {
+		return domain.Client{}, err
 	}
-	if command.RowsAffected() == 0 {
-		return application.ErrBookingNotFound
+	return client, nil
+}
+
+func scanBookingDetails(rows pgx.Rows) ([]application.BookingDetails, error) {
+	details := make([]application.BookingDetails, 0)
+	for rows.Next() {
+		var (
+			item     application.BookingDetails
+			rateText string
+			statText string
+			codeText string
+		)
+		if err := rows.Scan(
+			&item.Booking.ID, &item.Booking.SpaceID, &item.Booking.ClientID, &item.Booking.Date,
+			&rateText, &item.Booking.StartHour, &item.Booking.Duration, &item.Booking.Price,
+			&item.Booking.Deposit, &statText, &item.Booking.CreatedAt,
+			&item.ClientName, &item.ClientCompany, &item.SpaceName, &codeText, &item.SpaceTypeTitle,
+		); err != nil {
+			return nil, fmt.Errorf("scan booking: %w", err)
+		}
+		item.Booking.Rate = domain.BookingRate(rateText)
+		item.Booking.Status = domain.BookingStatus(statText)
+		item.SpaceTypeCode = domain.SpaceTypeCode(codeText)
+		details = append(details, item)
 	}
-	return nil
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate bookings: %w", err)
+	}
+	return details, nil
 }
 
 func emptyToNil(value string) any {
@@ -282,24 +517,6 @@ func emptyToNil(value string) any {
 		return nil
 	}
 	return value
-}
-
-func scanBookings(rows pgx.Rows) ([]domain.Booking, error) {
-	bookings := make([]domain.Booking, 0)
-	for rows.Next() {
-		var booking domain.Booking
-		if err := rows.Scan(
-			&booking.ID, &booking.SpaceID, &booking.ClientName, &booking.Date, &booking.Rate,
-			&booking.StartHour, &booking.Duration, &booking.Price, &booking.Deposit, &booking.Status, &booking.CreatedAt,
-		); err != nil {
-			return nil, fmt.Errorf("scan booking: %w", err)
-		}
-		bookings = append(bookings, booking)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate bookings: %w", err)
-	}
-	return bookings, nil
 }
 
 // MigrationURI переводит DATABASE_URL в формат URI, ожидаемый драйвером migrate.
@@ -316,9 +533,4 @@ func MigrationURI(databaseURL string) (string, error) {
 	query.Set("x-multi-statement", "true")
 	parsed.RawQuery = query.Encode()
 	return strings.TrimSpace(parsed.String()), nil
-}
-
-func isUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }

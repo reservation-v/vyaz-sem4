@@ -38,7 +38,7 @@ func RunMigrations(databaseURL string) error {
 
 // Ping waits for PostgreSQL to become available until ctx is cancelled.
 func Ping(ctx context.Context, databaseURL string) error {
-	repo, err := NewBookingRepository(ctx, databaseURL)
+	repo, err := NewRepository(ctx, databaseURL)
 	if err != nil {
 		return err
 	}

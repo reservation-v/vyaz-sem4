@@ -32,12 +32,12 @@ func main() {
 		log.Fatalf("database migrations: %v", err)
 	}
 
-	bookingRepo, err := postgres.NewBookingRepository(ctx, databaseURL)
+	repository, err := postgres.NewRepository(ctx, databaseURL)
 	if err != nil {
 		log.Fatalf("connect to PostgreSQL: %v", err)
 	}
-	defer bookingRepo.Close()
-	bookings := application.NewBookingService(bookingRepo)
+	defer repository.Close()
+	bookings := application.NewBookingService(repository, repository)
 
 	server, err := apphttp.NewServer(catalog,
 		apphttp.WithSiteTitle("Место"),

@@ -3,28 +3,49 @@
   <div class="shell page-inner">
     <p class="hero-kicker">Приложение к базе данных</p>
     <h1 class="page-title">Бронирование мест и переговорок</h1>
-    <p class="page-lead">Выберите стол, кабинет или переговорку, тариф, дату и время — сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
-
-    {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
+    <p class="page-lead">Ввод и редактирование броней и клиентов, поиск по базе и краткое содержание БД. Выберите стол, кабинет или переговорку, тариф, дату и время — сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
 
     <div class="booking-stack">
+      <aside class="db-summary" aria-label="Краткое содержание базы данных">
+        <div class="db-summary-head">
+          <span class="db-summary-title">База данных «Место»</span>
+          <span class="db-summary-top">Чаще всего бронируют: <strong>{{.Summary.TopSpaceTypeTitle}}</strong> ({{.Summary.TopSpaceTypeCount}})</span>
+        </div>
+        <dl class="db-summary-grid">
+          <div><dt>Локации</dt><dd>{{.Summary.Offices}}</dd></div>
+          <div><dt>Типы пространств</dt><dd>{{.Summary.SpaceTypes}}</dd></div>
+          <div><dt>Пространства</dt><dd>{{.Summary.Spaces}}</dd></div>
+          <div><dt>Клиенты</dt><dd>{{.Summary.Clients}}</dd></div>
+          <div><dt>Брони</dt><dd>{{.Summary.Bookings}}</dd></div>
+          <div><dt>Подтверждено</dt><dd>{{.Summary.Confirmed}}</dd></div>
+          <div><dt>Отменено</dt><dd>{{.Summary.Cancelled}}</dd></div>
+          <div><dt>Выручка</dt><dd>{{.Summary.Revenue | money}} ₽</dd></div>
+        </dl>
+      </aside>
+
+      {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
+
       <div class="plain-card">
-        <h2>Новая бронь</h2>
-        <form class="booking-form" id="booking-form" method="post" action="/booking" autocomplete="off">
+        <h2>{{if eq .Form.Mode "edit"}}Редактирование брони №{{.Form.ID}}{{else}}Новая бронь{{end}}</h2>
+        <form class="booking-form" id="booking-form" data-ajax method="post" action="{{if eq .Form.Mode "edit"}}/booking/{{.Form.ID}}{{else}}/booking{{end}}" autocomplete="off">
           <div class="form-field span-2">
-            <label class="form-label" for="bf-space">Пространство</label>
-            <select class="form-input" id="bf-space" name="space_id" required>
-              {{range .Spaces}}
-              <option value="{{.ID}}" data-price="{{.PricePerHour}}" data-deposit="{{.Deposit}}" data-type="{{.Type}}" {{if eq $.Form.SpaceID .ID}}selected{{end}}>
-                {{.Name}} — {{.TypeLabel}}, {{.Capacity}} чел., {{.PricePerHour | money}} ₽/ч{{if .Deposit}}, депозит {{.Deposit | money}} ₽{{end}}
-              </option>
+            <label class="form-label" for="bf-client">Клиент</label>
+            <select class="form-input" id="bf-client" name="client_id" required>
+              {{range .Clients}}
+              <option value="{{.ID}}" {{if eq $.Form.ClientID .ID}}selected{{end}}>{{.FullName}}{{if .Company}} — {{.Company}}{{end}}</option>
               {{end}}
             </select>
           </div>
 
           <div class="form-field span-2">
-            <label class="form-label" for="bf-client">Клиент</label>
-            <input class="form-input" id="bf-client" type="text" name="client" value="{{.Form.Client}}" maxlength="80" placeholder="Имя или название команды" required>
+            <label class="form-label" for="bf-space">Пространство</label>
+            <select class="form-input" id="bf-space" name="space_id" required>
+              {{range .Spaces}}
+              <option value="{{.ID}}" data-price="{{.PricePerHour}}" data-deposit="{{.Deposit}}" data-type="{{.TypeCode}}" {{if eq $.Form.SpaceID .ID}}selected{{end}}>
+                {{.Name}} — {{.TypeTitle}}, {{.Capacity}} чел., {{.PricePerHour | money}} ₽/ч{{if .Deposit}}, депозит {{.Deposit | money}} ₽{{end}}
+              </option>
+              {{end}}
+            </select>
           </div>
 
           <div class="form-row">
@@ -71,15 +92,132 @@
             <p class="widget-out" id="bf-total">Выберите параметры — цена появится здесь.</p>
           </div>
 
-          <button class="btn btn-primary" type="submit">Забронировать</button>
+          <div class="booking-form-actions">
+            <button class="btn btn-primary" type="submit">{{if eq .Form.Mode "edit"}}Сохранить изменения{{else}}Забронировать{{end}}</button>
+            {{if eq .Form.Mode "edit"}}<a class="btn btn-ghost" data-ajax href="/booking">Отменить редактирование</a>{{end}}
+          </div>
+        </form>
+      </div>
+
+      <div class="plain-card" id="clients">
+        <h2>{{if eq .ClientForm.Mode "edit"}}Редактирование клиента №{{.ClientForm.ID}}{{else}}Новый клиент{{end}}</h2>
+        <form class="client-form" data-ajax method="post" action="{{if eq .ClientForm.Mode "edit"}}/booking/clients/{{.ClientForm.ID}}/edit{{else}}/booking/clients{{end}}" autocomplete="off">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="cf-name">Имя / команда</label>
+              <input class="form-input" id="cf-name" type="text" name="full_name" value="{{.ClientForm.FullName}}" maxlength="100" placeholder="Например, Мария Соколова" required>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="cf-company">Компания</label>
+              <input class="form-input" id="cf-company" type="text" name="company" value="{{.ClientForm.Company}}" maxlength="100" placeholder="Необязательно">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="cf-phone">Телефон</label>
+              <input class="form-input" id="cf-phone" type="tel" name="phone" value="{{.ClientForm.Phone}}" maxlength="30" placeholder="+7 ___ ___-__-__">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="cf-email">E-mail</label>
+              <input class="form-input" id="cf-email" type="email" name="email" value="{{.ClientForm.Email}}" maxlength="120" placeholder="client@example.com">
+            </div>
+          </div>
+          <div class="booking-form-actions">
+            <button class="btn btn-primary" type="submit">{{if eq .ClientForm.Mode "edit"}}Сохранить клиента{{else}}Добавить клиента{{end}}</button>
+            {{if eq .ClientForm.Mode "edit"}}<a class="btn btn-ghost" data-ajax href="/booking#clients">Отменить</a>{{end}}
+          </div>
+        </form>
+
+        {{if .Clients}}
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>Клиент</th><th>Компания</th><th>Телефон</th><th>E-mail</th><th></th></tr>
+            </thead>
+            <tbody>
+              {{range .Clients}}
+              <tr>
+                <td>{{.FullName}}</td>
+                <td>{{if .Company}}{{.Company}}{{else}}—{{end}}</td>
+                <td>{{if .Phone}}{{.Phone}}{{else}}—{{end}}</td>
+                <td>{{if .Email}}{{.Email}}{{else}}—{{end}}</td>
+                <td><a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Изменить</a></td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <p class="table-note">Клиентов пока нет — добавьте первого, чтобы создать бронь.</p>
+        {{end}}
+      </div>
+
+      <div class="plain-card">
+        <h2>Поиск по базе данных</h2>
+        <p class="table-note">Поиск работает по одному значению и по двум значениям из двух таблиц одновременно.</p>
+        <form class="booking-filter" data-ajax method="get" action="/booking">
+          <fieldset class="filter-group">
+            <legend>По одному значению</legend>
+            <div class="form-field">
+              <label class="form-label" for="bf-search">Клиент, компания или пространство</label>
+              <input class="form-input" id="bf-search" type="search" name="search" value="{{.Filter.Search}}" placeholder="Например, Мария или переговорка">
+            </div>
+          </fieldset>
+
+          <fieldset class="filter-group">
+            <legend>По двум значениям (клиенты + типы пространств)</legend>
+            <div class="form-field">
+              <label class="form-label" for="bf-client-filter">Клиент</label>
+              <select class="form-input" id="bf-client-filter" name="client_name">
+                <option value="">Все клиенты</option>
+                {{range .Clients}}
+                <option value="{{.FullName}}" {{if eq $.Filter.ClientName .FullName}}selected{{end}}>{{.FullName}}</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-type">Тип пространства</label>
+              <select class="form-input" id="bf-type" name="space_type">
+                <option value="">Все типы</option>
+                {{range .SpaceTypes}}
+                <option value="{{.Code}}" {{if eq $.Filter.SpaceType .Code}}selected{{end}}>{{.Title}}</option>
+                {{end}}
+              </select>
+            </div>
+          </fieldset>
+
+          <fieldset class="filter-group">
+            <legend>Статус и даты</legend>
+            <div class="form-field">
+              <label class="form-label" for="bf-status">Статус</label>
+              <select class="form-input" id="bf-status" name="status">
+                <option value="">Все статусы</option>
+                <option value="confirmed" {{if eq .Filter.Status "confirmed"}}selected{{end}}>Подтверждена</option>
+                <option value="cancelled" {{if eq .Filter.Status "cancelled"}}selected{{end}}>Отменена</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-date-from">Дата с</label>
+              <input class="form-input" id="bf-date-from" type="date" name="date_from" value="{{.Filter.DateFrom}}">
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-date-to">Дата по</label>
+              <input class="form-input" id="bf-date-to" type="date" name="date_to" value="{{.Filter.DateTo}}">
+            </div>
+          </fieldset>
+
+          <div class="booking-filter-actions">
+            <button class="btn btn-primary" type="submit">Найти</button>
+            <a class="btn btn-ghost" data-ajax href="/booking">Сбросить</a>
+          </div>
         </form>
       </div>
 
       <div class="plain-card booking-stats">
         <div class="booking-stats-head">
           <div>
-            <h2>Отчёт по бронированиям</h2>
-            <p>Статистика рассчитана по записям PostgreSQL с учётом выбранных фильтров.</p>
+            <h2>Отчёт по найденным бронированиям</h2>
+            <p>Агрегация рассчитана по записям PostgreSQL с учётом условий поиска.</p>
           </div>
           <strong class="booking-revenue">{{.Statistics.Revenue | money}} ₽</strong>
         </div>
@@ -91,93 +229,62 @@
         {{if .Statistics.BySpaceType}}
         <ul class="booking-type-stats">
           {{range .Statistics.BySpaceType}}
-          <li><span>{{.Label}}</span><span>{{.Count}} брон. · {{.Revenue | money}} ₽ подтверждённой выручки</span></li>
+          <li><span>{{.Title}}</span><span>{{.Count}} брон. · {{.Revenue | money}} ₽ подтверждённой выручки</span></li>
           {{end}}
         </ul>
         {{end}}
       </div>
 
-      <div class="plain-card">
-        <h2>Брони и встречи</h2>
-        <form class="booking-filter" method="get" action="/booking">
-          <div class="form-field">
-            <label class="form-label" for="bf-search">Клиент или пространство</label>
-            <input class="form-input" id="bf-search" type="search" name="search" value="{{.Filter.Search}}" placeholder="Например, Мария или переговорка">
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="bf-type">Тип пространства</label>
-            <select class="form-input" id="bf-type" name="space_type">
-              <option value="">Все типы</option>
-              <option value="desk" {{if eq .Filter.SpaceType "desk"}}selected{{end}}>Деск-место</option>
-              <option value="cabin" {{if eq .Filter.SpaceType "cabin"}}selected{{end}}>Кабинет</option>
-              <option value="room" {{if eq .Filter.SpaceType "room"}}selected{{end}}>Переговорка</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="bf-status">Статус</label>
-            <select class="form-input" id="bf-status" name="status">
-              <option value="">Все статусы</option>
-              <option value="confirmed" {{if eq .Filter.Status "confirmed"}}selected{{end}}>Подтверждена</option>
-              <option value="cancelled" {{if eq .Filter.Status "cancelled"}}selected{{end}}>Отменена</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="bf-date-from">Дата с</label>
-            <input class="form-input" id="bf-date-from" type="date" name="date_from" value="{{.Filter.DateFrom}}">
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="bf-date-to">Дата по</label>
-            <input class="form-input" id="bf-date-to" type="date" name="date_to" value="{{.Filter.DateTo}}">
-          </div>
-          <div class="booking-filter-actions">
-            <button class="btn btn-primary" type="submit">Найти</button>
-            <a class="btn btn-ghost" href="/booking">Сбросить</a>
-          </div>
-        </form>
-        {{if .Rows}}
-        <div class="table-scroll">
-          <table class="data-table booking-table">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Время</th>
-                <th>Пространство</th>
-                <th>Клиент</th>
-                <th>Период</th>
-                <th>Сумма</th>
-                <th>Статус</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {{range .Rows}}
-              <tr>
-                <td>{{.DateLabel | shortDate}}</td>
-                <td>{{.TimeLabel}}</td>
-                <td>{{.Space}}</td>
-                <td>{{.Client}}</td>
-                <td>{{.DurationLabel}}</td>
-                <td class="price">
-                  {{.Total | money}} ₽
-                  {{if .Deposit}}<span class="table-sub">({{.Price | money}} ₽ + депозит {{.Deposit | money}} ₽)</span>{{end}}
-                </td>
-                <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
-                <td>
-                  {{if .CanCancel}}
-                  <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
-                    <button class="btn-mini" type="submit">Отменить</button>
-                  </form>
-                  {{end}}
-                </td>
-              </tr>
-              {{end}}
-            </tbody>
-          </table>
-        </div>
-        {{else}}
-        <p class="table-note">По выбранным условиям записи не найдены.</p>
-        {{end}}
+    </div>
+  </div>
+
+  <div class="booking-table-section">
+    <div class="plain-card">
+      <h2>Брони и встречи</h2>
+      {{if .Rows}}
+      <div class="table-scroll">
+        <table class="data-table booking-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Время</th>
+              <th>Пространство</th>
+              <th>Клиент</th>
+              <th>Период</th>
+              <th>Сумма</th>
+              <th>Статус</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Rows}}
+            <tr>
+              <td>{{.DateLabel | shortDate}}</td>
+              <td>{{.TimeLabel}}</td>
+              <td>{{.Space}}<span class="table-sub">{{.SpaceType}}</span></td>
+              <td>{{.Client}}{{if .Company}}<span class="table-sub">{{.Company}}</span>{{end}}</td>
+              <td>{{.DurationLabel}}</td>
+              <td class="price">
+                {{.Total | money}} ₽
+                {{if .Deposit}}<span class="table-sub">({{.Price | money}} ₽ + депозит {{.Deposit | money}} ₽)</span>{{end}}
+              </td>
+              <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
+              <td class="booking-row-actions">
+                <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Изменить</a>
+                {{if .CanCancel}}
+                <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
+                  <button class="btn-mini" type="submit">Отменить</button>
+                </form>
+                {{end}}
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
       </div>
+      {{else}}
+      <p class="table-note">По выбранным условиям записи не найдены.</p>
+      {{end}}
     </div>
   </div>
 </section>

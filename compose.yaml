@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: coworking
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:49733:5432"
     volumes:
       - coworking-postgres:/var/lib/postgresql
     healthcheck:

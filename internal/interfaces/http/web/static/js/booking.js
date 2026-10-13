@@ -2,7 +2,9 @@
 // - живой расчёт стоимости по пространству, тарифу и длительности;
 // - периодные тарифы (день/неделя/месяц) только для деск-мест;
 // - длительность почасовой брони ограничена закрытием офиса (22:00);
-// - отправка формы и отмена брони через fetch — страница не перезагружается.
+// - формы ввода, редактирования, отмены и поиска отправляются через fetch
+//   и заменяют блок приложения без перезагрузки страницы, чтобы не уезжать
+//   в начало страницы.
 (function () {
   "use strict";
 
@@ -128,7 +130,29 @@
     init();
   }
 
-  function bindForm(form) {
+  // Загружает страницу по адресу и подменяет блок приложения.
+  function fetchInto(url) {
+    return fetch(url)
+      .then(function (response) {
+        return response.text();
+      })
+      .then(replaceApp);
+  }
+
+  // Переход по внутренней ссылке без перезагрузки (с прокруткой к якорю).
+  function navigate(url, hash) {
+    window.history.pushState(null, "", url);
+    fetchInto(url).then(function () {
+      if (hash) {
+        var target = document.querySelector(hash);
+        if (target) {
+          target.scrollIntoView({ block: "start" });
+        }
+      }
+    });
+  }
+
+  function bindLiveCalc(form) {
     if (!form) {
       return;
     }
@@ -143,22 +167,42 @@
         updateTotal(form);
       }
     });
+  }
 
-    form.addEventListener("submit", function (event) {
-      event.preventDefault();
-      var submit = form.querySelector('button[type="submit"]');
-      submit.disabled = true;
+  // Отправляет форму через fetch и подменяет блок приложения ответом.
+  // Работает и для POST (бронь, клиент), и для GET (поиск).
+  function submitAjax(form) {
+    var method = (form.getAttribute("method") || "get").toLowerCase();
+    var button = form.querySelector('button[type="submit"]');
+    if (button) {
+      button.disabled = true;
+    }
 
-      fetch(form.action, { method: "POST", body: new FormData(form) })
-        .then(function (response) {
-          return response.text();
-        })
-        .then(replaceApp)
-        .catch(function () {
-          submit.disabled = false;
-          form.submit();
-        });
-    });
+    var request;
+    if (method === "post") {
+      request = fetch(form.action, { method: "POST", body: new FormData(form) });
+    } else {
+      var params = new URLSearchParams(new FormData(form)).toString();
+      var url = params ? form.action + "?" + params : form.action;
+      window.history.pushState(null, "", url);
+      request = fetch(url);
+    }
+
+    request
+      .then(function (response) {
+        // После POST сервер делает редирект (PRG) — приводим адрес к итоговому.
+        if (method === "post" && response.redirected) {
+          window.history.replaceState(null, "", response.url);
+        }
+        return response.text();
+      })
+      .then(replaceApp)
+      .catch(function () {
+        if (button) {
+          button.disabled = false;
+        }
+        form.submit();
+      });
   }
 
   function init() {
@@ -167,26 +211,45 @@
       return;
     }
 
-    bindForm(app.querySelector("#booking-form"));
+    bindLiveCalc(app.querySelector("#booking-form"));
 
-    // Отмена брони: делегирование на весь блок, кнопки «Отменить» переживают перерисовку.
+    // Делегирование: обработчик переживает подмену блока после fetch.
     app.addEventListener("submit", function (event) {
-      var cancelForm = event.target.closest("form[data-cancel]");
-      if (!cancelForm) {
+      var form = event.target;
+
+      if (form.hasAttribute("data-cancel")) {
+        event.preventDefault();
+        fetch(form.action, { method: "POST" })
+          .then(function (response) {
+            return response.text();
+          })
+          .then(replaceApp)
+          .catch(function () {
+            form.submit();
+          });
+        return;
+      }
+
+      if (form.hasAttribute("data-ajax")) {
+        event.preventDefault();
+        submitAjax(form);
+      }
+    });
+
+    // Внутренние ссылки (сброс поиска, редактирование, отмена) - без перезагрузки.
+    app.addEventListener("click", function (event) {
+      var link = event.target.closest ? event.target.closest("a[data-ajax]") : null;
+      if (!link) {
         return;
       }
       event.preventDefault();
-
-      fetch(cancelForm.action, { method: "POST" })
-        .then(function (response) {
-          return response.text();
-        })
-        .then(replaceApp)
-        .catch(function () {
-          cancelForm.submit();
-        });
+      navigate(link.getAttribute("href"), link.hash);
     });
   }
+
+  window.addEventListener("popstate", function () {
+    fetchInto(window.location.href);
+  });
 
   init();
 })();

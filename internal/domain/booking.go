@@ -2,26 +2,57 @@ package domain
 
 import "time"
 
-// SpaceType — тип пространства коворкинга.
-type SpaceType string
+// SpaceTypeCode — код типа пространства (классификатор space_types).
+type SpaceTypeCode string
 
 const (
 	// SpaceTypeDesk — деск-место в открытой зоне.
-	SpaceTypeDesk SpaceType = "desk"
+	SpaceTypeDesk SpaceTypeCode = "desk"
 	// SpaceTypeCabin — кабинет для команды.
-	SpaceTypeCabin SpaceType = "cabin"
+	SpaceTypeCabin SpaceTypeCode = "cabin"
 	// SpaceTypeRoom — переговорка.
-	SpaceTypeRoom SpaceType = "room"
+	SpaceTypeRoom SpaceTypeCode = "room"
 )
+
+// SpaceType — классификатор типов пространств (таблица space_types).
+type SpaceType struct {
+	ID          int
+	Code        SpaceTypeCode
+	Title       string
+	Description string
+}
+
+// Office — локация коворкинга (таблица offices).
+type Office struct {
+	ID      int
+	Name    string
+	City    string
+	Address string
+	Floor   int
+	Phone   string
+	Email   string
+}
 
 // Space — пространство, которое можно забронировать (стол, кабинет, переговорка).
 type Space struct {
 	ID           int
+	OfficeID     int
 	Name         string
-	Type         SpaceType
-	Capacity     int // сколько человек помещается
-	PricePerHour int // рубли за час аренды
-	Deposit      int // депозит за переговорку, 0 для столов и кабинетов
+	Type         SpaceType // тип-классификатор, подтягивается соединением с space_types
+	Capacity     int       // сколько человек помещается
+	PricePerHour int       // рубли за час аренды
+	Deposit      int       // депозит за переговорку, 0 для столов и кабинетов
+	IsActive     bool      // доступно ли пространство для новых броней
+}
+
+// Client — клиент коворкинга (таблица clients).
+type Client struct {
+	ID        int
+	FullName  string
+	Phone     string
+	Email     string
+	Company   string
+	CreatedAt time.Time
 }
 
 // BookingRate — тариф брони: почасовая, подневная, понедельная, помесячная.
@@ -46,15 +77,15 @@ const (
 
 // Booking — бронь пространства на отрезок времени.
 type Booking struct {
-	ID         int
-	SpaceID    int
-	ClientName string
-	Date       string // дата брони, YYYY-MM-DD
-	Rate       BookingRate
-	StartHour  int // час начала для почасовой брони, с 8 до 21
-	Duration   int // часы для почасовой; дни (1/7/1) для день/неделя/месяц
-	Price      int // стоимость аренды
-	Deposit    int // депозит (только переговорки)
-	Status     BookingStatus
-	CreatedAt  time.Time
+	ID        int
+	SpaceID   int
+	ClientID  int
+	Date      string // дата брони, YYYY-MM-DD
+	Rate      BookingRate
+	StartHour int // час начала для почасовой брони, с 8 до 21
+	Duration  int // часы для почасовой; 1/7/1 для день/неделя/месяц
+	Price     int // стоимость аренды
+	Deposit   int // депозит (только переговорки)
+	Status    BookingStatus
+	CreatedAt time.Time
 }
