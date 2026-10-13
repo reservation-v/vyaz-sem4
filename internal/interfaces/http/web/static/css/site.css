@@ -1753,3 +1753,196 @@ a.btn-mini {
         grid-template-columns: 1fr;
     }
 }
+
+/* ---------- Схема БД (модальное окно) ---------- */
+
+.page-actions {
+    margin: 0 0 18px;
+}
+
+.schema-open {
+    cursor: pointer;
+}
+
+.schema-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(35, 32, 25, 0.55);
+}
+
+.schema-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(1120px, 100%);
+    max-height: min(92vh, 1000px);
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.schema-dialog-head {
+    flex: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.schema-dialog-head h2 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+}
+
+.schema-dialog-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.schema-close {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-btn);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        border-color 200ms,
+        color 200ms;
+}
+
+.schema-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.schema-canvas-scroll {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    background: var(--bg);
+}
+
+.schema-canvas {
+    position: relative;
+    width: 1180px;
+    height: 990px;
+    margin: 0 auto;
+}
+
+.schema-links {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1180px;
+    height: 990px;
+}
+
+.schema-link {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.6;
+}
+
+.schema-arrow-head {
+    fill: var(--accent);
+}
+
+.schema-table {
+    position: absolute;
+    width: 400px;
+    background: var(--surface);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px var(--line), var(--shadow-lift);
+    overflow: hidden;
+}
+
+.schema-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--surface-tint);
+    color: var(--tint-ink);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.schema-count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.schema-col {
+    display: grid;
+    grid-template-columns: 116px 100px 1fr;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    padding: 0 14px;
+    border-top: 1px solid var(--line);
+    font-size: 0.72rem;
+}
+
+.schema-col-key {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-weight: 700;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.schema-col-type,
+.schema-col-desc {
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.schema-col.is-fk .schema-col-type {
+    color: var(--accent-strong);
+    font-weight: 600;
+}
+
+/* Блокировка прокрутки фона, пока открыта схема. */
+body.schema-locked {
+    overflow: hidden;
+}
+
+/* Подсказки в формах поиска. */
+.filter-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.filter-hint code {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.95em;
+    color: var(--tint-ink);
+}
+
+@media (max-width: 900px) {
+    .schema-modal {
+        padding: 12px;
+    }
+}

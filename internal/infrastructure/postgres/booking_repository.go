@@ -174,10 +174,13 @@ const bookingColumns = `b.id, b.space_id, b.client_id, b.book_date::text, b.rate
 	b.duration, b.price, b.deposit, b.status, b.created_at,
 	c.full_name, c.company, s.name, t.code, t.title`
 
-// bookingFilterClause — общие условия поиска по двум таблицам (clients и space_types).
+// bookingFilterClause — общие условия поиска.
+// $1 — поиск по одному значению (клиент ИЛИ компания ИЛИ пространство);
+// $2 — клиент (id) для поиска по двум синхронизированным значениям;
+// $3 — тип пространства; $4 — статус; $5, $6 — диапазон дат.
 const bookingFilterClause = `
 	WHERE ($1 = '' OR c.full_name ILIKE '%' || $1 || '%' OR c.company ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
-	  AND ($2 = '' OR c.full_name ILIKE '%' || $2 || '%')
+	  AND ($2 = 0 OR b.client_id = $2)
 	  AND ($3 = '' OR t.code = $3)
 	  AND ($4 = '' OR b.status = $4)
 	  AND ($5::date IS NULL OR b.book_date >= $5::date)
@@ -186,7 +189,7 @@ const bookingFilterClause = `
 func bookingFilterArgs(filter application.BookingFilter) []any {
 	return []any{
 		filter.Search,
-		filter.ClientName,
+		filter.ClientID,
 		string(filter.SpaceType),
 		string(filter.Status),
 		emptyToNil(filter.DateFrom),

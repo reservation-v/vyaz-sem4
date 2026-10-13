@@ -5,6 +5,94 @@
     <h1 class="page-title">Бронирование мест и переговорок</h1>
     <p class="page-lead">Ввод и редактирование броней и клиентов, поиск по базе и краткое содержание БД. Выберите стол, кабинет или переговорку, тариф, дату и время — сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
 
+    <div class="page-actions">
+      <button class="btn btn-ghost schema-open" type="button" data-schema-open aria-haspopup="dialog" aria-controls="schema-modal">Показать схему БД</button>
+    </div>
+
+    <div class="schema-modal" id="schema-modal" data-schema-modal role="dialog" aria-modal="true" aria-labelledby="schema-modal-title" hidden>
+      <div class="schema-dialog">
+        <div class="schema-dialog-head">
+          <div>
+            <h2 id="schema-modal-title">Схема базы данных «Место»</h2>
+            <p>5 таблиц, 36 атрибутов. Стрелки - внешние ключи (связи между таблицами).</p>
+          </div>
+          <button class="schema-close" type="button" data-schema-close aria-label="Закрыть схему">×</button>
+        </div>
+
+        <div class="schema-canvas-scroll">
+          <div class="schema-canvas">
+            <svg class="schema-links" viewBox="0 0 1180 990" width="1180" height="990" aria-hidden="true">
+              <defs>
+                <marker id="schema-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                  <path class="schema-arrow-head" d="M0,0 L10,5 L0,10 z"/>
+                </marker>
+              </defs>
+              <path class="schema-link" d="M240,236 V300 H560 V320" marker-end="url(#schema-arrow)"/>
+              <path class="schema-link" d="M920,164 V300 H800 V320" marker-end="url(#schema-arrow)"/>
+              <path class="schema-link" d="M680,550 V640" marker-end="url(#schema-arrow)"/>
+              <path class="schema-link" d="M440,732 H480" marker-end="url(#schema-arrow)"/>
+            </svg>
+
+            <div class="schema-table" style="left:40px; top:30px;">
+              <div class="schema-table-head"><span>offices</span><span class="schema-count">7 атрибутов</span></div>
+              <div class="schema-col"><span class="schema-col-key">id</span><span class="schema-col-type">serial PK</span><span class="schema-col-desc">Порядковый номер локации</span></div>
+              <div class="schema-col"><span class="schema-col-key">name</span><span class="schema-col-type">text</span><span class="schema-col-desc">Название офиса</span></div>
+              <div class="schema-col"><span class="schema-col-key">city</span><span class="schema-col-type">text</span><span class="schema-col-desc">Город</span></div>
+              <div class="schema-col"><span class="schema-col-key">address</span><span class="schema-col-type">text</span><span class="schema-col-desc">Адрес</span></div>
+              <div class="schema-col"><span class="schema-col-key">floor</span><span class="schema-col-type">int</span><span class="schema-col-desc">Этаж (CHECK &gt; 0)</span></div>
+              <div class="schema-col"><span class="schema-col-key">phone</span><span class="schema-col-type">text</span><span class="schema-col-desc">Телефон</span></div>
+              <div class="schema-col"><span class="schema-col-key">email</span><span class="schema-col-type">text</span><span class="schema-col-desc">E-mail (CHECK формат)</span></div>
+            </div>
+
+            <div class="schema-table" style="left:720px; top:30px;">
+              <div class="schema-table-head"><span>space_types</span><span class="schema-count">4 атрибута</span></div>
+              <div class="schema-col"><span class="schema-col-key">id</span><span class="schema-col-type">serial PK</span><span class="schema-col-desc">Порядковый номер</span></div>
+              <div class="schema-col"><span class="schema-col-key">code</span><span class="schema-col-type">text UNIQUE</span><span class="schema-col-desc">Ключ: desk / cabin / room</span></div>
+              <div class="schema-col"><span class="schema-col-key">title</span><span class="schema-col-type">text</span><span class="schema-col-desc">Название типа</span></div>
+              <div class="schema-col"><span class="schema-col-key">description</span><span class="schema-col-type">text</span><span class="schema-col-desc">Описание</span></div>
+            </div>
+
+            <div class="schema-table" style="left:480px; top:320px;">
+              <div class="schema-table-head"><span>spaces</span><span class="schema-count">8 атрибутов</span></div>
+              <div class="schema-col"><span class="schema-col-key">id</span><span class="schema-col-type">serial PK</span><span class="schema-col-desc">Порядковый номер</span></div>
+              <div class="schema-col is-fk"><span class="schema-col-key">office_id</span><span class="schema-col-type">int FK</span><span class="schema-col-desc">→ offices.id</span></div>
+              <div class="schema-col is-fk"><span class="schema-col-key">space_type_id</span><span class="schema-col-type">int FK</span><span class="schema-col-desc">→ space_types.id</span></div>
+              <div class="schema-col"><span class="schema-col-key">name</span><span class="schema-col-type">text</span><span class="schema-col-desc">Название места</span></div>
+              <div class="schema-col"><span class="schema-col-key">capacity</span><span class="schema-col-type">int</span><span class="schema-col-desc">Мест (CHECK &gt; 0)</span></div>
+              <div class="schema-col"><span class="schema-col-key">price_per_hour</span><span class="schema-col-type">int</span><span class="schema-col-desc">Цена за час, ₽</span></div>
+              <div class="schema-col"><span class="schema-col-key">deposit</span><span class="schema-col-type">int</span><span class="schema-col-desc">Депозит, ₽ (CHECK ≥ 0)</span></div>
+              <div class="schema-col"><span class="schema-col-key">is_active</span><span class="schema-col-type">boolean</span><span class="schema-col-desc">Доступно для брони</span></div>
+            </div>
+
+            <div class="schema-table" style="left:40px; top:640px;">
+              <div class="schema-table-head"><span>clients</span><span class="schema-count">6 атрибутов</span></div>
+              <div class="schema-col"><span class="schema-col-key">id</span><span class="schema-col-type">serial PK</span><span class="schema-col-desc">Порядковый номер</span></div>
+              <div class="schema-col"><span class="schema-col-key">full_name</span><span class="schema-col-type">text</span><span class="schema-col-desc">Имя или команда (1..100)</span></div>
+              <div class="schema-col"><span class="schema-col-key">phone</span><span class="schema-col-type">text</span><span class="schema-col-desc">Телефон</span></div>
+              <div class="schema-col"><span class="schema-col-key">email</span><span class="schema-col-type">text</span><span class="schema-col-desc">E-mail (CHECK формат)</span></div>
+              <div class="schema-col"><span class="schema-col-key">company</span><span class="schema-col-type">text</span><span class="schema-col-desc">Компания</span></div>
+              <div class="schema-col"><span class="schema-col-key">created_at</span><span class="schema-col-type">timestamptz</span><span class="schema-col-desc">Дата создания</span></div>
+            </div>
+
+            <div class="schema-table" style="left:480px; top:640px;">
+              <div class="schema-table-head"><span>bookings</span><span class="schema-count">11 атрибутов</span></div>
+              <div class="schema-col"><span class="schema-col-key">id</span><span class="schema-col-type">serial PK</span><span class="schema-col-desc">Порядковый номер</span></div>
+              <div class="schema-col is-fk"><span class="schema-col-key">space_id</span><span class="schema-col-type">int FK</span><span class="schema-col-desc">→ spaces.id</span></div>
+              <div class="schema-col is-fk"><span class="schema-col-key">client_id</span><span class="schema-col-type">int FK</span><span class="schema-col-desc">→ clients.id</span></div>
+              <div class="schema-col"><span class="schema-col-key">book_date</span><span class="schema-col-type">date</span><span class="schema-col-desc">Дата брони</span></div>
+              <div class="schema-col"><span class="schema-col-key">rate</span><span class="schema-col-type">text</span><span class="schema-col-desc">hour / day / week / month</span></div>
+              <div class="schema-col"><span class="schema-col-key">start_hour</span><span class="schema-col-type">int</span><span class="schema-col-desc">Час начала (8..21)</span></div>
+              <div class="schema-col"><span class="schema-col-key">duration</span><span class="schema-col-type">int</span><span class="schema-col-desc">Длительность, ч</span></div>
+              <div class="schema-col"><span class="schema-col-key">price</span><span class="schema-col-type">int</span><span class="schema-col-desc">Стоимость, ₽ (CHECK ≥ 0)</span></div>
+              <div class="schema-col"><span class="schema-col-key">deposit</span><span class="schema-col-type">int</span><span class="schema-col-desc">Депозит, ₽ (CHECK ≥ 0)</span></div>
+              <div class="schema-col"><span class="schema-col-key">status</span><span class="schema-col-type">text</span><span class="schema-col-desc">confirmed / cancelled</span></div>
+              <div class="schema-col"><span class="schema-col-key">created_at</span><span class="schema-col-type">timestamptz</span><span class="schema-col-desc">Дата создания</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="booking-stack">
       <aside class="db-summary" aria-label="Краткое содержание базы данных">
         <div class="db-summary-head">
@@ -141,7 +229,7 @@
                 <td>{{if .Company}}{{.Company}}{{else}}—{{end}}</td>
                 <td>{{if .Phone}}{{.Phone}}{{else}}—{{end}}</td>
                 <td>{{if .Email}}{{.Email}}{{else}}—{{end}}</td>
-                <td><a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Изменить</a></td>
+                <td><a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Редактировать</a></td>
               </tr>
               {{end}}
             </tbody>
@@ -154,7 +242,7 @@
 
       <div class="plain-card">
         <h2>Поиск по базе данных</h2>
-        <p class="table-note">Поиск работает по одному значению и по двум значениям из двух таблиц одновременно.</p>
+        <p class="table-note">Поиск работает по одному значению (клиент, компания или пространство) либо сразу по двум синхронизированным значениям из двух таблиц (клиент + тип пространства).</p>
         <form class="booking-filter" data-ajax method="get" action="/booking">
           <fieldset class="filter-group">
             <legend>По одному значению</legend>
@@ -164,25 +252,27 @@
             </div>
           </fieldset>
 
-          <fieldset class="filter-group">
-            <legend>По двум значениям (клиенты + типы пространств)</legend>
+          <fieldset class="filter-group filter-group-sync">
+            <legend>По двум синхронизированным значениям (клиент → тип пространства)</legend>
+            <p class="filter-hint">Второй список сужается по первому: выбираете клиента - остаются только те типы пространств, которые он бронировал. Результат собирается JOIN-запросом <code>clients → bookings → spaces → space_types</code>.</p>
             <div class="form-field">
-              <label class="form-label" for="bf-client-filter">Клиент</label>
-              <select class="form-input" id="bf-client-filter" name="client_name">
-                <option value="">Все клиенты</option>
+              <label class="form-label" for="bf-sync-client">Клиент</label>
+              <select class="form-input" id="bf-sync-client" name="client">
+                <option value="">Выберите клиента</option>
                 {{range .Clients}}
-                <option value="{{.FullName}}" {{if eq $.Filter.ClientName .FullName}}selected{{end}}>{{.FullName}}</option>
+                <option value="{{.ID}}" {{if eq $.Filter.ClientID .ID}}selected{{end}}>{{.FullName}}</option>
                 {{end}}
               </select>
             </div>
             <div class="form-field">
-              <label class="form-label" for="bf-type">Тип пространства</label>
-              <select class="form-input" id="bf-type" name="space_type">
-                <option value="">Все типы</option>
-                {{range .SpaceTypes}}
+              <label class="form-label" for="bf-sync-type">Тип пространства</label>
+              <select class="form-input" id="bf-sync-type" name="space_type" {{if not .Filter.ClientID}}disabled{{end}}>
+                <option value="">Все типы клиента</option>
+                {{range .ClientSpaceTypes}}
                 <option value="{{.Code}}" {{if eq $.Filter.SpaceType .Code}}selected{{end}}>{{.Title}}</option>
                 {{end}}
               </select>
+              <small class="filter-hint">{{if not .Filter.ClientID}}Сначала выберите клиента.{{else if not .ClientSpaceTypes}}Клиент пока ничего не бронировал.{{else}}Показаны только типы, которые бронировал выбранный клиент.{{end}}</small>
             </div>
           </fieldset>
 
@@ -270,7 +360,7 @@
               </td>
               <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
               <td class="booking-row-actions">
-                <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Изменить</a>
+                <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Редактировать</a>
                 {{if .CanCancel}}
                 <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
                   <button class="btn-mini" type="submit">Отменить</button>

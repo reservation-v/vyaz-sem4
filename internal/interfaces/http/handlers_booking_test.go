@@ -80,6 +80,8 @@ func TestBookingPageRendersFormAndSeeds(t *testing.T) {
 		"Мария Соколова",
 		"База данных «Место»",
 		"Поиск по базе данных",
+		"Показать схему БД",
+		"Схема базы данных «Место»",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("GET /booking body missing %q", want)
@@ -110,8 +112,8 @@ func TestBookingSearchByOneValueAndDatabaseStatistics(t *testing.T) {
 func TestBookingSearchByTwoValues(t *testing.T) {
 	srv := newTestBookingServer(t)
 
-	// Два значения из двух таблиц: клиент (clients) + тип пространства (space_types).
-	rec := doGet(t, srv, "/booking?client_name="+url.QueryEscape("Студия «Волна»")+"&space_type=room")
+	// Два синхронизированных значения из двух таблиц: клиент (clients) + тип пространства (space_types).
+	rec := doGet(t, srv, "/booking?client=2&space_type=room")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("GET two-value /booking code = %d, want 200", rec.Code)
 	}
@@ -123,6 +125,53 @@ func TestBookingSearchByTwoValues(t *testing.T) {
 	// Бронь Марии на деске не должна попасть в результат.
 	if strings.Contains(table, "Деск A2") || strings.Contains(table, "Мария") {
 		t.Error("результат двухзначного поиска содержит постороннюю бронь")
+	}
+}
+
+// selectHTML вырезает разметку <select> по его id, чтобы проверять именно нужный список.
+func selectHTML(body, id string) string {
+	marker := `id="` + id + `"`
+	idx := strings.Index(body, marker)
+	if idx < 0 {
+		return ""
+	}
+	start := strings.LastIndex(body[:idx], "<select")
+	end := strings.Index(body[idx:], "</select>")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return body[start : idx+end]
+}
+
+// TestBookingSynchronizedTypeList проверяет, что второй список сужается по первому:
+// без клиента он выключен, а с выбранным клиентом содержит только его типы.
+func TestBookingSynchronizedTypeList(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	// Без клиента второй список выключен.
+	body := doGet(t, srv, "/booking").Body.String()
+	if options := selectHTML(body, "bf-sync-type"); !strings.Contains(options, "disabled") {
+		t.Error("без выбранного клиента второй (зависимый) список должен быть выключен")
+	}
+	if !strings.Contains(body, "Сначала выберите клиента") {
+		t.Error("подсказка про выбор клиента отсутствует")
+	}
+
+	// С выбранным клиентом второй список включён и содержит только его типы (переговорка).
+	rec := doGet(t, srv, "/booking?client=2")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /booking?client=2 code = %d, want 200", rec.Code)
+	}
+	body = rec.Body.String()
+	sync := selectHTML(body, "bf-sync-type")
+	if strings.Contains(sync, "disabled") {
+		t.Error("с выбранным клиентом второй список должен быть включён")
+	}
+	if !strings.Contains(sync, "Переговорка") {
+		t.Error("второй список не содержит тип, который бронировал клиент")
+	}
+	if strings.Contains(sync, `value="desk"`) || strings.Contains(sync, `value="cabin"`) {
+		t.Error("второй список содержит типы, которых у клиента нет")
 	}
 }
 

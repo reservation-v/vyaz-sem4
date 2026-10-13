@@ -103,7 +103,7 @@ func (r *stubRepo) SearchBookings(_ context.Context, filter BookingFilter) ([]Bo
 		if filter.DateTo != "" && booking.Date > filter.DateTo {
 			continue
 		}
-		if filter.ClientName != "" && !strings.Contains(strings.ToLower(detail.ClientName), strings.ToLower(filter.ClientName)) {
+		if filter.ClientID != 0 && booking.ClientID != filter.ClientID {
 			continue
 		}
 		if filter.Search != "" {
@@ -605,9 +605,9 @@ func TestSearchByOneAndTwoValues(t *testing.T) {
 		t.Fatalf("одно значение: got %+v, want only Мария Соколова", one)
 	}
 
-	// По двум значениям из двух таблиц: клиент + тип пространства.
+	// По двум синхронизированным значениям: клиент + его тип пространства.
 	two, err := svc.BookingsFiltered(context.Background(), BookingFilter{
-		ClientName: "Студия «Волна»", SpaceType: domain.SpaceTypeRoom,
+		ClientID: 2, SpaceType: domain.SpaceTypeRoom,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -616,15 +616,56 @@ func TestSearchByOneAndTwoValues(t *testing.T) {
 		t.Fatalf("два значения: got %+v, want only переговорка Студии «Волна»", two)
 	}
 
-	// Противоречивые два значения не находят ничего.
+	// Противоречивые два значения не находят ничего: у Марии нет переговорок.
 	none, err := svc.BookingsFiltered(context.Background(), BookingFilter{
-		ClientName: "Мария Соколова", SpaceType: domain.SpaceTypeRoom,
+		ClientID: 3, SpaceType: domain.SpaceTypeRoom,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(none) != 0 {
 		t.Errorf("противоречивые значения: got %d bookings, want 0", len(none))
+	}
+}
+
+// TestClientSpaceTypes проверяет зависимый (синхронизированный) список:
+// типы пространств, которые бронировал клиент (JOIN clients → bookings →
+// spaces → space_types).
+func TestClientSpaceTypes(t *testing.T) {
+	svc := newTestBookingService()
+
+	if _, err := createHour(t, svc, 1, 3, "2026-10-12", 10, 1); err != nil { // Мария, деск
+		t.Fatal(err)
+	}
+	if _, err := createHour(t, svc, 3, 3, "2026-10-13", 10, 1); err != nil { // Мария, кабинет
+		t.Fatal(err)
+	}
+
+	types, err := svc.ClientSpaceTypes(context.Background(), 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(types) != 2 || types[0].Code != domain.SpaceTypeDesk || types[1].Code != domain.SpaceTypeCabin {
+		t.Fatalf("ClientSpaceTypes(3) = %+v, want desk, cabin", types)
+	}
+
+	// Клиент без броней — пустой список.
+	empty, err := svc.ClientSpaceTypes(context.Background(), 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(empty) != 0 {
+		t.Errorf("ClientSpaceTypes(4) = %+v, want empty", empty)
+	}
+
+	// Нулевой клиент — пустой список без обращения к хранилищу.
+	if zero, err := svc.ClientSpaceTypes(context.Background(), 0); err != nil || zero != nil {
+		t.Errorf("ClientSpaceTypes(0) = %+v, %v; want nil, nil", zero, err)
+	}
+
+	// Неизвестный клиент — ошибка ErrClientNotFound.
+	if _, err := svc.ClientSpaceTypes(context.Background(), 99); !errors.Is(err, ErrClientNotFound) {
+		t.Errorf("ClientSpaceTypes(99) error = %v, want ErrClientNotFound", err)
 	}
 }
 

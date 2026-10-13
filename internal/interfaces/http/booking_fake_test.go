@@ -110,7 +110,7 @@ func (r *fakeRepo) SearchBookings(_ context.Context, filter application.BookingF
 		if filter.DateTo != "" && booking.Date > filter.DateTo {
 			continue
 		}
-		if filter.ClientName != "" && !strings.Contains(strings.ToLower(detail.ClientName), strings.ToLower(filter.ClientName)) {
+		if filter.ClientID != 0 && booking.ClientID != filter.ClientID {
 			continue
 		}
 		if filter.Search != "" {

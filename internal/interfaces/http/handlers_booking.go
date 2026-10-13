@@ -82,28 +82,29 @@ type clientFormData struct {
 // bookingPageData — данные страницы «Бронирование».
 type bookingPageData struct {
 	basePageData
-	Spaces     []bookingSpaceView
-	SpaceTypes []spaceTypeView
-	Clients    []bookingClientView
-	Rows       []bookingRowView
-	StartHours []int
-	Durations  []int
-	Form       bookingFormData
-	ClientForm clientFormData
-	Filter     bookingFilterView
-	Statistics bookingStatisticsView
-	Summary    bookingSummaryView
-	Flash      string
-	FlashKind  string // "ok" или "err"
+	Spaces           []bookingSpaceView
+	SpaceTypes       []spaceTypeView
+	ClientSpaceTypes []spaceTypeView // типы, которые бронировал выбранный клиент
+	Clients          []bookingClientView
+	Rows             []bookingRowView
+	StartHours       []int
+	Durations        []int
+	Form             bookingFormData
+	ClientForm       clientFormData
+	Filter           bookingFilterView
+	Statistics       bookingStatisticsView
+	Summary          bookingSummaryView
+	Flash            string
+	FlashKind        string // "ok" или "err"
 }
 
 type bookingFilterView struct {
-	Search     string
-	ClientName string
-	SpaceType  string
-	Status     string
-	DateFrom   string
-	DateTo     string
+	Search    string
+	ClientID  int
+	SpaceType string
+	Status    string
+	DateFrom  string
+	DateTo    string
 }
 
 type bookingStatisticsView struct {
@@ -342,6 +343,26 @@ func (s *Server) buildBookingPage(r *http.Request, form bookingFormData, clientF
 		return bookingPageData{}, fmt.Errorf("не удалось загрузить клиентов")
 	}
 
+	// Поиск по двум синхронизированным значениям: второй список зависит от клиента.
+	var clientSpaceTypes []domain.SpaceType
+	if filter.ClientID != 0 {
+		clientSpaceTypes, err = s.bookings.ClientSpaceTypes(r.Context(), filter.ClientID)
+		switch {
+		case errors.Is(err, application.ErrClientNotFound):
+			// Неизвестный клиент — игнорируем это условие поиска.
+			filter.ClientID = 0
+			clientSpaceTypes = nil
+		case err != nil:
+			log.Printf("booking page: load client space types: %v", err)
+			return bookingPageData{}, fmt.Errorf("не удалось загрузить типы пространств клиента")
+		default:
+			// Тип, которого нет у выбранного клиента, отбрасываем.
+			if filter.SpaceType != "" && !spaceTypeInList(clientSpaceTypes, filter.SpaceType) {
+				filter.SpaceType = ""
+			}
+		}
+	}
+
 	details, err := s.bookings.BookingsFiltered(r.Context(), filter)
 	if err != nil {
 		if errors.Is(err, application.ErrInvalidFilter) {
@@ -385,20 +406,21 @@ func (s *Server) buildBookingPage(r *http.Request, form bookingFormData, clientF
 	}
 
 	return bookingPageData{
-		basePageData: s.basePage("Бронирование", "booking"),
-		Spaces:       toBookingSpaceViews(spaces),
-		SpaceTypes:   toSpaceTypeViews(spaceTypes),
-		Clients:      toBookingClientViews(clients),
-		Rows:         toBookingRowViews(details),
-		StartHours:   hourRange(bookingMinStartHour, bookingMaxStartHour),
-		Durations:    hourRange(1, bookingMaxHours),
-		Form:         form,
-		ClientForm:   clientForm,
-		Filter:       toBookingFilterView(filter),
-		Statistics:   toBookingStatisticsView(statistics),
-		Summary:      toBookingSummaryView(summary),
-		Flash:        flash,
-		FlashKind:    kind,
+		basePageData:     s.basePage("Бронирование", "booking"),
+		Spaces:           toBookingSpaceViews(spaces),
+		SpaceTypes:       toSpaceTypeViews(spaceTypes),
+		ClientSpaceTypes: toSpaceTypeViews(clientSpaceTypes),
+		Clients:          toBookingClientViews(clients),
+		Rows:             toBookingRowViews(details),
+		StartHours:       hourRange(bookingMinStartHour, bookingMaxStartHour),
+		Durations:        hourRange(1, bookingMaxHours),
+		Form:             form,
+		ClientForm:       clientForm,
+		Filter:           toBookingFilterView(filter),
+		Statistics:       toBookingStatisticsView(statistics),
+		Summary:          toBookingSummaryView(summary),
+		Flash:            flash,
+		FlashKind:        kind,
 	}, nil
 }
 
@@ -550,24 +572,37 @@ func defaultDate(r *http.Request) string {
 func bookingFilterFromRequest(r *http.Request) application.BookingFilter {
 	query := r.URL.Query()
 	return application.BookingFilter{
-		Search:     strings.TrimSpace(query.Get("search")),
-		ClientName: strings.TrimSpace(query.Get("client_name")),
-		SpaceType:  domain.SpaceTypeCode(query.Get("space_type")),
-		Status:     domain.BookingStatus(query.Get("status")),
-		DateFrom:   query.Get("date_from"),
-		DateTo:     query.Get("date_to"),
+		Search:    strings.TrimSpace(query.Get("search")),
+		ClientID:  queryInt(query.Get("client")),
+		SpaceType: domain.SpaceTypeCode(query.Get("space_type")),
+		Status:    domain.BookingStatus(query.Get("status")),
+		DateFrom:  query.Get("date_from"),
+		DateTo:    query.Get("date_to"),
 	}
 }
 
 func toBookingFilterView(filter application.BookingFilter) bookingFilterView {
 	return bookingFilterView{
-		Search:     filter.Search,
-		ClientName: filter.ClientName,
-		SpaceType:  string(filter.SpaceType),
-		Status:     string(filter.Status),
-		DateFrom:   filter.DateFrom,
-		DateTo:     filter.DateTo,
+		Search:    filter.Search,
+		ClientID:  filter.ClientID,
+		SpaceType: string(filter.SpaceType),
+		Status:    string(filter.Status),
+		DateFrom:  filter.DateFrom,
+		DateTo:    filter.DateTo,
 	}
+}
+
+// spaceTypeInList сообщает, входит ли тип в список типов клиента.
+func spaceTypeInList(types []domain.SpaceType, code domain.SpaceTypeCode) bool {
+	if code == "" {
+		return true
+	}
+	for _, item := range types {
+		if item.Code == code {
+			return true
+		}
+	}
+	return false
 }
 
 func toBookingStatisticsView(stats application.BookingStatistics) bookingStatisticsView {
@@ -716,4 +751,13 @@ func formInt(r *http.Request, name string) int {
 		return 0
 	}
 	return value
+}
+
+// queryInt читает целое значение параметра строки запроса (0 при ошибке).
+func queryInt(value string) int {
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
+	}
+	return parsed
 }

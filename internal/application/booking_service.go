@@ -56,17 +56,18 @@ type BookingDetails struct {
 //
 // Search — поиск по одному значению (совпадение с именем клиента,
 // компанией или названием пространства).
-// ClientName и SpaceType — поиск по двум синхронизированным значениям
-// из двух таблиц: клиенты (clients) и типы пространств (space_types).
+// ClientID и SpaceType — поиск по двум синхронизированным значениям из двух
+// таблиц: сначала выбирается клиент (clients), затем тип пространства
+// (space_types) только из тех, что бронировал этот клиент.
 // SpaceID используется внутри для проверки занятости пространства.
 type BookingFilter struct {
-	Search     string
-	ClientName string
-	SpaceType  domain.SpaceTypeCode
-	Status     domain.BookingStatus
-	DateFrom   string
-	DateTo     string
-	SpaceID    int
+	Search    string
+	ClientID  int
+	SpaceType domain.SpaceTypeCode
+	Status    domain.BookingStatus
+	DateFrom  string
+	DateTo    string
+	SpaceID   int
 }
 
 // BookingStatistics содержит агрегаты по отфильтрованным данным БД.
@@ -183,6 +184,40 @@ func (s *BookingService) BookingByID(ctx context.Context, id int) (BookingDetail
 // SpaceTypes возвращает классификатор типов пространств.
 func (s *BookingService) SpaceTypes(ctx context.Context) ([]domain.SpaceType, error) {
 	return s.bookings.ListSpaceTypes(ctx)
+}
+
+// ClientSpaceTypes возвращает типы пространств, которые бронировал клиент.
+// Это второй, зависимый (синхронизированный) список поиска по двум значениям:
+// его значения определяются выбранным клиентом через JOIN
+// clients → bookings → spaces → space_types.
+// Для clientID == 0 возвращает пустой список.
+func (s *BookingService) ClientSpaceTypes(ctx context.Context, clientID int) ([]domain.SpaceType, error) {
+	if clientID == 0 {
+		return nil, nil
+	}
+	if _, err := s.clients.ClientByID(ctx, clientID); err != nil {
+		return nil, err
+	}
+
+	details, err := s.bookings.SearchBookings(ctx, BookingFilter{ClientID: clientID})
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[domain.SpaceTypeCode]struct{}, len(details))
+	types := make([]domain.SpaceType, 0, len(details))
+	for _, detail := range details {
+		if _, ok := seen[detail.SpaceTypeCode]; ok {
+			continue
+		}
+		seen[detail.SpaceTypeCode] = struct{}{}
+		types = append(types, domain.SpaceType{Code: detail.SpaceTypeCode, Title: detail.SpaceTypeTitle})
+	}
+
+	slices.SortStableFunc(types, func(a, b domain.SpaceType) int {
+		return spaceTypeOrder(a.Code) - spaceTypeOrder(b.Code)
+	})
+	return types, nil
 }
 
 // spaceTypeOrder задаёт порядок типов в списках: деск-места, переговорки, кабинеты.

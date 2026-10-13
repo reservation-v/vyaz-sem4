@@ -205,6 +205,51 @@
       });
   }
 
+  // Открывает и закрывает окно со схемой БД поверх страницы.
+  function bindSchemaModal() {
+    var modal = app.querySelector("[data-schema-modal]");
+    var opener = app.querySelector("[data-schema-open]");
+    if (!modal || !opener) {
+      return;
+    }
+
+    opener.addEventListener("click", function () {
+      modal.hidden = false;
+      document.body.classList.add("schema-locked");
+      var closeBtn = modal.querySelector("[data-schema-close]");
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+    });
+
+    modal.addEventListener("click", function (event) {
+      var isBackdrop = event.target === modal;
+      var isClose = event.target.closest && event.target.closest("[data-schema-close]");
+      if (isBackdrop || isClose) {
+        closeSchemaModal(modal, opener);
+      }
+    });
+  }
+
+  function closeSchemaModal(modal, opener) {
+    modal.hidden = true;
+    document.body.classList.remove("schema-locked");
+    if (opener) {
+      opener.focus();
+    }
+  }
+
+  // Второй список поиска зависит от клиента: при смене клиента форма
+  // отправляется сразу, и сервер отдаёт только его типы пространств.
+  function bindSynchronizedSearch() {
+    var client = app.querySelector("#bf-sync-client");
+    if (client && client.form && client.form.hasAttribute("data-ajax")) {
+      client.addEventListener("change", function () {
+        submitAjax(client.form);
+      });
+    }
+  }
+
   function init() {
     app = document.getElementById("booking-app");
     if (!app) {
@@ -212,6 +257,8 @@
     }
 
     bindLiveCalc(app.querySelector("#booking-form"));
+    bindSchemaModal();
+    bindSynchronizedSearch();
 
     // Делегирование: обработчик переживает подмену блока после fetch.
     app.addEventListener("submit", function (event) {
@@ -249,6 +296,17 @@
 
   window.addEventListener("popstate", function () {
     fetchInto(window.location.href);
+  });
+
+  // Esc закрывает схему БД (обработчик ставится один раз и переживает подмену блока).
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") {
+      return;
+    }
+    var modal = document.querySelector("[data-schema-modal]:not([hidden])");
+    if (modal) {
+      closeSchemaModal(modal, document.querySelector("[data-schema-open]"));
+    }
   });
 
   init();
