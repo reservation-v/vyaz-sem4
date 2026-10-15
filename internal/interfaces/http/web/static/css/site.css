@@ -1633,11 +1633,18 @@ a {
     margin-bottom: 20px;
 }
 
+/* Действия в строке таблицы. Flex-раскладку держим на внутреннем .row-actions,
+   а не на самой ячейке: display:flex на <td> ломает расчёт ширин колонок —
+   таблица перестаёт вписываться в карточку и появляется горизонтальная прокрутка. */
 .booking-row-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     white-space: nowrap;
+}
+
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 a.btn-mini {

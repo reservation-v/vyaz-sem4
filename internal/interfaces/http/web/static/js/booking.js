@@ -128,6 +128,25 @@
     }
     app.outerHTML = next.outerHTML;
     init();
+    revealFlash();
+  }
+
+  // Сообщение о результате рендерится в начале блока, а после подмены
+  // пользователь остаётся у таблицы ниже: без прокрутки кажется, что действие
+  // не сработало (например, отказ удалить клиента, у которого есть брони).
+  function revealFlash() {
+    var flash = app.querySelector(".flash-err");
+    if (!flash) {
+      return;
+    }
+
+    var box = flash.getBoundingClientRect();
+    if (box.top >= 0 && box.bottom <= window.innerHeight) {
+      return;
+    }
+
+    var instant = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    flash.scrollIntoView({ block: "nearest", behavior: instant ? "auto" : "smooth" });
   }
 
   // Загружает страницу по адресу и подменяет блок приложения.
@@ -263,6 +282,13 @@
     // Делегирование: обработчик переживает подмену блока после fetch.
     app.addEventListener("submit", function (event) {
       var form = event.target;
+
+      // Подтверждение для необратимых действий (удаление клиента).
+      var confirmText = form.getAttribute && form.getAttribute("data-confirm");
+      if (confirmText && !window.confirm(confirmText)) {
+        event.preventDefault();
+        return;
+      }
 
       if (form.hasAttribute("data-cancel")) {
         event.preventDefault();

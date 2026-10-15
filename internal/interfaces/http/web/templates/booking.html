@@ -229,7 +229,14 @@
                 <td>{{if .Company}}{{.Company}}{{else}}—{{end}}</td>
                 <td>{{if .Phone}}{{.Phone}}{{else}}—{{end}}</td>
                 <td>{{if .Email}}{{.Email}}{{else}}—{{end}}</td>
-                <td><a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Редактировать</a></td>
+                <td class="booking-row-actions">
+                  <span class="row-actions">
+                    <a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Редактировать</a>
+                    					<form class="inline-form" data-ajax data-confirm="Удалить клиента «{{.FullName}}»? Действие необратимо, отменённые брони удалятся вместе с ним." method="post" action="/booking/clients/{{.ID}}/delete">
+                      <button class="btn-mini" type="submit">Удалить</button>
+                    </form>
+                  </span>
+                </td>
               </tr>
               {{end}}
             </tbody>
@@ -360,12 +367,14 @@
               </td>
               <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
               <td class="booking-row-actions">
-                <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Редактировать</a>
-                {{if .CanCancel}}
-                <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
-                  <button class="btn-mini" type="submit">Отменить</button>
-                </form>
-                {{end}}
+                <span class="row-actions">
+                  <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Редактировать</a>
+                  {{if .CanCancel}}
+                  <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
+                    <button class="btn-mini" type="submit">Отменить</button>
+                  </form>
+                  {{end}}
+                </span>
               </td>
             </tr>
             {{end}}

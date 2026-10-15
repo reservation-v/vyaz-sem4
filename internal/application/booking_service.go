@@ -40,6 +40,8 @@ type ClientRepository interface {
 	ClientByID(ctx context.Context, id int) (domain.Client, error)
 	SaveClient(ctx context.Context, client domain.Client) (domain.Client, error)
 	UpdateClient(ctx context.Context, client domain.Client) (domain.Client, error)
+	// DeleteClient удаляет клиента, у которого ещё нет броней.
+	DeleteClient(ctx context.Context, id int) error
 }
 
 // BookingDetails — бронь с подтянутыми для показа данными клиента и пространства.
@@ -131,6 +133,7 @@ var (
 	ErrBookingNotFound      = errors.New("booking not found")
 	ErrRateNotAvailable     = errors.New("rate not available for this space")
 	ErrInvalidFilter        = errors.New("invalid booking filter")
+	ErrClientHasBookings    = errors.New("client has confirmed bookings")
 )
 
 const (
@@ -301,6 +304,26 @@ func (s *BookingService) UpdateClient(ctx context.Context, id int, input ClientI
 	}
 	client.ID = id
 	return s.clients.UpdateClient(ctx, client)
+}
+
+// DeleteClient удаляет клиента.
+// Подтверждённая бронь запрещает удаление: это действующая история, её сначала
+// нужно отменить. Отменённые брони считаются закрытыми и удаляются вместе с
+// клиентом (внешний ключ не даёт оставить их без клиента).
+func (s *BookingService) DeleteClient(ctx context.Context, id int) error {
+	if _, err := s.clients.ClientByID(ctx, id); err != nil {
+		return err
+	}
+	details, err := s.bookings.SearchBookings(ctx, BookingFilter{ClientID: id})
+	if err != nil {
+		return err
+	}
+	for _, detail := range details {
+		if detail.Booking.Status == domain.BookingStatusConfirmed {
+			return fmt.Errorf("%w: id %d", ErrClientHasBookings, id)
+		}
+	}
+	return s.clients.DeleteClient(ctx, id)
 }
 
 func validateBookingFilter(filter BookingFilter) error {

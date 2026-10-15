@@ -241,6 +241,31 @@ func (r *stubRepo) UpdateClient(_ context.Context, client domain.Client) (domain
 	return domain.Client{}, ErrClientNotFound
 }
 
+func (r *stubRepo) DeleteClient(_ context.Context, id int) error {
+	found := false
+	for i := range r.clients {
+		if r.clients[i].ID == id {
+			found = true
+			r.clients = append(r.clients[:i], r.clients[i+1:]...)
+			break
+		}
+	}
+	if !found {
+		return ErrClientNotFound
+	}
+
+	// Отменённые брони клиента уходят вместе с ним (как в postgres-репозитории).
+	kept := r.bookings[:0]
+	for _, booking := range r.bookings {
+		if booking.ClientID == id && booking.Status == domain.BookingStatusCancelled {
+			continue
+		}
+		kept = append(kept, booking)
+	}
+	r.bookings = kept
+	return nil
+}
+
 // fixedNow — фиксированные «сейчас» для детерминированных тестов.
 var fixedNow = time.Date(2026, time.October, 10, 9, 0, 0, 0, time.UTC)
 
@@ -791,6 +816,50 @@ func TestClientCreateAndUpdate(t *testing.T) {
 
 	if _, err := svc.UpdateClient(context.Background(), 404, ClientInput{FullName: "Кто-то"}); !errors.Is(err, ErrClientNotFound) {
 		t.Errorf("unknown client error = %v, want ErrClientNotFound", err)
+	}
+}
+
+func TestClientDelete(t *testing.T) {
+	svc := newTestBookingService()
+
+	// Клиент без броней удаляется.
+	created, err := svc.CreateClient(context.Background(), ClientInput{FullName: "Временный Клиент"})
+	if err != nil {
+		t.Fatalf("CreateClient() error = %v", err)
+	}
+	if err := svc.DeleteClient(context.Background(), created.ID); err != nil {
+		t.Fatalf("DeleteClient() error = %v", err)
+	}
+
+	clients, err := svc.Clients(context.Background())
+	if err != nil {
+		t.Fatalf("Clients() error = %v", err)
+	}
+	for _, client := range clients {
+		if client.ID == created.ID {
+			t.Error("deleted client is still listed")
+		}
+	}
+
+	if err := svc.DeleteClient(context.Background(), 404); !errors.Is(err, ErrClientNotFound) {
+		t.Errorf("unknown client delete error = %v, want ErrClientNotFound", err)
+	}
+
+	// Подтверждённая бронь запрещает удаление: история сохраняется.
+	booking, err := createHour(t, svc, 1, 1, "2026-10-12", 10, 1)
+	if err != nil {
+		t.Fatalf("CreateBooking() error = %v", err)
+	}
+	if err := svc.DeleteClient(context.Background(), 1); !errors.Is(err, ErrClientHasBookings) {
+		t.Errorf("client with confirmed booking delete error = %v, want ErrClientHasBookings", err)
+	}
+
+	// После отмены брони клиент удаляется вместе с отменённой записью.
+	if err := svc.CancelBooking(context.Background(), booking.ID); err != nil {
+		t.Fatalf("CancelBooking() error = %v", err)
+	}
+	if err := svc.DeleteClient(context.Background(), 1); err != nil {
+		t.Errorf("client with cancelled booking delete error = %v, want nil", err)
 	}
 }
 

@@ -320,6 +320,73 @@ func TestClientCreateValidationError(t *testing.T) {
 	}
 }
 
+func TestClientDeleteFlow(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	// Новый клиент без броней удаляется.
+	if rec := doPostForm(t, srv, "/booking/clients", url.Values{"full_name": {"Временный Клиент"}}); rec.Code != http.StatusSeeOther {
+		t.Fatalf("create client POST code = %d, want 303", rec.Code)
+	}
+
+	// Сиды заняли ID 1–3, новый клиент получил ID 4.
+	rec := doPostForm(t, srv, "/booking/clients/4/delete", nil)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("POST /booking/clients/4/delete code = %d, want 303; body: %s", rec.Code, rec.Body.String())
+	}
+	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=client-deleted") {
+		t.Errorf("Location = %q, want notice=client-deleted", loc)
+	}
+
+	body := doGet(t, srv, "/booking").Body.String()
+	if strings.Contains(body, "Временный Клиент") {
+		t.Error("deleted client is still on the page")
+	}
+}
+
+func TestClientDeleteRefusedWhenHasBookings(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	// Клиент 1 (Мария Соколова) имеет бронь в сидах — удаление запрещено.
+	rec := doPostForm(t, srv, "/booking/clients/1/delete", nil)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("POST /booking/clients/1/delete code = %d, want 303", rec.Code)
+	}
+	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=client-has-bookings") {
+		t.Errorf("Location = %q, want notice=client-has-bookings", loc)
+	}
+
+	body := doGet(t, srv, "/booking?notice=client-has-bookings").Body.String()
+	if !strings.Contains(body, "Нельзя удалить клиента") {
+		t.Error("refusal message not shown for client with bookings")
+	}
+	if !strings.Contains(body, "Мария Соколова") {
+		t.Error("client with bookings should remain after refused delete")
+	}
+}
+
+func TestClientDeleteAfterBookingCancelled(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	// Отменяем единственную бронь клиента 1: теперь удаление должно проходить.
+	if rec := doPostForm(t, srv, "/booking/1/cancel", nil); rec.Code != http.StatusSeeOther {
+		t.Fatalf("cancel booking POST code = %d, want 303", rec.Code)
+	}
+
+	rec := doPostForm(t, srv, "/booking/clients/1/delete", nil)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("DELETE client POST code = %d, want 303; body: %s", rec.Code, rec.Body.String())
+	}
+	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=client-deleted") {
+		t.Errorf("Location = %q, want notice=client-deleted", loc)
+	}
+
+	body := doGet(t, srv, "/booking").Body.String()
+	// Почта уникальна для клиента 1: имя в шаблоне встречается ещё и в placeholder.
+	if strings.Contains(body, "maria@example.com") {
+		t.Error("deleted client is still on the page")
+	}
+}
+
 func TestBookingCancelFlow(t *testing.T) {
 	srv := newTestBookingServer(t)
 

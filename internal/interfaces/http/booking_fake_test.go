@@ -247,3 +247,27 @@ func (r *fakeRepo) UpdateClient(_ context.Context, client domain.Client) (domain
 	}
 	return domain.Client{}, application.ErrClientNotFound
 }
+
+func (r *fakeRepo) DeleteClient(_ context.Context, id int) error {
+	found := false
+	for i := range r.clients {
+		if r.clients[i].ID == id {
+			found = true
+			r.clients = append(r.clients[:i], r.clients[i+1:]...)
+			break
+		}
+	}
+	if !found {
+		return application.ErrClientNotFound
+	}
+
+	kept := r.bookings[:0]
+	for _, booking := range r.bookings {
+		if booking.ClientID == id && booking.Status == domain.BookingStatusCancelled {
+			continue
+		}
+		kept = append(kept, booking)
+	}
+	r.bookings = kept
+	return nil
+}

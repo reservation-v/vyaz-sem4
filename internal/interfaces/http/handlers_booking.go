@@ -303,6 +303,30 @@ func (s *Server) handleClientUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/booking?notice=client-updated", http.StatusSeeOther)
 }
 
+// handleClientDelete удаляет клиента, у которого ещё нет броней.
+func (s *Server) handleClientDelete(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := s.bookings.DeleteClient(r.Context(), id); err != nil {
+		switch {
+		case errors.Is(err, application.ErrClientNotFound):
+			http.NotFound(w, r)
+		case errors.Is(err, application.ErrClientHasBookings):
+			http.Redirect(w, r, "/booking?notice=client-has-bookings", http.StatusSeeOther)
+		default:
+			log.Printf("delete client %d failed: %v", id, err)
+			http.Redirect(w, r, "/booking?notice=client-delete-error", http.StatusSeeOther)
+		}
+		return
+	}
+
+	http.Redirect(w, r, "/booking?notice=client-deleted", http.StatusSeeOther)
+}
+
 // renderBookingError повторно показывает страницу с ошибкой и введёнными данными брони.
 func (s *Server) renderBookingError(w http.ResponseWriter, r *http.Request, form bookingFormData, cause error) {
 	data, err := s.buildBookingPage(r, form, clientFormData{Mode: "create"}, bookingErrorMessage(cause), "err")
@@ -554,6 +578,12 @@ func flashFromQuery(r *http.Request) (string, string) {
 		return "Клиент добавлен.", "ok"
 	case "client-updated":
 		return "Данные клиента изменены.", "ok"
+	case "client-deleted":
+		return "Клиент удалён.", "ok"
+	case "client-has-bookings":
+		return "Нельзя удалить клиента: у него есть подтверждённые брони. Сначала отмените их.", "err"
+	case "client-delete-error":
+		return "Не удалось удалить клиента. Обновите страницу и попробуйте снова.", "err"
 	case "cancel-error":
 		return "Не удалось отменить бронь. Обновите страницу и попробуйте снова.", "err"
 	default:

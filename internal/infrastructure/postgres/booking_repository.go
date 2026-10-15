@@ -12,6 +12,7 @@ import (
 	"coworking/internal/domain"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -167,6 +168,43 @@ func (r *Repository) UpdateClient(ctx context.Context, client domain.Client) (do
 		return domain.Client{}, fmt.Errorf("update client %d: %w", client.ID, err)
 	}
 	return client, nil
+}
+
+// DeleteClient удаляет клиента вместе с его отменёнными бронями. Подтверждённая
+// бронь остаётся и запрещает удаление (внешний ключ bookings.client_id
+// ON DELETE RESTRICT): история броней сохраняется, её сначала отменяют.
+func (r *Repository) DeleteClient(ctx context.Context, id int) error {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return fmt.Errorf("begin delete client transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx, `DELETE FROM bookings WHERE client_id = $1 AND status = 'cancelled'`, id); err != nil {
+		return fmt.Errorf("delete cancelled bookings of client %d: %w", id, err)
+	}
+
+	command, err := tx.Exec(ctx, `DELETE FROM clients WHERE id = $1`, id)
+	if err != nil {
+		if isForeignKeyViolation(err) {
+			return fmt.Errorf("%w: id %d", application.ErrClientHasBookings, id)
+		}
+		return fmt.Errorf("delete client %d: %w", id, err)
+	}
+	if command.RowsAffected() == 0 {
+		return application.ErrClientNotFound
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit delete client transaction: %w", err)
+	}
+	return nil
+}
+
+// isForeignKeyViolation распознаёт нарушение внешнего ключа (SQLSTATE 23503).
+func isForeignKeyViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23503"
 }
 
 // bookingColumns — общий список полей с соединением клиентов и пространств.
