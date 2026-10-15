@@ -91,16 +91,7 @@ func (r *stubRepo) SearchBookings(_ context.Context, filter BookingFilter) ([]Bo
 		if filter.SpaceID != 0 && booking.SpaceID != filter.SpaceID {
 			continue
 		}
-		if filter.Status != "" && booking.Status != filter.Status {
-			continue
-		}
 		if filter.SpaceType != "" && space.Type.Code != filter.SpaceType {
-			continue
-		}
-		if filter.DateFrom != "" && booking.Date < filter.DateFrom {
-			continue
-		}
-		if filter.DateTo != "" && booking.Date > filter.DateTo {
 			continue
 		}
 		if filter.ClientID != 0 && booking.ClientID != filter.ClientID {
@@ -254,10 +245,10 @@ func (r *stubRepo) DeleteClient(_ context.Context, id int) error {
 		return ErrClientNotFound
 	}
 
-	// Отменённые брони клиента уходят вместе с ним (как в postgres-репозитории).
+	// Брони клиента уходят вместе с ним (ON DELETE CASCADE в схеме БД).
 	kept := r.bookings[:0]
 	for _, booking := range r.bookings {
-		if booking.ClientID == id && booking.Status == domain.BookingStatusCancelled {
+		if booking.ClientID == id {
 			continue
 		}
 		kept = append(kept, booking)
@@ -593,11 +584,8 @@ func TestBookingFilterValidation(t *testing.T) {
 		filter BookingFilter
 		want   error
 	}{
-		{name: "valid filter", filter: BookingFilter{SpaceType: domain.SpaceTypeRoom, Status: domain.BookingStatusConfirmed, DateFrom: "2026-10-10", DateTo: "2026-10-12"}},
+		{name: "valid filter", filter: BookingFilter{SpaceType: domain.SpaceTypeRoom}},
 		{name: "invalid space type", filter: BookingFilter{SpaceType: "unknown"}, want: ErrInvalidFilter},
-		{name: "invalid status", filter: BookingFilter{Status: "pending"}, want: ErrInvalidFilter},
-		{name: "invalid date", filter: BookingFilter{DateFrom: "10.10.2026"}, want: ErrInvalidFilter},
-		{name: "reversed date range", filter: BookingFilter{DateFrom: "2026-10-12", DateTo: "2026-10-10"}, want: ErrInvalidFilter},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -845,21 +833,16 @@ func TestClientDelete(t *testing.T) {
 		t.Errorf("unknown client delete error = %v, want ErrClientNotFound", err)
 	}
 
-	// Подтверждённая бронь запрещает удаление: история сохраняется.
+	// Подтверждённая бронь не мешает удалению: клиент уходит вместе с бронью.
 	booking, err := createHour(t, svc, 1, 1, "2026-10-12", 10, 1)
 	if err != nil {
 		t.Fatalf("CreateBooking() error = %v", err)
 	}
-	if err := svc.DeleteClient(context.Background(), 1); !errors.Is(err, ErrClientHasBookings) {
-		t.Errorf("client with confirmed booking delete error = %v, want ErrClientHasBookings", err)
-	}
-
-	// После отмены брони клиент удаляется вместе с отменённой записью.
-	if err := svc.CancelBooking(context.Background(), booking.ID); err != nil {
-		t.Fatalf("CancelBooking() error = %v", err)
-	}
 	if err := svc.DeleteClient(context.Background(), 1); err != nil {
-		t.Errorf("client with cancelled booking delete error = %v, want nil", err)
+		t.Fatalf("client with confirmed booking delete error = %v, want nil", err)
+	}
+	if _, err := svc.BookingByID(context.Background(), booking.ID); !errors.Is(err, ErrBookingNotFound) {
+		t.Errorf("booking of deleted client error = %v, want ErrBookingNotFound", err)
 	}
 }
 

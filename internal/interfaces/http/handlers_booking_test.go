@@ -343,24 +343,26 @@ func TestClientDeleteFlow(t *testing.T) {
 	}
 }
 
-func TestClientDeleteRefusedWhenHasBookings(t *testing.T) {
+func TestClientDeleteRemovesBookings(t *testing.T) {
 	srv := newTestBookingServer(t)
 
-	// Клиент 1 (Мария Соколова) имеет бронь в сидах — удаление запрещено.
+	// Клиент 1 (Мария Соколова) имеет подтверждённую бронь в сидах: удаление
+	// проходит, бронь уходит вместе с ним.
 	rec := doPostForm(t, srv, "/booking/clients/1/delete", nil)
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("POST /booking/clients/1/delete code = %d, want 303", rec.Code)
 	}
-	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=client-has-bookings") {
-		t.Errorf("Location = %q, want notice=client-has-bookings", loc)
+	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=client-deleted") {
+		t.Errorf("Location = %q, want notice=client-deleted", loc)
 	}
 
-	body := doGet(t, srv, "/booking?notice=client-has-bookings").Body.String()
-	if !strings.Contains(body, "Нельзя удалить клиента") {
-		t.Error("refusal message not shown for client with bookings")
+	body := doGet(t, srv, "/booking?notice=client-deleted").Body.String()
+	if !strings.Contains(body, "Клиент удалён") {
+		t.Error("deletion message not shown for client with bookings")
 	}
-	if !strings.Contains(body, "Мария Соколова") {
-		t.Error("client with bookings should remain after refused delete")
+	// Почта уникальна для клиента 1: если он удалён, её на странице нет.
+	if strings.Contains(body, "maria@example.com") {
+		t.Error("client with bookings should be removed from the page")
 	}
 }
 

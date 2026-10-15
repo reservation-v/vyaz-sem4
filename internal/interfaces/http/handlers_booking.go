@@ -102,9 +102,6 @@ type bookingFilterView struct {
 	Search    string
 	ClientID  int
 	SpaceType string
-	Status    string
-	DateFrom  string
-	DateTo    string
 }
 
 type bookingStatisticsView struct {
@@ -303,7 +300,7 @@ func (s *Server) handleClientUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/booking?notice=client-updated", http.StatusSeeOther)
 }
 
-// handleClientDelete удаляет клиента, у которого ещё нет броней.
+// handleClientDelete удаляет клиента вместе с его бронями.
 func (s *Server) handleClientDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
@@ -315,8 +312,6 @@ func (s *Server) handleClientDelete(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, application.ErrClientNotFound):
 			http.NotFound(w, r)
-		case errors.Is(err, application.ErrClientHasBookings):
-			http.Redirect(w, r, "/booking?notice=client-has-bookings", http.StatusSeeOther)
 		default:
 			log.Printf("delete client %d failed: %v", id, err)
 			http.Redirect(w, r, "/booking?notice=client-delete-error", http.StatusSeeOther)
@@ -579,9 +574,7 @@ func flashFromQuery(r *http.Request) (string, string) {
 	case "client-updated":
 		return "Данные клиента изменены.", "ok"
 	case "client-deleted":
-		return "Клиент удалён.", "ok"
-	case "client-has-bookings":
-		return "Нельзя удалить клиента: у него есть подтверждённые брони. Сначала отмените их.", "err"
+		return "Клиент удалён вместе с его бронями.", "ok"
 	case "client-delete-error":
 		return "Не удалось удалить клиента. Обновите страницу и попробуйте снова.", "err"
 	case "cancel-error":
@@ -605,9 +598,6 @@ func bookingFilterFromRequest(r *http.Request) application.BookingFilter {
 		Search:    strings.TrimSpace(query.Get("search")),
 		ClientID:  queryInt(query.Get("client")),
 		SpaceType: domain.SpaceTypeCode(query.Get("space_type")),
-		Status:    domain.BookingStatus(query.Get("status")),
-		DateFrom:  query.Get("date_from"),
-		DateTo:    query.Get("date_to"),
 	}
 }
 
@@ -616,9 +606,6 @@ func toBookingFilterView(filter application.BookingFilter) bookingFilterView {
 		Search:    filter.Search,
 		ClientID:  filter.ClientID,
 		SpaceType: string(filter.SpaceType),
-		Status:    string(filter.Status),
-		DateFrom:  filter.DateFrom,
-		DateTo:    filter.DateTo,
 	}
 }
 

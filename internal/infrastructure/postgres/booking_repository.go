@@ -12,7 +12,6 @@ import (
 	"coworking/internal/domain"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -170,41 +169,18 @@ func (r *Repository) UpdateClient(ctx context.Context, client domain.Client) (do
 	return client, nil
 }
 
-// DeleteClient удаляет клиента вместе с его отменёнными бронями. Подтверждённая
-// бронь остаётся и запрещает удаление (внешний ключ bookings.client_id
-// ON DELETE RESTRICT): история броней сохраняется, её сначала отменяют.
+// DeleteClient удаляет клиента вместе с его бронями. Целостность обеспечивает
+// внешний ключ bookings.client_id ON DELETE CASCADE: брони уходят вслед за
+// клиентом, предварительная отмена не нужна.
 func (r *Repository) DeleteClient(ctx context.Context, id int) error {
-	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	command, err := r.pool.Exec(ctx, `DELETE FROM clients WHERE id = $1`, id)
 	if err != nil {
-		return fmt.Errorf("begin delete client transaction: %w", err)
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
-	if _, err := tx.Exec(ctx, `DELETE FROM bookings WHERE client_id = $1 AND status = 'cancelled'`, id); err != nil {
-		return fmt.Errorf("delete cancelled bookings of client %d: %w", id, err)
-	}
-
-	command, err := tx.Exec(ctx, `DELETE FROM clients WHERE id = $1`, id)
-	if err != nil {
-		if isForeignKeyViolation(err) {
-			return fmt.Errorf("%w: id %d", application.ErrClientHasBookings, id)
-		}
 		return fmt.Errorf("delete client %d: %w", id, err)
 	}
 	if command.RowsAffected() == 0 {
 		return application.ErrClientNotFound
 	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("commit delete client transaction: %w", err)
-	}
 	return nil
-}
-
-// isForeignKeyViolation распознаёт нарушение внешнего ключа (SQLSTATE 23503).
-func isForeignKeyViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23503"
 }
 
 // bookingColumns — общий список полей с соединением клиентов и пространств.
@@ -215,23 +191,17 @@ const bookingColumns = `b.id, b.space_id, b.client_id, b.book_date::text, b.rate
 // bookingFilterClause — общие условия поиска.
 // $1 — поиск по одному значению (клиент ИЛИ компания ИЛИ пространство);
 // $2 — клиент (id) для поиска по двум синхронизированным значениям;
-// $3 — тип пространства; $4 — статус; $5, $6 — диапазон дат.
+// $3 — тип пространства.
 const bookingFilterClause = `
 	WHERE ($1 = '' OR c.full_name ILIKE '%' || $1 || '%' OR c.company ILIKE '%' || $1 || '%' OR s.name ILIKE '%' || $1 || '%')
 	  AND ($2 = 0 OR b.client_id = $2)
-	  AND ($3 = '' OR t.code = $3)
-	  AND ($4 = '' OR b.status = $4)
-	  AND ($5::date IS NULL OR b.book_date >= $5::date)
-	  AND ($6::date IS NULL OR b.book_date <= $6::date)`
+	  AND ($3 = '' OR t.code = $3)`
 
 func bookingFilterArgs(filter application.BookingFilter) []any {
 	return []any{
 		filter.Search,
 		filter.ClientID,
 		string(filter.SpaceType),
-		string(filter.Status),
-		emptyToNil(filter.DateFrom),
-		emptyToNil(filter.DateTo),
 	}
 }
 
@@ -242,7 +212,7 @@ func (r *Repository) SearchBookings(ctx context.Context, filter application.Book
 		JOIN clients c ON c.id = b.client_id
 		JOIN spaces s ON s.id = b.space_id
 		JOIN space_types t ON t.id = s.space_type_id` + bookingFilterClause + `
-		  AND ($7 = 0 OR b.space_id = $7)
+		  AND ($4 = 0 OR b.space_id = $4)
 		ORDER BY b.book_date, b.start_hour, b.created_at`
 	rows, err := r.pool.Query(ctx, query, append(bookingFilterArgs(filter), filter.SpaceID)...)
 	if err != nil {
@@ -551,13 +521,6 @@ func scanBookingDetails(rows pgx.Rows) ([]application.BookingDetails, error) {
 		return nil, fmt.Errorf("iterate bookings: %w", err)
 	}
 	return details, nil
-}
-
-func emptyToNil(value string) any {
-	if value == "" {
-		return nil
-	}
-	return value
 }
 
 // MigrationURI переводит DATABASE_URL в формат URI, ожидаемый драйвером migrate.

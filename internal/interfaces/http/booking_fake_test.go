@@ -98,16 +98,7 @@ func (r *fakeRepo) SearchBookings(_ context.Context, filter application.BookingF
 		if filter.SpaceID != 0 && booking.SpaceID != filter.SpaceID {
 			continue
 		}
-		if filter.Status != "" && booking.Status != filter.Status {
-			continue
-		}
 		if filter.SpaceType != "" && space.Type.Code != filter.SpaceType {
-			continue
-		}
-		if filter.DateFrom != "" && booking.Date < filter.DateFrom {
-			continue
-		}
-		if filter.DateTo != "" && booking.Date > filter.DateTo {
 			continue
 		}
 		if filter.ClientID != 0 && booking.ClientID != filter.ClientID {
@@ -263,7 +254,7 @@ func (r *fakeRepo) DeleteClient(_ context.Context, id int) error {
 
 	kept := r.bookings[:0]
 	for _, booking := range r.bookings {
-		if booking.ClientID == id && booking.Status == domain.BookingStatusCancelled {
+		if booking.ClientID == id {
 			continue
 		}
 		kept = append(kept, booking)

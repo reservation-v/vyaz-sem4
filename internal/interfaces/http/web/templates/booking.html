@@ -232,7 +232,7 @@
                 <td class="booking-row-actions">
                   <span class="row-actions">
                     <a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Редактировать</a>
-                    					<form class="inline-form" data-ajax data-confirm="Удалить клиента «{{.FullName}}»? Действие необратимо, отменённые брони удалятся вместе с ним." method="post" action="/booking/clients/{{.ID}}/delete">
+                    <form class="inline-form" data-ajax data-confirm="Удалить клиента «{{.FullName}}»? Действие необратимо: брони клиента удалятся вместе с ним." method="post" action="/booking/clients/{{.ID}}/delete">
                       <button class="btn-mini" type="submit">Удалить</button>
                     </form>
                   </span>
@@ -280,26 +280,6 @@
                 {{end}}
               </select>
               <small class="filter-hint">{{if not .Filter.ClientID}}Сначала выберите клиента.{{else if not .ClientSpaceTypes}}Клиент пока ничего не бронировал.{{else}}Показаны только типы, которые бронировал выбранный клиент.{{end}}</small>
-            </div>
-          </fieldset>
-
-          <fieldset class="filter-group">
-            <legend>Статус и даты</legend>
-            <div class="form-field">
-              <label class="form-label" for="bf-status">Статус</label>
-              <select class="form-input" id="bf-status" name="status">
-                <option value="">Все статусы</option>
-                <option value="confirmed" {{if eq .Filter.Status "confirmed"}}selected{{end}}>Подтверждена</option>
-                <option value="cancelled" {{if eq .Filter.Status "cancelled"}}selected{{end}}>Отменена</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="bf-date-from">Дата с</label>
-              <input class="form-input" id="bf-date-from" type="date" name="date_from" value="{{.Filter.DateFrom}}">
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="bf-date-to">Дата по</label>
-              <input class="form-input" id="bf-date-to" type="date" name="date_to" value="{{.Filter.DateTo}}">
             </div>
           </fieldset>
 

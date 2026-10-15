@@ -40,7 +40,7 @@ type ClientRepository interface {
 	ClientByID(ctx context.Context, id int) (domain.Client, error)
 	SaveClient(ctx context.Context, client domain.Client) (domain.Client, error)
 	UpdateClient(ctx context.Context, client domain.Client) (domain.Client, error)
-	// DeleteClient удаляет клиента, у которого ещё нет броней.
+	// DeleteClient удаляет клиента вместе с его бронями.
 	DeleteClient(ctx context.Context, id int) error
 }
 
@@ -66,9 +66,6 @@ type BookingFilter struct {
 	Search    string
 	ClientID  int
 	SpaceType domain.SpaceTypeCode
-	Status    domain.BookingStatus
-	DateFrom  string
-	DateTo    string
 	SpaceID   int
 }
 
@@ -133,7 +130,6 @@ var (
 	ErrBookingNotFound      = errors.New("booking not found")
 	ErrRateNotAvailable     = errors.New("rate not available for this space")
 	ErrInvalidFilter        = errors.New("invalid booking filter")
-	ErrClientHasBookings    = errors.New("client has confirmed bookings")
 )
 
 const (
@@ -306,23 +302,10 @@ func (s *BookingService) UpdateClient(ctx context.Context, id int, input ClientI
 	return s.clients.UpdateClient(ctx, client)
 }
 
-// DeleteClient удаляет клиента.
-// Подтверждённая бронь запрещает удаление: это действующая история, её сначала
-// нужно отменить. Отменённые брони считаются закрытыми и удаляются вместе с
-// клиентом (внешний ключ не даёт оставить их без клиента).
+// DeleteClient удаляет клиента вместе с его бронями. Брони уходят вслед
+// (ON DELETE CASCADE в схеме БД): предварительная отмена не нужна, запись
+// клиента удаляется без условий.
 func (s *BookingService) DeleteClient(ctx context.Context, id int) error {
-	if _, err := s.clients.ClientByID(ctx, id); err != nil {
-		return err
-	}
-	details, err := s.bookings.SearchBookings(ctx, BookingFilter{ClientID: id})
-	if err != nil {
-		return err
-	}
-	for _, detail := range details {
-		if detail.Booking.Status == domain.BookingStatusConfirmed {
-			return fmt.Errorf("%w: id %d", ErrClientHasBookings, id)
-		}
-	}
 	return s.clients.DeleteClient(ctx, id)
 }
 
@@ -330,27 +313,6 @@ func validateBookingFilter(filter BookingFilter) error {
 	if filter.SpaceType != "" && filter.SpaceType != domain.SpaceTypeDesk &&
 		filter.SpaceType != domain.SpaceTypeCabin && filter.SpaceType != domain.SpaceTypeRoom {
 		return fmt.Errorf("%w: неизвестный тип пространства", ErrInvalidFilter)
-	}
-	if filter.Status != "" && filter.Status != domain.BookingStatusConfirmed && filter.Status != domain.BookingStatusCancelled {
-		return fmt.Errorf("%w: неизвестный статус брони", ErrInvalidFilter)
-	}
-
-	var from, to time.Time
-	var err error
-	if filter.DateFrom != "" {
-		from, err = time.Parse("2006-01-02", filter.DateFrom)
-		if err != nil {
-			return fmt.Errorf("%w: дата начала должна быть в формате ГГГГ-ММ-ДД", ErrInvalidFilter)
-		}
-	}
-	if filter.DateTo != "" {
-		to, err = time.Parse("2006-01-02", filter.DateTo)
-		if err != nil {
-			return fmt.Errorf("%w: дата окончания должна быть в формате ГГГГ-ММ-ДД", ErrInvalidFilter)
-		}
-	}
-	if !from.IsZero() && !to.IsZero() && from.After(to) {
-		return fmt.Errorf("%w: дата начала позже даты окончания", ErrInvalidFilter)
 	}
 	return nil
 }
