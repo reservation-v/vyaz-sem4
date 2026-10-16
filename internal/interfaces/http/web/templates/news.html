@@ -1,27 +1,47 @@
 {{define "content"}}
-<section class="page">
+<section class="page news-page" id="news-app">
   <div class="shell page-inner">
-    <p class="hero-kicker">Новости</p>
-    <h1 class="page-title">Новости коворкинга</h1>
-    <p class="page-lead">Анонсы и события «Места». Скоро новости подключатся к базе данных и будут дополняться внешними источниками по теме.</p>
+    <p class="hero-kicker">Обмен данными между приложениями</p>
+    <h1 class="page-title">Новости</h1>
+    <p class="page-lead">Внешние новости по теме коворкинга из открытой RSS-ленты, а также собственные новости коворкинга «Место» из базы данных. Переключайтесь между двумя блоками кнопками ниже.</p>
 
-    <div class="news-list">
-      <article class="news-item reveal">
-        <p class="news-date">1 октября 2026</p>
-        <h2>Скидка 20 % на первый месяц</h2>
-        <p>Новые резиденты получают скидку на первый месяц аренды деск-места или кабинета. Акция действует до конца октября.</p>
-      </article>
-      <article class="news-item reveal">
-        <p class="news-date">15 сентября 2026</p>
-        <h2>Митапы по четвергам</h2>
-        <p>Каждый четверг в 19:00 — открытые встречи резидентов в лаунже: короткие доклады, вопросы и нетворкинг с чаем.</p>
-      </article>
-      <article class="news-item reveal">
-        <p class="news-date">1 сентября 2026</p>
-        <h2>Место открылось</h2>
-        <p>31-й этаж башни «Око» принял первых резидентов: 24 стола, 6 кабинетов и 3 переговорки с видом на Москва-Сити.</p>
-      </article>
+    <div class="db-menu" role="tablist" aria-label="Что показать">
+      <button class="db-menu-btn is-active" type="button" data-tab="external" role="tab" aria-selected="true" aria-controls="panel-external">Внешние новости</button>
+      <button class="db-menu-btn" type="button" data-tab="own" role="tab" aria-selected="false" aria-controls="panel-own">Наши новости (из базы данных)</button>
+    </div>
+  </div>
+
+  <div class="news-panels">
+    <div class="db-panel" id="panel-external" data-panel="external" role="tabpanel">
+      <div class="news-toolbar">
+        <p class="news-status" id="external-status" aria-live="polite">Загружаем новости из внешних источников…</p>
+        <button class="btn btn-ghost" id="external-refresh" type="button">Обновить</button>
+      </div>
+      <div class="news-list" id="external-news"></div>
+      <p class="table-note">Внешние новости страница забирает у нашего сервера, а сервер читает RSS-ленту vc.ru (тег «коворкинг»). Это пример обмена данными между приложениями.</p>
+    </div>
+
+    <div class="db-panel" id="panel-own" data-panel="own" role="tabpanel" hidden>
+      <div class="news-list">
+        <article class="news-item">
+          <p class="news-date">1 октября 2026</p>
+          <h2>Скидка 20 % на первый месяц</h2>
+          <p>Новые резиденты получают скидку на первый месяц аренды деск-места или кабинета. Акция действует до конца октября.</p>
+        </article>
+        <article class="news-item">
+          <p class="news-date">15 сентября 2026</p>
+          <h2>Митапы по четвергам</h2>
+          <p>Каждый четверг в 19:00 - открытые встречи резидентов в лаунже: короткие доклады, вопросы и нетворкинг с чаем.</p>
+        </article>
+        <article class="news-item">
+          <p class="news-date">1 сентября 2026</p>
+          <h2>Место открылось</h2>
+          <p>31-й этаж башни «Око» принял первых резидентов: 24 стола, 6 кабинетов и 3 переговорки с видом на Москва-Сити.</p>
+        </article>
+      </div>
+      <p class="table-note">Собственные новости коворкинга «Место» хранятся в базе данных.</p>
     </div>
   </div>
 </section>
+<script src="/static/js/news.js" defer></script>
 {{end}}

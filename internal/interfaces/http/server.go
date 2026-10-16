@@ -16,6 +16,7 @@ import (
 type Server struct {
 	catalog       *application.ServiceCatalog
 	bookings      *application.BookingService // nil — страница /booking остаётся статической
+	news          *application.NewsService    // nil — внешние новости недоступны
 	siteTitle     string
 	templates     map[string]*template.Template
 	staticHandler nethttp.Handler
@@ -36,6 +37,13 @@ func WithSiteTitle(title string) Option {
 func WithBookingService(bookings *application.BookingService) Option {
 	return func(s *Server) {
 		s.bookings = bookings
+	}
+}
+
+// WithNewsService включает внешние новости на странице /news (через /api/news/external).
+func WithNewsService(news *application.NewsService) Option {
+	return func(s *Server) {
+		s.news = news
 	}
 }
 
@@ -94,6 +102,7 @@ func (s *Server) Router() nethttp.Handler {
 		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))
 	}
 	mux.HandleFunc("GET /residents", s.staticPage("residents", "Резиденты из XML", "residents"))
+	mux.HandleFunc("GET /api/news/external", s.handleExternalNews)
 	mux.HandleFunc("GET /soon", s.handleSoon)
 	mux.Handle("GET /static/", nethttp.StripPrefix("/static/", s.staticHandler))
 

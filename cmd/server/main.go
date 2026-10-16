@@ -14,6 +14,7 @@ import (
 	"coworking/internal/application"
 	"coworking/internal/infrastructure/memory"
 	"coworking/internal/infrastructure/postgres"
+	"coworking/internal/infrastructure/rss"
 	apphttp "coworking/internal/interfaces/http"
 )
 
@@ -39,9 +40,15 @@ func main() {
 	defer repository.Close()
 	bookings := application.NewBookingService(repository, repository)
 
+	// Внешние новости по предметной области: RSS-ленту забирает сервер.
+	newsService := application.NewNewsService(5*time.Minute,
+		rss.NewFeed("vc.ru · коворкинг", "https://vc.ru/rss/tag/coworking"),
+	)
+
 	server, err := apphttp.NewServer(catalog,
 		apphttp.WithSiteTitle("Место"),
 		apphttp.WithBookingService(bookings),
+		apphttp.WithNewsService(newsService),
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

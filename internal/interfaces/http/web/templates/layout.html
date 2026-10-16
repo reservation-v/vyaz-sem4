@@ -39,12 +39,12 @@
             </button>
             <nav class="burger-menu" id="burger-menu" aria-label="Все страницы" hidden>
               <a href="/" {{if eq .ActiveNav "home"}}class="is-active" aria-current="page"{{end}}>Главная</a>
-              <a href="/#services">Сервисы</a>
+              <a href="/news" {{if eq .ActiveNav "news"}}class="is-active" aria-current="page"{{end}}>Новости</a>
               <a href="/residents" {{if eq .ActiveNav "residents"}}class="is-active" aria-current="page"{{end}}>Резиденты из XML</a>
               <a href="/booking" {{if eq .ActiveNav "booking"}}class="is-active" aria-current="page"{{end}}>Бронирование</a>
               <a href="/office" {{if eq .ActiveNav "office"}}class="is-active" aria-current="page"{{end}}>Офис</a>
               <a href="/tariffs" {{if eq .ActiveNav "tariffs"}}class="is-active" aria-current="page"{{end}}>Тарифы</a>
-              <a href="/news" {{if eq .ActiveNav "news"}}class="is-active" aria-current="page"{{end}}>Новости</a>
+              <a href="/#services">Сервисы</a>
               <a href="/achievements" {{if eq .ActiveNav "achievements"}}class="is-active" aria-current="page"{{end}}>Достижения</a>
               <a href="/contacts" {{if eq .ActiveNav "contacts"}}class="is-active" aria-current="page"{{end}}>Контакты</a>
               <a href="/about" {{if eq .ActiveNav "about"}}class="is-active" aria-current="page"{{end}}>О коворкинге</a>
