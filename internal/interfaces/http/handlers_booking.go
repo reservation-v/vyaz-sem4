@@ -54,7 +54,6 @@ type bookingRowView struct {
 	Total         int
 	StatusLabel   string
 	StatusClass   string
-	CanCancel     bool
 }
 
 // bookingFormData — значения формы брони (ввод или редактирование).
@@ -92,30 +91,20 @@ type bookingPageData struct {
 	Form             bookingFormData
 	ClientForm       clientFormData
 	Filter           bookingFilterView
-	Statistics       bookingStatisticsView
 	Summary          bookingSummaryView
 	Flash            string
 	FlashKind        string // "ok" или "err"
+	// Tab - вкладка собственного меню страницы, видимая при отрисовке.
+	Tab string
+	// TabHint - вкладка, которую просит открыть текущий запрос: редактирование
+	// брони или клиента, активный поиск. Пустое значение - оставить текущую.
+	TabHint string
 }
 
 type bookingFilterView struct {
 	Search    string
 	ClientID  int
 	SpaceType string
-}
-
-type bookingStatisticsView struct {
-	TotalBookings     int
-	ConfirmedBookings int
-	CancelledBookings int
-	Revenue           int
-	BySpaceType       []bookingTypeStatisticsView
-}
-
-type bookingTypeStatisticsView struct {
-	Title   string
-	Count   int
-	Revenue int
 }
 
 // bookingSummaryView — краткое содержание всей БД для постоянной панели.
@@ -233,24 +222,25 @@ func (s *Server) handleBookingUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/booking?notice=updated&id=%d", id), http.StatusSeeOther)
 }
 
-// handleBookingCancel отменяет бронь по её id, сохраняя запись в истории.
-func (s *Server) handleBookingCancel(w http.ResponseWriter, r *http.Request) {
+// handleBookingDelete удаляет бронь по её id. Отмена брони выполняется
+// удалением: запись исчезает из таблицы и из счётчиков.
+func (s *Server) handleBookingDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	if err := s.bookings.CancelBooking(r.Context(), id); err != nil {
+	if err := s.bookings.DeleteBooking(r.Context(), id); err != nil {
 		if errors.Is(err, application.ErrBookingNotFound) {
 			http.NotFound(w, r)
 			return
 		}
-		http.Redirect(w, r, "/booking?notice=cancel-error", http.StatusSeeOther)
+		http.Redirect(w, r, "/booking?notice=delete-error", http.StatusSeeOther)
 		return
 	}
 
-	http.Redirect(w, r, "/booking?notice=cancelled", http.StatusSeeOther)
+	http.Redirect(w, r, "/booking?notice=deleted", http.StatusSeeOther)
 }
 
 // handleClientCreate обрабатывает ввод нового клиента.
@@ -391,12 +381,6 @@ func (s *Server) buildBookingPage(r *http.Request, form bookingFormData, clientF
 		return bookingPageData{}, fmt.Errorf("не удалось загрузить брони")
 	}
 
-	statistics, err := s.bookings.Statistics(r.Context(), filter)
-	if err != nil {
-		log.Printf("booking page: load statistics: %v", err)
-		return bookingPageData{}, fmt.Errorf("не удалось рассчитать отчёт")
-	}
-
 	summary, err := s.bookings.Summary(r.Context())
 	if err != nil {
 		log.Printf("booking page: load summary: %v", err)
@@ -424,6 +408,12 @@ func (s *Server) buildBookingPage(r *http.Request, form bookingFormData, clientF
 		}
 	}
 
+	tabHint := bookingTabHint(form, clientForm, filter)
+	tab := tabHint
+	if tab == "" {
+		tab = "clients"
+	}
+
 	return bookingPageData{
 		basePageData:     s.basePage("Бронирование", "booking"),
 		Spaces:           toBookingSpaceViews(spaces),
@@ -436,10 +426,11 @@ func (s *Server) buildBookingPage(r *http.Request, form bookingFormData, clientF
 		Form:             form,
 		ClientForm:       clientForm,
 		Filter:           toBookingFilterView(filter),
-		Statistics:       toBookingStatisticsView(statistics),
 		Summary:          toBookingSummaryView(summary),
 		Flash:            flash,
 		FlashKind:        kind,
+		Tab:              tab,
+		TabHint:          tabHint,
 	}, nil
 }
 
@@ -567,8 +558,8 @@ func flashFromQuery(r *http.Request) (string, string) {
 		return "Бронь создана. Оплата — на ресепшене при входе.", "ok"
 	case "updated":
 		return "Бронь изменена.", "ok"
-	case "cancelled":
-		return "Бронь отменена. Запись сохранена в истории, депозит за переговорку вернётся в течение дня.", "ok"
+	case "deleted":
+		return "Бронь удалена из базы данных. Депозит за переговорку вернётся в течение дня.", "ok"
 	case "client-created":
 		return "Клиент добавлен.", "ok"
 	case "client-updated":
@@ -577,8 +568,8 @@ func flashFromQuery(r *http.Request) (string, string) {
 		return "Клиент удалён вместе с его бронями.", "ok"
 	case "client-delete-error":
 		return "Не удалось удалить клиента. Обновите страницу и попробуйте снова.", "err"
-	case "cancel-error":
-		return "Не удалось отменить бронь. Обновите страницу и попробуйте снова.", "err"
+	case "delete-error":
+		return "Не удалось удалить бронь. Обновите страницу и попробуйте снова.", "err"
 	default:
 		return "", ""
 	}
@@ -590,6 +581,22 @@ func defaultDate(r *http.Request) string {
 		return date
 	}
 	return time.Now().Format("2006-01-02")
+}
+
+// bookingTabHint выбирает вкладку собственного меню страницы под текущий запрос:
+// редактирование брони или клиента, либо активный поиск. Пустая строка означает
+// «не навязывать вкладку» - интерфейс оставит открытой текущую.
+func bookingTabHint(form bookingFormData, clientForm clientFormData, filter application.BookingFilter) string {
+	switch {
+	case form.Mode == "edit":
+		return "booking"
+	case clientForm.Mode == "edit":
+		return "clients"
+	case filter.Search != "" || filter.ClientID != 0 || filter.SpaceType != "":
+		return "search"
+	default:
+		return ""
+	}
 }
 
 func bookingFilterFromRequest(r *http.Request) application.BookingFilter {
@@ -620,22 +627,6 @@ func spaceTypeInList(types []domain.SpaceType, code domain.SpaceTypeCode) bool {
 		}
 	}
 	return false
-}
-
-func toBookingStatisticsView(stats application.BookingStatistics) bookingStatisticsView {
-	view := bookingStatisticsView{
-		TotalBookings:     stats.TotalBookings,
-		ConfirmedBookings: stats.ConfirmedBookings,
-		CancelledBookings: stats.CancelledBookings,
-		Revenue:           stats.Revenue,
-		BySpaceType:       make([]bookingTypeStatisticsView, 0, len(stats.BySpaceType)),
-	}
-	for _, item := range stats.BySpaceType {
-		view.BySpaceType = append(view.BySpaceType, bookingTypeStatisticsView{
-			Title: item.Title, Count: item.Count, Revenue: item.Revenue,
-		})
-	}
-	return view
 }
 
 func toBookingSummaryView(summary application.DatabaseSummary) bookingSummaryView {
@@ -707,7 +698,6 @@ func toBookingRowViews(details []application.BookingDetails) []bookingRowView {
 			Price:         booking.Price,
 			Deposit:       booking.Deposit,
 			Total:         booking.Price + booking.Deposit,
-			CanCancel:     booking.Status == domain.BookingStatusConfirmed,
 		}
 
 		switch booking.Status {

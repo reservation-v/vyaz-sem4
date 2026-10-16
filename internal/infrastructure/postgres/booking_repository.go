@@ -403,10 +403,12 @@ func (r *Repository) UpdateBooking(ctx context.Context, booking domain.Booking) 
 	return booking, nil
 }
 
-func (r *Repository) CancelBooking(ctx context.Context, id int) error {
-	command, err := r.pool.Exec(ctx, `UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'confirmed'`, id)
+// DeleteBooking удаляет бронь из таблицы. Отмена брони выполняется удалением,
+// поэтому запись исчезает из списка и перестаёт учитываться в счётчиках.
+func (r *Repository) DeleteBooking(ctx context.Context, id int) error {
+	command, err := r.pool.Exec(ctx, `DELETE FROM bookings WHERE id = $1`, id)
 	if err != nil {
-		return fmt.Errorf("cancel booking %d: %w", id, err)
+		return fmt.Errorf("delete booking %d: %w", id, err)
 	}
 	if command.RowsAffected() == 0 {
 		return application.ErrBookingNotFound

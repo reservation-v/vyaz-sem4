@@ -192,10 +192,10 @@ func (r *stubRepo) UpdateBooking(_ context.Context, booking domain.Booking) (dom
 	return domain.Booking{}, ErrBookingNotFound
 }
 
-func (r *stubRepo) CancelBooking(_ context.Context, id int) error {
+func (r *stubRepo) DeleteBooking(_ context.Context, id int) error {
 	for i := range r.bookings {
-		if r.bookings[i].ID == id && r.bookings[i].Status == domain.BookingStatusConfirmed {
-			r.bookings[i].Status = domain.BookingStatusCancelled
+		if r.bookings[i].ID == id {
+			r.bookings = append(r.bookings[:i], r.bookings[i+1:]...)
 			return nil
 		}
 	}
@@ -412,7 +412,7 @@ func TestSameTimeDifferentSpace(t *testing.T) {
 	}
 }
 
-func TestCancelledBookingIsKeptForHistoryAndDoesNotBlockSpace(t *testing.T) {
+func TestDeletedBookingIsRemovedAndFreesSpace(t *testing.T) {
 	svc := newTestBookingService()
 
 	booking, err := createHour(t, svc, 1, 1, "2026-10-12", 10, 2)
@@ -420,19 +420,16 @@ func TestCancelledBookingIsKeptForHistoryAndDoesNotBlockSpace(t *testing.T) {
 		t.Fatalf("first booking: %v", err)
 	}
 
-	if err := svc.CancelBooking(context.Background(), booking.ID); err != nil {
-		t.Fatalf("CancelBooking() error = %v", err)
+	if err := svc.DeleteBooking(context.Background(), booking.ID); err != nil {
+		t.Fatalf("DeleteBooking() error = %v", err)
 	}
 
-	stored, err := svc.BookingByID(context.Background(), booking.ID)
-	if err != nil {
-		t.Fatalf("BookingByID() error = %v, want cancelled booking retained", err)
-	}
-	if stored.Booking.Status != domain.BookingStatusCancelled {
-		t.Errorf("status = %q, want cancelled", stored.Booking.Status)
+	// Отмена выполняется удалением: записи в базе больше нет.
+	if _, err := svc.BookingByID(context.Background(), booking.ID); !errors.Is(err, ErrBookingNotFound) {
+		t.Errorf("BookingByID() error = %v, want ErrBookingNotFound", err)
 	}
 	if _, err := createHour(t, svc, 1, 4, "2026-10-12", 10, 2); err != nil {
-		t.Errorf("booking after cancel error = %v, want nil", err)
+		t.Errorf("booking after delete error = %v, want nil", err)
 	}
 }
 
@@ -683,16 +680,23 @@ func TestClientSpaceTypes(t *testing.T) {
 }
 
 func TestBookingStatisticsForFilteredData(t *testing.T) {
-	svc := newTestBookingService()
+	repo := newStubRepo()
+	svc := NewBookingService(repo, repo)
+	svc.now = func() time.Time { return fixedNow }
+
 	if _, err := createHour(t, svc, 1, 3, "2026-10-12", 10, 2); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := createHour(t, svc, 2, 1, "2026-10-12", 10, 1); err != nil {
 		t.Fatal(err)
 	}
-	if err := svc.CancelBooking(context.Background(), 2); err != nil {
-		t.Fatal(err)
-	}
+	// Статус «отменена» остаётся в схеме отдельным значением, поэтому вводим
+	// такую бронь напрямую: действие отмены теперь удаляет запись из базы.
+	repo.bookings = append(repo.bookings, domain.Booking{
+		ID: 3, SpaceID: 1, ClientID: 1, Date: "2026-10-13",
+		Rate: domain.BookingRateHour, StartHour: 10, Duration: 1, Price: 200,
+		Status: domain.BookingStatusCancelled,
+	})
 
 	filter := BookingFilter{Search: "мария", SpaceType: domain.SpaceTypeDesk}
 	bookings, err := svc.BookingsFiltered(context.Background(), filter)
@@ -707,22 +711,29 @@ func TestBookingStatisticsForFilteredData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if stats.TotalBookings != 2 || stats.ConfirmedBookings != 1 || stats.CancelledBookings != 1 || stats.Revenue != 400 {
-		t.Errorf("statistics = %+v, want total=2 confirmed=1 cancelled=1 revenue=400", stats)
+	if stats.TotalBookings != 3 || stats.ConfirmedBookings != 2 || stats.CancelledBookings != 1 || stats.Revenue != 1100 {
+		t.Errorf("statistics = %+v, want total=3 confirmed=2 cancelled=1 revenue=1100", stats)
 	}
 }
 
 func TestDatabaseSummary(t *testing.T) {
-	svc := newTestBookingService()
+	repo := newStubRepo()
+	svc := NewBookingService(repo, repo)
+	svc.now = func() time.Time { return fixedNow }
+
 	if _, err := createHour(t, svc, 1, 1, "2026-10-12", 10, 2); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := createHour(t, svc, 1, 4, "2026-10-13", 10, 1); err != nil {
 		t.Fatal(err)
 	}
-	if err := svc.CancelBooking(context.Background(), 2); err != nil {
-		t.Fatal(err)
-	}
+	// Легаси-бронь со статусом «отменена»: действие отмены теперь удаляет запись,
+	// но схема по-прежнему различает статусы.
+	repo.bookings = append(repo.bookings, domain.Booking{
+		ID: 3, SpaceID: 1, ClientID: 1, Date: "2026-10-14",
+		Rate: domain.BookingRateHour, StartHour: 10, Duration: 1, Price: 200,
+		Status: domain.BookingStatusCancelled,
+	})
 
 	summary, err := svc.Summary(context.Background())
 	if err != nil {
@@ -731,15 +742,15 @@ func TestDatabaseSummary(t *testing.T) {
 	if summary.Spaces != 3 || summary.Clients != 4 || summary.SpaceTypes != 3 {
 		t.Errorf("summary counts = %+v, want spaces=3 clients=4 types=3", summary)
 	}
-	if summary.Bookings != 2 || summary.Confirmed != 1 || summary.Cancelled != 1 || summary.Revenue != 400 {
-		t.Errorf("summary aggregates = %+v, want bookings=2 confirmed=1 cancelled=1 revenue=400", summary)
+	if summary.Bookings != 3 || summary.Confirmed != 2 || summary.Cancelled != 1 || summary.Revenue != 600 {
+		t.Errorf("summary aggregates = %+v, want bookings=3 confirmed=2 cancelled=1 revenue=600", summary)
 	}
 	if summary.TopSpaceTypeCount == 0 {
 		t.Error("TopSpaceTypeCount = 0, want at least one confirmed booking")
 	}
 }
 
-func TestCancelBooking(t *testing.T) {
+func TestDeleteBooking(t *testing.T) {
 	svc := newTestBookingService()
 
 	booking, err := createHour(t, svc, 1, 1, "2026-10-12", 10, 1)
@@ -747,15 +758,15 @@ func TestCancelBooking(t *testing.T) {
 		t.Fatalf("CreateBooking() error = %v", err)
 	}
 
-	if err := svc.CancelBooking(context.Background(), booking.ID); err != nil {
-		t.Fatalf("CancelBooking() error = %v", err)
+	if err := svc.DeleteBooking(context.Background(), booking.ID); err != nil {
+		t.Fatalf("DeleteBooking() error = %v", err)
 	}
 
-	// Повторная отмена и несуществующая бронь — одна ошибка.
-	if err := svc.CancelBooking(context.Background(), booking.ID); !errors.Is(err, ErrBookingNotFound) {
-		t.Errorf("second cancel error = %v, want ErrBookingNotFound", err)
+	// Повторное удаление и несуществующая бронь - одна ошибка.
+	if err := svc.DeleteBooking(context.Background(), booking.ID); !errors.Is(err, ErrBookingNotFound) {
+		t.Errorf("second delete error = %v, want ErrBookingNotFound", err)
 	}
-	if err := svc.CancelBooking(context.Background(), 404); !errors.Is(err, ErrBookingNotFound) {
+	if err := svc.DeleteBooking(context.Background(), 404); !errors.Is(err, ErrBookingNotFound) {
 		t.Errorf("unknown booking error = %v, want ErrBookingNotFound", err)
 	}
 }

@@ -30,8 +30,9 @@ type BookingRepository interface {
 	SaveBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error)
 	// UpdateBooking сохраняет изменённую бронь (редактирование).
 	UpdateBooking(ctx context.Context, booking domain.Booking) (domain.Booking, error)
-	// CancelBooking отменяет бронь, сохраняя запись для истории и отчётов.
-	CancelBooking(ctx context.Context, id int) error
+	// DeleteBooking удаляет бронь из базы: отмена выполняется удалением,
+	// чтобы запись исчезала из списка и не попадала в счётчики.
+	DeleteBooking(ctx context.Context, id int) error
 }
 
 // ClientRepository — порт хранилища клиентов.
@@ -352,9 +353,10 @@ func (s *BookingService) UpdateBooking(ctx context.Context, id int, input Bookin
 	return s.bookings.UpdateBooking(ctx, booking)
 }
 
-// CancelBooking отменяет бронь, сохраняя запись в истории.
-func (s *BookingService) CancelBooking(ctx context.Context, id int) error {
-	return s.bookings.CancelBooking(ctx, id)
+// DeleteBooking удаляет бронь из базы данных. Отмена брони выполняется
+// удалением: запись не остаётся ни в списке, ни в счётчиках.
+func (s *BookingService) DeleteBooking(ctx context.Context, id int) error {
+	return s.bookings.DeleteBooking(ctx, id)
 }
 
 // prepareBooking проверяет входные данные и рассчитывает стоимость и депозит.

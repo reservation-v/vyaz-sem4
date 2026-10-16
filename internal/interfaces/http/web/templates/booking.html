@@ -1,12 +1,14 @@
 {{define "content"}}
-<section class="page" id="booking-app">
+<section class="page" id="booking-app" data-tab-hint="{{.TabHint}}">
   <div class="shell page-inner">
     <p class="hero-kicker">Приложение к базе данных</p>
     <h1 class="page-title">Бронирование мест и переговорок</h1>
-    <p class="page-lead">Ввод и редактирование броней и клиентов, поиск по базе и краткое содержание БД. Выберите стол, кабинет или переговорку, тариф, дату и время — сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
 
-    <div class="page-actions">
-      <button class="btn btn-ghost schema-open" type="button" data-schema-open aria-haspopup="dialog" aria-controls="schema-modal">Показать схему БД</button>
+    <div class="page-head">
+      <p class="page-lead">Ввод и редактирование броней и клиентов, поиск по базе и краткое содержание БД. Выберите стол, кабинет или переговорку, тариф, дату и время - сервис проверит свободные часы и рассчитает стоимость с учётом депозита.</p>
+      <div class="page-actions">
+        <button class="btn btn-ghost schema-open" type="button" data-schema-open aria-haspopup="dialog" aria-controls="schema-modal">Показать схему БД</button>
+      </div>
     </div>
 
     <div class="schema-modal" id="schema-modal" data-schema-modal role="dialog" aria-modal="true" aria-labelledby="schema-modal-title" hidden>
@@ -93,101 +95,35 @@
       </div>
     </div>
 
-    <div class="booking-stack">
-      <aside class="db-summary" aria-label="Краткое содержание базы данных">
-        <div class="db-summary-head">
-          <span class="db-summary-title">База данных «Место»</span>
-          <span class="db-summary-top">Чаще всего бронируют: <strong>{{.Summary.TopSpaceTypeTitle}}</strong> ({{.Summary.TopSpaceTypeCount}})</span>
-        </div>
-        <dl class="db-summary-grid">
-          <div><dt>Локации</dt><dd>{{.Summary.Offices}}</dd></div>
-          <div><dt>Типы пространств</dt><dd>{{.Summary.SpaceTypes}}</dd></div>
-          <div><dt>Пространства</dt><dd>{{.Summary.Spaces}}</dd></div>
-          <div><dt>Клиенты</dt><dd>{{.Summary.Clients}}</dd></div>
-          <div><dt>Брони</dt><dd>{{.Summary.Bookings}}</dd></div>
-          <div><dt>Подтверждено</dt><dd>{{.Summary.Confirmed}}</dd></div>
-          <div><dt>Отменено</dt><dd>{{.Summary.Cancelled}}</dd></div>
-          <div><dt>Выручка</dt><dd>{{.Summary.Revenue | money}} ₽</dd></div>
-        </dl>
-      </aside>
-
-      {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
-
-      <div class="plain-card">
-        <h2>{{if eq .Form.Mode "edit"}}Редактирование брони №{{.Form.ID}}{{else}}Новая бронь{{end}}</h2>
-        <form class="booking-form" id="booking-form" data-ajax method="post" action="{{if eq .Form.Mode "edit"}}/booking/{{.Form.ID}}{{else}}/booking{{end}}" autocomplete="off">
-          <div class="form-field span-2">
-            <label class="form-label" for="bf-client">Клиент</label>
-            <select class="form-input" id="bf-client" name="client_id" required>
-              {{range .Clients}}
-              <option value="{{.ID}}" {{if eq $.Form.ClientID .ID}}selected{{end}}>{{.FullName}}{{if .Company}} — {{.Company}}{{end}}</option>
-              {{end}}
-            </select>
-          </div>
-
-          <div class="form-field span-2">
-            <label class="form-label" for="bf-space">Пространство</label>
-            <select class="form-input" id="bf-space" name="space_id" required>
-              {{range .Spaces}}
-              <option value="{{.ID}}" data-price="{{.PricePerHour}}" data-deposit="{{.Deposit}}" data-type="{{.TypeCode}}" {{if eq $.Form.SpaceID .ID}}selected{{end}}>
-                {{.Name}} — {{.TypeTitle}}, {{.Capacity}} чел., {{.PricePerHour | money}} ₽/ч{{if .Deposit}}, депозит {{.Deposit | money}} ₽{{end}}
-              </option>
-              {{end}}
-            </select>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label" for="bf-rate">Тариф</label>
-              <select class="form-input" id="bf-rate" name="rate" required>
-                <option value="hour" {{if eq .Form.Rate "hour"}}selected{{end}}>Почасовой</option>
-                <option value="day" {{if eq .Form.Rate "day"}}selected{{end}}>На день — 900 ₽</option>
-                <option value="week" {{if eq .Form.Rate "week"}}selected{{end}}>На неделю — 3 500 ₽</option>
-                <option value="month" {{if eq .Form.Rate "month"}}selected{{end}}>На месяц — 12 000 ₽</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="bf-date">Дата</label>
-              <input class="form-input" id="bf-date" type="date" name="date" value="{{.Form.Date}}" required>
-            </div>
-          </div>
-
-          <div class="form-row" id="bf-hour-row">
-            <div class="form-field">
-              <label class="form-label" for="bf-start">Начало</label>
-              <select class="form-input" id="bf-start" name="start_hour" required>
-                {{range .StartHours}}
-                <option value="{{.}}" {{if eq $.Form.StartHour .}}selected{{end}}>{{.}}:00</option>
-                {{end}}
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label" for="bf-duration">Длительность</label>
-              <select class="form-input" id="bf-duration" name="duration" required>
-                {{range .Durations}}
-                <option value="{{.}}" {{if eq $.Form.Duration .}}selected{{end}}>{{.}} ч</option>
-                {{end}}
-              </select>
-            </div>
-          </div>
-
-          <div class="form-field span-2" id="bf-period-note" hidden>
-            <p class="widget-out">Деск-место закрепляется за вами на весь выбранный период в рабочие часы офиса (8:00–22:00).</p>
-          </div>
-
-          <div class="form-field span-2 booking-total">
-            <span class="form-label">Стоимость</span>
-            <p class="widget-out" id="bf-total">Выберите параметры — цена появится здесь.</p>
-          </div>
-
-          <div class="booking-form-actions">
-            <button class="btn btn-primary" type="submit">{{if eq .Form.Mode "edit"}}Сохранить изменения{{else}}Забронировать{{end}}</button>
-            {{if eq .Form.Mode "edit"}}<a class="btn btn-ghost" data-ajax href="/booking">Отменить редактирование</a>{{end}}
-          </div>
-        </form>
+    <aside class="db-summary" aria-label="Краткое содержание базы данных">
+      <div class="db-summary-head">
+        <span class="db-summary-title">База данных «Место»</span>
+        <span class="db-summary-top">Чаще всего бронируют: <strong>{{.Summary.TopSpaceTypeTitle}}</strong> ({{.Summary.TopSpaceTypeCount}})</span>
       </div>
+      <dl class="db-summary-grid">
+        <div><dt>Локации</dt><dd>{{.Summary.Offices}}</dd></div>
+        <div><dt>Типы пространств</dt><dd>{{.Summary.SpaceTypes}}</dd></div>
+        <div><dt>Пространства</dt><dd>{{.Summary.Spaces}}</dd></div>
+        <div><dt>Клиенты</dt><dd>{{.Summary.Clients}}</dd></div>
+        <div><dt>Брони</dt><dd>{{.Summary.Bookings}}</dd></div>
+        <div><dt>Подтверждено</dt><dd>{{.Summary.Confirmed}}</dd></div>
+        <div><dt>Отменено</dt><dd>{{.Summary.Cancelled}}</dd></div>
+        <div><dt>Выручка</dt><dd>{{.Summary.Revenue | money}} ₽</dd></div>
+      </dl>
+    </aside>
 
-      <div class="plain-card" id="clients">
+    {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
+
+    <div class="db-menu" role="tablist" aria-label="Работа с базой данных">
+      <button class="db-menu-btn" type="button" data-tab="clients" role="tab" aria-selected="{{if eq .Tab "clients"}}true{{else}}false{{end}}" aria-controls="panel-clients">Новый клиент</button>
+      <button class="db-menu-btn" type="button" data-tab="booking" role="tab" aria-selected="{{if eq .Tab "booking"}}true{{else}}false{{end}}" aria-controls="panel-booking">Новая бронь</button>
+      <button class="db-menu-btn" type="button" data-tab="search" role="tab" aria-selected="{{if eq .Tab "search"}}true{{else}}false{{end}}" aria-controls="panel-search">Поиск по базе</button>
+    </div>
+  </div>
+
+  <div class="db-panels">
+    <div class="db-panel" id="panel-clients" data-panel="clients" role="tabpanel" aria-label="Клиенты" {{if ne .Tab "clients"}}hidden{{end}}>
+      <div class="plain-card db-panel-card" id="clients">
         <h2>{{if eq .ClientForm.Mode "edit"}}Редактирование клиента №{{.ClientForm.ID}}{{else}}Новый клиент{{end}}</h2>
         <form class="client-form" data-ajax method="post" action="{{if eq .ClientForm.Mode "edit"}}/booking/clients/{{.ClientForm.ID}}/edit{{else}}/booking/clients{{end}}" autocomplete="off">
           <div class="form-row">
@@ -226,9 +162,9 @@
               {{range .Clients}}
               <tr>
                 <td>{{.FullName}}</td>
-                <td>{{if .Company}}{{.Company}}{{else}}—{{end}}</td>
-                <td>{{if .Phone}}{{.Phone}}{{else}}—{{end}}</td>
-                <td>{{if .Email}}{{.Email}}{{else}}—{{end}}</td>
+                <td>{{if .Company}}{{.Company}}{{else}}-{{end}}</td>
+                <td>{{if .Phone}}{{.Phone}}{{else}}-{{end}}</td>
+                <td>{{if .Email}}{{.Email}}{{else}}-{{end}}</td>
                 <td class="booking-row-actions">
                   <span class="row-actions">
                     <a class="btn-mini" data-ajax href="/booking?edit_client={{.ID}}#clients">Редактировать</a>
@@ -243,11 +179,89 @@
           </table>
         </div>
         {{else}}
-        <p class="table-note">Клиентов пока нет — добавьте первого, чтобы создать бронь.</p>
+        <p class="table-note">Клиентов пока нет - добавьте первого, чтобы создать бронь.</p>
         {{end}}
       </div>
+    </div>
 
-      <div class="plain-card">
+    <div class="db-panel" id="panel-booking" data-panel="booking" role="tabpanel" aria-label="Брони" {{if ne .Tab "booking"}}hidden{{end}}>
+      <div class="plain-card db-panel-card">
+        <h2>{{if eq .Form.Mode "edit"}}Редактирование брони №{{.Form.ID}}{{else}}Новая бронь{{end}}</h2>
+        <form class="booking-form" id="booking-form" data-ajax method="post" action="{{if eq .Form.Mode "edit"}}/booking/{{.Form.ID}}{{else}}/booking{{end}}" autocomplete="off">
+          <div class="form-field span-2">
+            <label class="form-label" for="bf-client">Клиент</label>
+            <select class="form-input" id="bf-client" name="client_id" required>
+              {{range .Clients}}
+              <option value="{{.ID}}" {{if eq $.Form.ClientID .ID}}selected{{end}}>{{.FullName}}{{if .Company}} - {{.Company}}{{end}}</option>
+              {{end}}
+            </select>
+          </div>
+
+          <div class="form-field span-2">
+            <label class="form-label" for="bf-space">Пространство</label>
+            <select class="form-input" id="bf-space" name="space_id" required>
+              {{range .Spaces}}
+              <option value="{{.ID}}" data-price="{{.PricePerHour}}" data-deposit="{{.Deposit}}" data-type="{{.TypeCode}}" {{if eq $.Form.SpaceID .ID}}selected{{end}}>
+                {{.Name}} - {{.TypeTitle}}, {{.Capacity}} чел., {{.PricePerHour | money}} ₽/ч{{if .Deposit}}, депозит {{.Deposit | money}} ₽{{end}}
+              </option>
+              {{end}}
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label" for="bf-rate">Тариф</label>
+              <select class="form-input" id="bf-rate" name="rate" required>
+                <option value="hour" {{if eq .Form.Rate "hour"}}selected{{end}}>Почасовой</option>
+                <option value="day" {{if eq .Form.Rate "day"}}selected{{end}}>На день - 900 ₽</option>
+                <option value="week" {{if eq .Form.Rate "week"}}selected{{end}}>На неделю - 3 500 ₽</option>
+                <option value="month" {{if eq .Form.Rate "month"}}selected{{end}}>На месяц - 12 000 ₽</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-date">Дата</label>
+              <input class="form-input" id="bf-date" type="date" name="date" value="{{.Form.Date}}" required>
+            </div>
+          </div>
+
+          <div class="form-row" id="bf-hour-row">
+            <div class="form-field">
+              <label class="form-label" for="bf-start">Начало</label>
+              <select class="form-input" id="bf-start" name="start_hour" required>
+                {{range .StartHours}}
+                <option value="{{.}}" {{if eq $.Form.StartHour .}}selected{{end}}>{{.}}:00</option>
+                {{end}}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bf-duration">Длительность</label>
+              <select class="form-input" id="bf-duration" name="duration" required>
+                {{range .Durations}}
+                <option value="{{.}}" {{if eq $.Form.Duration .}}selected{{end}}>{{.}} ч</option>
+                {{end}}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field span-2" id="bf-period-note" hidden>
+            <p class="widget-out">Деск-место закрепляется за вами на весь выбранный период в рабочие часы офиса (8:00-22:00).</p>
+          </div>
+
+          <div class="form-field span-2 booking-total">
+            <span class="form-label">Стоимость</span>
+            <p class="widget-out" id="bf-total">Выберите параметры - цена появится здесь.</p>
+          </div>
+
+          <div class="booking-form-actions">
+            <button class="btn btn-primary" type="submit">{{if eq .Form.Mode "edit"}}Сохранить изменения{{else}}Забронировать{{end}}</button>
+            {{if eq .Form.Mode "edit"}}<a class="btn btn-ghost" data-ajax href="/booking">Отменить редактирование</a>{{end}}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="db-panel" id="panel-search" data-panel="search" role="tabpanel" aria-label="Поиск" {{if ne .Tab "search"}}hidden{{end}}>
+      <div class="plain-card db-panel-card">
         <h2>Поиск по базе данных</h2>
         <p class="table-note">Поиск работает по одному значению (клиент, компания или пространство) либо сразу по двум синхронизированным значениям из двух таблиц (клиент + тип пространства).</p>
         <form class="booking-filter" data-ajax method="get" action="/booking">
@@ -290,80 +304,55 @@
         </form>
       </div>
 
-      <div class="plain-card booking-stats">
-        <div class="booking-stats-head">
-          <div>
-            <h2>Отчёт по найденным бронированиям</h2>
-            <p>Агрегация рассчитана по записям PostgreSQL с учётом условий поиска.</p>
+      <div class="booking-table-section" id="search-results">
+        <div class="plain-card">
+          <h2>Брони и встречи</h2>
+          {{if .Rows}}
+          <div class="table-scroll">
+            <table class="data-table booking-table">
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Время</th>
+                  <th>Пространство</th>
+                  <th>Клиент</th>
+                  <th>Период</th>
+                  <th>Сумма</th>
+                  <th>Статус</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {{range .Rows}}
+                <tr>
+                  <td>{{.DateLabel | shortDate}}</td>
+                  <td>{{.TimeLabel}}</td>
+                  <td>{{.Space}}<span class="table-sub">{{.SpaceType}}</span></td>
+                  <td>{{.Client}}{{if .Company}}<span class="table-sub">{{.Company}}</span>{{end}}</td>
+                  <td>{{.DurationLabel}}</td>
+                  <td class="price">
+                    {{.Total | money}} ₽
+                    {{if .Deposit}}<span class="table-sub">({{.Price | money}} ₽ + депозит {{.Deposit | money}} ₽)</span>{{end}}
+                  </td>
+                  <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
+                  <td class="booking-row-actions">
+                    <span class="row-actions">
+                      <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Редактировать</a>
+                      <form class="inline-form" data-delete data-confirm="Удалить бронь №{{.ID}} из базы данных? Запись не сохранится." method="post" action="/booking/{{.ID}}/delete">
+                        <button class="btn-mini" type="submit">Удалить</button>
+                      </form>
+                    </span>
+                  </td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>
           </div>
-          <strong class="booking-revenue">{{.Statistics.Revenue | money}} ₽</strong>
-        </div>
-        <div class="booking-stat-grid">
-          <div><span>Всего записей</span><strong>{{.Statistics.TotalBookings}}</strong></div>
-          <div><span>Подтверждено</span><strong>{{.Statistics.ConfirmedBookings}}</strong></div>
-          <div><span>Отменено</span><strong>{{.Statistics.CancelledBookings}}</strong></div>
-        </div>
-        {{if .Statistics.BySpaceType}}
-        <ul class="booking-type-stats">
-          {{range .Statistics.BySpaceType}}
-          <li><span>{{.Title}}</span><span>{{.Count}} брон. · {{.Revenue | money}} ₽ подтверждённой выручки</span></li>
+          {{else}}
+          <p class="table-note">По выбранным условиям записи не найдены.</p>
           {{end}}
-        </ul>
-        {{end}}
+        </div>
       </div>
-
-    </div>
-  </div>
-
-  <div class="booking-table-section">
-    <div class="plain-card">
-      <h2>Брони и встречи</h2>
-      {{if .Rows}}
-      <div class="table-scroll">
-        <table class="data-table booking-table">
-          <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Время</th>
-              <th>Пространство</th>
-              <th>Клиент</th>
-              <th>Период</th>
-              <th>Сумма</th>
-              <th>Статус</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range .Rows}}
-            <tr>
-              <td>{{.DateLabel | shortDate}}</td>
-              <td>{{.TimeLabel}}</td>
-              <td>{{.Space}}<span class="table-sub">{{.SpaceType}}</span></td>
-              <td>{{.Client}}{{if .Company}}<span class="table-sub">{{.Company}}</span>{{end}}</td>
-              <td>{{.DurationLabel}}</td>
-              <td class="price">
-                {{.Total | money}} ₽
-                {{if .Deposit}}<span class="table-sub">({{.Price | money}} ₽ + депозит {{.Deposit | money}} ₽)</span>{{end}}
-              </td>
-              <td><span class="status-text {{.StatusClass}}">{{.StatusLabel}}</span></td>
-              <td class="booking-row-actions">
-                <span class="row-actions">
-                  <a class="btn-mini" data-ajax href="/booking?edit={{.ID}}#booking-form">Редактировать</a>
-                  {{if .CanCancel}}
-                  <form class="inline-form" data-cancel method="post" action="/booking/{{.ID}}/cancel">
-                    <button class="btn-mini" type="submit">Отменить</button>
-                  </form>
-                  {{end}}
-                </span>
-              </td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
-      </div>
-      {{else}}
-      <p class="table-note">По выбранным условиям записи не найдены.</p>
-      {{end}}
     </div>
   </div>
 </section>

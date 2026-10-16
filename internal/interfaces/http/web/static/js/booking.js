@@ -2,7 +2,9 @@
 // - живой расчёт стоимости по пространству, тарифу и длительности;
 // - периодные тарифы (день/неделя/месяц) только для деск-мест;
 // - длительность почасовой брони ограничена закрытием офиса (22:00);
-// - формы ввода, редактирования, отмены и поиска отправляются через fetch
+// - собственное меню из трёх вкладок (клиенты, брони, поиск): переключение
+//   не двигает страницу, все блоки уже отрисованы и видимость меняется в браузере;
+// - формы ввода, редактирования, удаления и поиска отправляются через fetch
 //   и заменяют блок приложения без перезагрузки страницы, чтобы не уезжать
 //   в начало страницы.
 (function () {
@@ -11,6 +13,44 @@
   var app = document.getElementById("booking-app");
   if (!app) {
     return;
+  }
+
+  // Собственное меню страницы БД: три вкладки. Переключение не ходит на сервер -
+  // все блоки уже отрисованы, меняется только их видимость.
+  var TAB_ORDER = ["clients", "booking", "search"];
+  var activeTab = null;
+
+  function isTab(name) {
+    return TAB_ORDER.indexOf(name) >= 0;
+  }
+
+  function activateTab(name) {
+    if (!isTab(name)) {
+      name = "clients";
+    }
+    activeTab = name;
+
+    Array.prototype.forEach.call(app.querySelectorAll("[data-panel]"), function (panel) {
+      panel.hidden = panel.getAttribute("data-panel") !== name;
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-tab]"), function (button) {
+      var on = button.getAttribute("data-tab") === name;
+      button.classList.toggle("is-active", on);
+      button.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+
+  // Сервер помечает вкладку, которую требует текущий запрос (редактирование брони
+  // или клиента, активный поиск). Если подсказки нет, остаётся та вкладка,
+  // что была открыта до подмены блока.
+  function applyInitialTab() {
+    var hint = app.getAttribute("data-tab-hint") || "";
+    if (isTab(hint)) {
+      activeTab = hint;
+    } else if (!isTab(activeTab)) {
+      activeTab = "clients";
+    }
+    activateTab(activeTab);
   }
 
   var PERIOD_PRICES = { day: 900, week: 3500, month: 12000 };
@@ -149,6 +189,23 @@
     flash.scrollIntoView({ block: "nearest", behavior: instant ? "auto" : "smooth" });
   }
 
+  // Показывает результаты поиска: если карточка с ними оказалась за пределами
+  // экрана, аккуратно подводит к ней взгляд (меню вкладок страницу не двигает).
+  function revealSearchResults() {
+    var results = app.querySelector("#search-results");
+    if (!results) {
+      return;
+    }
+
+    var box = results.getBoundingClientRect();
+    if (box.top >= 0 && box.top <= window.innerHeight) {
+      return;
+    }
+
+    var instant = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    results.scrollIntoView({ block: "start", behavior: instant ? "auto" : "smooth" });
+  }
+
   // Загружает страницу по адресу и подменяет блок приложения.
   function fetchInto(url) {
     return fetch(url)
@@ -190,7 +247,7 @@
 
   // Отправляет форму через fetch и подменяет блок приложения ответом.
   // Работает и для POST (бронь, клиент), и для GET (поиск).
-  function submitAjax(form) {
+  function submitAjax(form, scrollToResults) {
     var method = (form.getAttribute("method") || "get").toLowerCase();
     var button = form.querySelector('button[type="submit"]');
     if (button) {
@@ -215,7 +272,12 @@
         }
         return response.text();
       })
-      .then(replaceApp)
+      .then(function (html) {
+        replaceApp(html);
+        if (scrollToResults) {
+          revealSearchResults();
+        }
+      })
       .catch(function () {
         if (button) {
           button.disabled = false;
@@ -278,6 +340,7 @@
     bindLiveCalc(app.querySelector("#booking-form"));
     bindSchemaModal();
     bindSynchronizedSearch();
+    applyInitialTab();
 
     // Делегирование: обработчик переживает подмену блока после fetch.
     app.addEventListener("submit", function (event) {
@@ -290,7 +353,7 @@
         return;
       }
 
-      if (form.hasAttribute("data-cancel")) {
+      if (form.hasAttribute("data-delete")) {
         event.preventDefault();
         fetch(form.action, { method: "POST" })
           .then(function (response) {
@@ -305,12 +368,19 @@
 
       if (form.hasAttribute("data-ajax")) {
         event.preventDefault();
-        submitAjax(form);
+        submitAjax(form, form.classList.contains("booking-filter"));
       }
     });
 
-    // Внутренние ссылки (сброс поиска, редактирование, отмена) - без перезагрузки.
+    // Внутренние ссылки (сброс поиска, редактирование, удаление) - без перезагрузки.
     app.addEventListener("click", function (event) {
+      var tabButton = event.target.closest ? event.target.closest("[data-tab]") : null;
+      if (tabButton) {
+        event.preventDefault();
+        activateTab(tabButton.getAttribute("data-tab"));
+        return;
+      }
+
       var link = event.target.closest ? event.target.closest("a[data-ajax]") : null;
       if (!link) {
         return;

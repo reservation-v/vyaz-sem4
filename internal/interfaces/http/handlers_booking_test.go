@@ -366,12 +366,12 @@ func TestClientDeleteRemovesBookings(t *testing.T) {
 	}
 }
 
-func TestClientDeleteAfterBookingCancelled(t *testing.T) {
+func TestClientDeleteAfterBookingDeleted(t *testing.T) {
 	srv := newTestBookingServer(t)
 
-	// Отменяем единственную бронь клиента 1: теперь удаление должно проходить.
-	if rec := doPostForm(t, srv, "/booking/1/cancel", nil); rec.Code != http.StatusSeeOther {
-		t.Fatalf("cancel booking POST code = %d, want 303", rec.Code)
+	// Удаляем единственную бронь клиента 1: теперь удаление клиента проходит.
+	if rec := doPostForm(t, srv, "/booking/1/delete", nil); rec.Code != http.StatusSeeOther {
+		t.Fatalf("delete booking POST code = %d, want 303", rec.Code)
 	}
 
 	rec := doPostForm(t, srv, "/booking/clients/1/delete", nil)
@@ -389,10 +389,10 @@ func TestClientDeleteAfterBookingCancelled(t *testing.T) {
 	}
 }
 
-func TestBookingCancelFlow(t *testing.T) {
+func TestBookingDeleteFlow(t *testing.T) {
 	srv := newTestBookingServer(t)
 
-	// Сиды занимают ID 1–2, новая бронь получит ID 3.
+	// Сиды занимают ID 1-2, новая бронь получит ID 3.
 	form := url.Values{
 		"space_id":   {"2"},
 		"client_id":  {"1"},
@@ -405,20 +405,24 @@ func TestBookingCancelFlow(t *testing.T) {
 		t.Fatalf("POST code = %d, want 303", rec.Code)
 	}
 
-	rec := doPostForm(t, srv, "/booking/3/cancel", nil)
+	rec := doPostForm(t, srv, "/booking/3/delete", nil)
 	if rec.Code != http.StatusSeeOther {
-		t.Fatalf("POST /booking/3/cancel code = %d, want 303", rec.Code)
+		t.Fatalf("POST /booking/3/delete code = %d, want 303", rec.Code)
 	}
-	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=cancelled") {
-		t.Errorf("Location = %q, want notice=cancelled", loc)
+	if loc := rec.Header().Get("Location"); !strings.Contains(loc, "notice=deleted") {
+		t.Errorf("Location = %q, want notice=deleted", loc)
 	}
 
-	body := doGet(t, srv, "/booking").Body.String()
-	if !strings.Contains(body, "Отменена") {
-		t.Error("cancelled booking status missing from table")
+	body := doGet(t, srv, "/booking?notice=deleted").Body.String()
+	if !strings.Contains(body, "Бронь удалена") {
+		t.Error("deletion message not shown")
 	}
-	if strings.Contains(body, "/booking/3/cancel") {
-		t.Error("cancelled booking still has a cancel button")
+	// Отмена выполняется удалением: строки в таблице больше нет.
+	if strings.Contains(body, "18:00\u201319:00") {
+		t.Error("deleted booking is still in the table")
+	}
+	if strings.Contains(body, "/booking/3/delete") {
+		t.Error("deleted booking still has a delete button")
 	}
 }
 
@@ -528,5 +532,123 @@ func TestBookingUnknownEditFallsBackToCreate(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "Новая бронь") {
 		t.Error("missing booking should fall back to the create form")
+	}
+}
+
+// panelTagHTML вырезает открывающий тег блока вкладки по имени панели,
+// чтобы проверить, скрыт ли блок атрибутом hidden.
+func panelTagHTML(body, name string) string {
+	marker := `data-panel="` + name + `"`
+	idx := strings.Index(body, marker)
+	if idx < 0 {
+		return ""
+	}
+	start := strings.LastIndex(body[:idx], "<div")
+	end := strings.Index(body[idx:], ">")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return body[start : idx+end]
+}
+
+// TestBookingMenuTabs проверяет собственное меню страницы БД: три вкладки,
+// по умолчанию открыт блок «Новый клиент», а запросы (поиск, редактирование)
+// подсказывают интерфейсу нужную вкладку.
+func TestBookingMenuTabs(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	body := doGet(t, srv, "/booking").Body.String()
+	for _, want := range []string{
+		`data-tab="clients"`,
+		`data-tab="booking"`,
+		`data-tab="search"`,
+		`data-panel="clients"`,
+		`data-panel="booking"`,
+		`data-panel="search"`,
+		`data-tab-hint=""`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("GET /booking missing %q", want)
+		}
+	}
+
+	if tag := panelTagHTML(body, "clients"); strings.Contains(tag, "hidden") {
+		t.Error("блок клиентов должен быть открыт по умолчанию")
+	}
+	for _, name := range []string{"booking", "search"} {
+		if tag := panelTagHTML(body, name); !strings.Contains(tag, "hidden") {
+			t.Errorf("блок %q должен быть скрыт по умолчанию", name)
+		}
+	}
+
+	// Активный поиск открывает блок поиска.
+	searchBody := doGet(t, srv, "/booking?search=Мария").Body.String()
+	if !strings.Contains(searchBody, `data-tab-hint="search"`) {
+		t.Error("активный поиск должен открывать вкладку поиска")
+	}
+	if tag := panelTagHTML(searchBody, "search"); strings.Contains(tag, "hidden") {
+		t.Error("блок поиска должен быть открыт при активном поиске")
+	}
+
+	// Редактирование брони и клиента открывает соответствующую вкладку.
+	if !strings.Contains(doGet(t, srv, "/booking?edit=1").Body.String(), `data-tab-hint="booking"`) {
+		t.Error("редактирование брони должно открывать вкладку броней")
+	}
+	if !strings.Contains(doGet(t, srv, "/booking?edit_client=1").Body.String(), `data-tab-hint="clients"`) {
+		t.Error("редактирование клиента должно открывать вкладку клиентов")
+	}
+}
+
+// TestBookingLayoutBlocks проверяет раскладку страницы БД: отчёта по найденным
+// броням больше нет, а таблица броней вынесена в отдельный (не привязанный
+// к форме поиска) блок на всю ширину.
+func TestBookingLayoutBlocks(t *testing.T) {
+	srv := newTestBookingServer(t)
+	body := doGet(t, srv, "/booking").Body.String()
+
+	if strings.Contains(body, "Отчёт по найденным бронированиям") {
+		t.Error("отчёт по найденным бронированиям должен быть удалён")
+	}
+	if !strings.Contains(body, `class="booking-table-section" id="search-results"`) {
+		t.Error("таблица броней должна быть отдельным блоком с id search-results")
+	}
+	if !strings.Contains(body, `class="db-panels"`) {
+		t.Error("рабочие блоки должны лежать в отдельном контейнере db-panels")
+	}
+}
+
+// TestBookingSearchByNewClientAndType повторяет сценарий преподавателя:
+// новый клиент, затем его бронь, затем поиск по клиенту и типу пространства.
+func TestBookingSearchByNewClientAndType(t *testing.T) {
+	srv := newTestBookingServer(t)
+
+	// Сиды заняли ID 1-3, новый клиент получит ID 4.
+	if rec := doPostForm(t, srv, "/booking/clients", url.Values{"full_name": {"Новый"}}); rec.Code != http.StatusSeeOther {
+		t.Fatalf("create client code = %d, want 303", rec.Code)
+	}
+
+	// Новая бронь клиента 4 на переговорке (space_id 4).
+	form := url.Values{
+		"space_id":   {"4"},
+		"client_id":  {"4"},
+		"date":       {time.Now().Format("2006-01-02")},
+		"rate":       {"hour"},
+		"start_hour": {"9"},
+		"duration":   {"1"},
+	}
+	if rec := doPostForm(t, srv, "/booking", form); rec.Code != http.StatusSeeOther {
+		t.Fatalf("create booking code = %d, want 303; body: %s", rec.Code, rec.Body.String())
+	}
+
+	rec := doGet(t, srv, "/booking?client=4&space_type=room")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET search code = %d, want 200", rec.Code)
+	}
+	table := bookingsTableHTML(rec.Body.String())
+	if !strings.Contains(table, "Новый") {
+		t.Error("поиск по клиенту и типу пространства не нашёл созданную бронь")
+	}
+	if !strings.Contains(table, "Переговорка") {
+		t.Error("в результате поиска нет переговорки")
 	}
 }

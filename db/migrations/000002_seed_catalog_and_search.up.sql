@@ -74,8 +74,3 @@ INSERT INTO bookings (space_id, client_id, book_date, rate, start_hour, duration
 SELECT s.id, c.id, CURRENT_DATE + 1, 'hour', 14, 1, s.price_per_hour, s.deposit, 'confirmed', now() - INTERVAL '15 minutes'
 FROM spaces s, clients c
 WHERE s.name = 'Переговорка «Встреча»' AND c.full_name = 'ООО «Прогресс»';
-
-INSERT INTO bookings (space_id, client_id, book_date, rate, start_hour, duration, price, deposit, status, created_at)
-SELECT s.id, c.id, CURRENT_DATE + 3, 'hour', 11, 2, s.price_per_hour * 2, s.deposit, 'cancelled', now() - INTERVAL '10 minutes'
-FROM spaces s, clients c
-WHERE s.name = 'Кабинет 2–3 №1' AND c.full_name = 'Илья Морозов';

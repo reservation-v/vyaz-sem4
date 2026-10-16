@@ -1452,6 +1452,97 @@ a {
     min-width: 0;
 }
 
+/* ---------- Собственное меню страницы БД ---------- */
+
+/* Верхняя (статичная) часть страницы: заголовок, сводка и меню. Она уже
+   рабочих блоков ниже, чтобы текст не растягивался. */
+
+/* Меню вкладок отделено от панели сводки: кнопки и статистика не слипаются. */
+.db-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 34px 0 0;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-btn);
+    background: var(--surface-tint);
+}
+/* Вводный текст и кнопка «Показать схему БД» стоят в одну строку. */
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px 32px;
+    margin: 0 0 44px;
+}
+
+.page-head .page-lead {
+    margin: 0;
+}
+
+.page-head .page-actions {
+    flex: none;
+    margin: 2px 0 0;
+}
+
+.db-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 18px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-btn);
+    background: var(--surface-tint);
+}
+
+.db-menu-btn {
+    flex: 1 1 180px;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        color 200ms,
+        background 200ms,
+        border-color 200ms;
+}
+
+.db-menu-btn:hover {
+    color: var(--ink);
+}
+
+.db-menu-btn.is-active {
+    border-color: var(--line);
+    background: var(--surface);
+    color: var(--ink);
+}
+
+/* Рабочие блоки страницы (меняются по кнопкам меню) шире верхней части.
+   Карточки форм сжимаются до читаемой ширины, а таблица броней внутри
+   поиска остаётся отдельным блоком на всю ширину страницы. */
+.db-panels {
+    margin-top: 22px;
+    padding: 0 20px;
+}
+
+.db-panel-card {
+    max-width: 1120px;
+    margin: 0 auto 18px;
+}
+
+/* Меню скрывает неактивные блоки. */
+.db-panel[hidden] {
+    display: none;
+}
+
 .booking-form {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1506,7 +1597,7 @@ a {
 }
 
 .flash {
-    margin: 0 0 18px;
+    margin: 20px 0 0;
     padding: 10px 14px;
     border-radius: var(--radius-btn);
     font-size: 0.9rem;
@@ -1555,12 +1646,12 @@ a {
 }
 
 /* Блок «Брони и встречи» тянется за таблицей и потому шире остальных карточек:
-   вынесен за .page-inner, центрируется и сжимается по содержимому таблицы. */
+   отдельный блок на всю ширину страницы, а не ширина формы поиска. */
 .booking-table-section {
     display: flex;
     justify-content: center;
     margin-top: 26px;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .booking-table-section .plain-card {

@@ -199,10 +199,10 @@ func (r *fakeRepo) UpdateBooking(_ context.Context, booking domain.Booking) (dom
 	return domain.Booking{}, application.ErrBookingNotFound
 }
 
-func (r *fakeRepo) CancelBooking(_ context.Context, id int) error {
+func (r *fakeRepo) DeleteBooking(_ context.Context, id int) error {
 	for i := range r.bookings {
-		if r.bookings[i].ID == id && r.bookings[i].Status == domain.BookingStatusConfirmed {
-			r.bookings[i].Status = domain.BookingStatusCancelled
+		if r.bookings[i].ID == id {
+			r.bookings = append(r.bookings[:i], r.bookings[i+1:]...)
 			return nil
 		}
 	}

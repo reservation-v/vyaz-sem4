@@ -89,7 +89,7 @@ func (s *Server) Router() nethttp.Handler {
 		mux.HandleFunc("POST /booking/clients/{id}/edit", s.handleClientUpdate)
 		mux.HandleFunc("POST /booking/clients/{id}/delete", s.handleClientDelete)
 		mux.HandleFunc("POST /booking/{id}", s.handleBookingUpdate)
-		mux.HandleFunc("POST /booking/{id}/cancel", s.handleBookingCancel)
+		mux.HandleFunc("POST /booking/{id}/delete", s.handleBookingDelete)
 	} else {
 		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))
 	}
