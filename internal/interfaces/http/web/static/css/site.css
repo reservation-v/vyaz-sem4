@@ -1046,6 +1046,12 @@ a {
 
 /* ---------- Новости ---------- */
 
+.news-page .page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .news-list {
     display: grid;
     gap: 16px;
@@ -1058,12 +1064,36 @@ a {
     padding: 26px;
 }
 
+.news-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.news-source {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.news-source-own {
+    background: var(--tag-ready-bg);
+    color: var(--tag-ready-ink);
+}
+
+.news-source-external {
+    background: var(--surface-tint);
+    color: var(--tint-ink);
+}
+
 .news-date {
     margin: 0;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 0.82rem;
     color: var(--muted);
 }
 
@@ -1074,7 +1104,7 @@ a {
     font-size: 1.35rem;
 }
 
-.news-item p:last-child {
+.news-item p {
     margin: 0;
     color: var(--muted);
 }
@@ -1089,8 +1119,14 @@ a {
     color: var(--accent-strong);
 }
 
+.news-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
 /* Блоки страницы «Новости» выравниваем по ширине верхней части страницы
-   (кнопки переключения и описание). */
+   (заголовок, описание и описание ленты). */
 .news-panels {
     width: min(1120px, calc(100% - 40px));
     max-width: 780px;
@@ -1098,7 +1134,7 @@ a {
 }
 
 .news-status {
-    margin: 0;
+    margin: 0 0 18px;
     color: var(--muted);
     font-size: 0.95rem;
 }
@@ -1107,12 +1143,164 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 16px;
     margin: 0 0 16px;
 }
 
 .news-toolbar .btn {
     flex: none;
+}
+
+.news-toolbar .news-status {
+    margin: 0;
+}
+
+/* Подключённые источники: компактная панель с ровными строками. */
+.news-connected {
+    margin-top: 34px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+}
+
+.news-connected h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.news-sources {
+    display: grid;
+    gap: 0;
+    margin: 14px 0 0;
+    padding: 4px 14px;
+    list-style: none;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--bg);
+}
+
+.news-sources li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.88rem;
+}
+
+.news-sources li:first-child {
+    border-top: none;
+}
+
+.news-sources a {
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.news-sources .inline-form {
+    margin-left: auto;
+}
+
+.news-source-error {
+    color: var(--tag-soon-ink);
+    font-size: 0.8rem;
+}
+
+/* Рекомендации отделены фоном и карточками, чтобы не сливаться
+   с подключёнными источниками. */
+.news-recommendations {
+    margin-top: 30px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface-tint);
+}
+
+.news-recommendations-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.news-recommendations-head h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.news-recommendations-head .table-note {
+    margin: 0;
+}
+
+.news-rec-badge {
+    flex: none;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--tag-ready-bg);
+    color: var(--tag-ready-ink);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.news-suggestion-list {
+    display: grid;
+    gap: 10px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.news-suggestion {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-btn);
+    background: var(--surface);
+}
+
+.news-suggestion-info {
+    min-width: 0;
+}
+
+.news-suggestion-info p {
+    margin: 6px 0 4px;
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.news-suggestion-info a {
+    color: var(--muted);
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+}
+
+.news-suggestion > form {
+    flex: none;
+    margin-left: auto;
+}
+
+.news-suggestion-done {
+    flex: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .news-recommendations-head,
+    .news-suggestion {
+        flex-direction: column;
+    }
+
+    .news-suggestion > form {
+        margin-left: 0;
+    }
 }
 
 /* ---------- Достижения ---------- */
@@ -2078,5 +2266,49 @@ body.schema-locked {
 @media (max-width: 900px) {
     .schema-modal {
         padding: 12px;
+    }
+}
+
+/* ---------- Предпросмотр RSS ---------- */
+
+.rss-modal .rss-dialog {
+    width: min(920px, 100%);
+    max-height: min(86vh, 820px);
+}
+
+.rss-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 18px 20px;
+    background: var(--bg);
+}
+
+.rss-content {
+    margin: 0;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.rss-actions {
+    flex: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+}
+
+.rss-actions .btn {
+    text-decoration: none;
+}
+
+@media (max-width: 900px) {
+    .rss-modal .rss-dialog {
+        max-height: calc(100vh - 24px);
     }
 }

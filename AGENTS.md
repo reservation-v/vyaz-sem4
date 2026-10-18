@@ -24,6 +24,7 @@
 - брони с почасовым тарифом и периодными тарифами (день/неделя/месяц), статусы (подтверждена/отменена), оплата и депозит за переговорку
 
 Схема БД (Лаба 3, 5 таблиц, 36 атрибутов): `offices`, `space_types`, `spaces`, `clients`, `bookings`.
+Лаба 4 добавляет свои таблицы отдельной миграцией: `news` (свои новости) и `news_sources` (подключённые RSS-ленты).
 
 ## Задачи
 
@@ -33,5 +34,6 @@
 ## Структура
 
 - Проект автономен: Go-приложение (`cmd/`, `internal/`), шаблоны и статика внутри этого репозитория; БД подключена в Лабе 3 (`db/migrations`, `internal/infrastructure/postgres`)
+- Новости (Лаба 4): `internal/application/news_service.go`, `internal/infrastructure/rss`, `internal/infrastructure/postgres/news_repository.go`, страница `internal/interfaces/http/web/templates/news.html`
 - `tasks.md` — план работ на семестр (5 лаб), статусы
 - `tasks-2sem.txt` — исходное ТЗ

@@ -15,8 +15,9 @@ import (
 // Server — HTTP-сервер сайта коворкинга.
 type Server struct {
 	catalog       *application.ServiceCatalog
-	bookings      *application.BookingService // nil — страница /booking остаётся статической
-	news          *application.NewsService    // nil — внешние новости недоступны
+	bookings      *application.BookingService   // nil — страница /booking остаётся статической
+	news          *application.NewsService      // nil — новости недоступны
+	newsPublisher application.NewsFeedPublisher // nil — своя RSS-лента недоступна
 	siteTitle     string
 	templates     map[string]*template.Template
 	staticHandler nethttp.Handler
@@ -40,10 +41,17 @@ func WithBookingService(bookings *application.BookingService) Option {
 	}
 }
 
-// WithNewsService включает внешние новости на странице /news (через /api/news/external).
+// WithNewsService включает новости на странице /news и JSON /api/news.
 func WithNewsService(news *application.NewsService) Option {
 	return func(s *Server) {
 		s.news = news
+	}
+}
+
+// WithNewsPublisher включает публикацию своих новостей в RSS на /news/rss.xml.
+func WithNewsPublisher(publisher application.NewsFeedPublisher) Option {
+	return func(s *Server) {
+		s.newsPublisher = publisher
 	}
 }
 
@@ -85,7 +93,7 @@ func (s *Server) Router() nethttp.Handler {
 	mux.HandleFunc("GET /about", s.staticPage("about", "О коворкинге", "about"))
 	mux.HandleFunc("GET /office", s.staticPage("office", "Офис", "office"))
 	mux.HandleFunc("GET /tariffs", s.staticPage("tariffs", "Тарифы", "tariffs"))
-	mux.HandleFunc("GET /news", s.staticPage("news", "Новости", "news"))
+	mux.HandleFunc("GET /news", s.handleNewsPage)
 	mux.HandleFunc("GET /achievements", s.staticPage("achievements", "Достижения", "achievements"))
 	mux.HandleFunc("GET /contacts", s.staticPage("contacts", "Контакты", "contacts"))
 	mux.HandleFunc("GET /rules", s.staticPage("rules", "Правила", "rules"))
@@ -102,7 +110,14 @@ func (s *Server) Router() nethttp.Handler {
 		mux.HandleFunc("GET /booking", s.staticPage("booking", "Бронирование", "booking"))
 	}
 	mux.HandleFunc("GET /residents", s.staticPage("residents", "Резиденты из XML", "residents"))
-	mux.HandleFunc("GET /api/news/external", s.handleExternalNews)
+
+	// Новости (Лаба 4): одна страница, JSON для обновления и своя RSS-лента.
+	mux.HandleFunc("POST /news", s.handleNewsCreate)
+	mux.HandleFunc("POST /news/sources", s.handleNewsSourceCreate)
+	mux.HandleFunc("POST /news/sources/{id}/delete", s.handleNewsSourceDelete)
+	mux.HandleFunc("POST /news/{id}/delete", s.handleNewsDelete)
+	mux.HandleFunc("GET /news/rss.xml", s.handleNewsRSS)
+	mux.HandleFunc("GET /api/news", s.handleNewsList)
 	mux.HandleFunc("GET /soon", s.handleSoon)
 	mux.Handle("GET /static/", nethttp.StripPrefix("/static/", s.staticHandler))
 

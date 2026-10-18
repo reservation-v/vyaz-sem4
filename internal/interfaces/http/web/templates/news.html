@@ -1,47 +1,165 @@
 {{define "content"}}
-<section class="page news-page" id="news-app">
+<section class="page news-page" id="news-app" data-tab="{{.Tab}}">
   <div class="shell page-inner">
     <p class="hero-kicker">Обмен данными между приложениями</p>
     <h1 class="page-title">Новости</h1>
-    <p class="page-lead">Внешние новости по теме коворкинга из открытой RSS-ленты, а также собственные новости коворкинга «Место» из базы данных. Переключайтесь между двумя блоками кнопками ниже.</p>
+    <div class="page-head">
+      <p class="page-lead">Одна общая лента: собственные новости коворкинга «Место» из базы данных и материалы подключённых RSS-лент. У каждой новости указан источник.</p>
+      <div class="page-actions">
+        <button class="btn btn-ghost" id="rss-open" type="button" aria-haspopup="dialog" aria-controls="rss-modal">RSS нашего сайта</button>
+      </div>
+    </div>
 
-    <div class="db-menu" role="tablist" aria-label="Что показать">
-      <button class="db-menu-btn is-active" type="button" data-tab="external" role="tab" aria-selected="true" aria-controls="panel-external">Внешние новости</button>
-      <button class="db-menu-btn" type="button" data-tab="own" role="tab" aria-selected="false" aria-controls="panel-own">Наши новости (из базы данных)</button>
+    {{if .Flash}}<p class="flash flash-{{.FlashKind}}" role="status">{{.Flash}}</p>{{end}}
+
+    <div class="db-menu" role="tablist" aria-label="Разделы страницы новостей">
+      <button class="db-menu-btn {{if eq .Tab "feed"}}is-active{{end}}" type="button" data-tab="feed" role="tab" aria-selected="{{if eq .Tab "feed"}}true{{else}}false{{end}}" aria-controls="panel-feed">Новости</button>
+      <button class="db-menu-btn {{if eq .Tab "add-news"}}is-active{{end}}" type="button" data-tab="add-news" role="tab" aria-selected="{{if eq .Tab "add-news"}}true{{else}}false{{end}}" aria-controls="panel-add-news">Добавить новость</button>
+      <button class="db-menu-btn {{if eq .Tab "add-source"}}is-active{{end}}" type="button" data-tab="add-source" role="tab" aria-selected="{{if eq .Tab "add-source"}}true{{else}}false{{end}}" aria-controls="panel-add-source">Подключить RSS</button>
     </div>
   </div>
 
   <div class="news-panels">
-    <div class="db-panel" id="panel-external" data-panel="external" role="tabpanel">
+    <div class="db-panel" id="panel-feed" data-panel="feed" role="tabpanel" aria-label="Новости" {{if ne .Tab "feed"}}hidden{{end}}>
       <div class="news-toolbar">
-        <p class="news-status" id="external-status" aria-live="polite">Загружаем новости из внешних источников…</p>
-        <button class="btn btn-ghost" id="external-refresh" type="button">Обновить</button>
+        <p class="news-status" id="news-status" aria-live="polite">Показано {{len .Items}} новостей. Источников: {{len .Sources}}.</p>
+        <button class="btn btn-ghost" id="news-refresh" type="button">Обновить</button>
       </div>
-      <div class="news-list" id="external-news"></div>
-      <p class="table-note">Внешние новости страница забирает у нашего сервера, а сервер читает RSS-ленту vc.ru (тег «коворкинг»). Это пример обмена данными между приложениями.</p>
+
+      <div class="news-list" id="news-list">
+        {{range .Items}}
+        <article class="news-item" id="news-{{.ID}}">
+          <div class="news-meta">
+            <span class="news-source news-source-{{.SourceClass}}">{{.Source}}</span>
+            {{if .DateLabel}}<span class="news-date">{{.DateLabel}}</span>{{end}}
+          </div>
+          <h2>{{if .Link}}<a href="{{.Link}}" target="_blank" rel="noopener">{{.Title}}</a>{{else}}{{.Title}}{{end}}</h2>
+          {{if .Summary}}<p>{{.Summary}}</p>{{end}}
+          {{if .Own}}
+          <div class="news-item-actions">
+            <form class="inline-form" method="post" action="/news/{{.ID}}/delete">
+              <button class="btn-mini" type="submit">Удалить</button>
+            </form>
+          </div>
+          {{end}}
+        </article>
+        {{else}}
+        <p class="table-note">Новостей пока нет. Добавьте свою новость или подключите RSS-ленту на соседних вкладках.</p>
+        {{end}}
+      </div>
     </div>
 
-    <div class="db-panel" id="panel-own" data-panel="own" role="tabpanel" hidden>
-      <div class="news-list">
-        <article class="news-item">
-          <p class="news-date">1 октября 2026</p>
-          <h2>Скидка 20 % на первый месяц</h2>
-          <p>Новые резиденты получают скидку на первый месяц аренды деск-места или кабинета. Акция действует до конца октября.</p>
-        </article>
-        <article class="news-item">
-          <p class="news-date">15 сентября 2026</p>
-          <h2>Митапы по четвергам</h2>
-          <p>Каждый четверг в 19:00 - открытые встречи резидентов в лаунже: короткие доклады, вопросы и нетворкинг с чаем.</p>
-        </article>
-        <article class="news-item">
-          <p class="news-date">1 сентября 2026</p>
-          <h2>Место открылось</h2>
-          <p>31-й этаж башни «Око» принял первых резидентов: 24 стола, 6 кабинетов и 3 переговорки с видом на Москва-Сити.</p>
-        </article>
+    <div class="db-panel" id="panel-add-news" data-panel="add-news" role="tabpanel" aria-label="Добавить новость" {{if ne .Tab "add-news"}}hidden{{end}}>
+      <div class="plain-card db-panel-card">
+        <h2>Добавить свою новость</h2>
+        <p class="table-note">Новость сохранится в таблицу news и сразу появится в общей ленте с источником «Место».</p>
+        <form class="booking-form" method="post" action="/news" autocomplete="off">
+          <div class="form-field span-2">
+            <label class="form-label" for="nf-title">Заголовок</label>
+            <input class="form-input" id="nf-title" type="text" name="title" value="{{.Form.Title}}" maxlength="200" required>
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label" for="nf-summary">Текст новости</label>
+            <textarea class="form-input" id="nf-summary" name="summary" rows="4" maxlength="2000">{{.Form.Summary}}</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="nf-date">Дата публикации</label>
+            <input class="form-input" id="nf-date" type="date" name="published_at" value="{{.Form.PublishedAt}}" required>
+          </div>
+          <div class="booking-form-actions">
+            <button class="btn btn-primary" type="submit">Опубликовать</button>
+          </div>
+        </form>
       </div>
-      <p class="table-note">Собственные новости коворкинга «Место» хранятся в базе данных.</p>
+    </div>
+
+    <div class="db-panel" id="panel-add-source" data-panel="add-source" role="tabpanel" aria-label="Подключить RSS" {{if ne .Tab "add-source"}}hidden{{end}}>
+      <div class="plain-card db-panel-card" id="sources">
+        <h2>Подключить RSS-ленту</h2>
+        <p class="table-note">Любая лента RSS или Atom по адресу http:// или https://. Сервер сам забирает её и добавляет новости в общую ленту.</p>
+        <form class="booking-form" method="post" action="/news/sources" autocomplete="off">
+          <div class="form-field">
+            <label class="form-label" for="sf-title">Название источника</label>
+            <input class="form-input" id="sf-title" type="text" name="title" value="{{.SourceForm.Title}}" maxlength="100" placeholder="Например, Хабр">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="sf-url">Адрес ленты</label>
+            <input class="form-input" id="sf-url" type="url" name="url" value="{{.SourceForm.URL}}" maxlength="500" placeholder="https://example.com/rss" required>
+          </div>
+          <div class="booking-form-actions">
+            <button class="btn btn-primary" type="submit">Подключить</button>
+          </div>
+        </form>
+
+        <section class="news-connected">
+          <h3>Подключённые источники</h3>
+          <ul class="news-sources">
+            {{range .Sources}}
+            <li>
+              <span class="news-source {{if .Own}}news-source-own{{else}}news-source-external{{end}}">{{.Title}}</span>
+              {{if .URL}}<a href="{{.URL}}" target="_blank" rel="noopener">{{.URL}}</a>{{end}}
+              {{if .Error}}<span class="news-source-error">{{.Error}}</span>{{end}}
+              {{if not .Own}}
+              <form class="inline-form" method="post" action="/news/sources/{{.ID}}/delete">
+                <button class="btn-mini" type="submit">Отключить</button>
+              </form>
+              {{end}}
+            </li>
+            {{end}}
+          </ul>
+        </section>
+
+        <section class="news-recommendations">
+          <div class="news-recommendations-head">
+            <div>
+              <h3>Рекомендуемые ленты</h3>
+              <p class="table-note">Проверенные ленты по теме коворкинга и близким областям. Можно подключить в один клик.</p>
+            </div>
+            <span class="news-rec-badge">в один клик</span>
+          </div>
+          <ul class="news-suggestion-list">
+            {{range .Suggestions}}
+            <li class="news-suggestion">
+              <div class="news-suggestion-info">
+                <span class="news-source news-source-external">{{.Title}}</span>
+                <p>{{.Description}}</p>
+                <a href="{{.URL}}" target="_blank" rel="noopener">{{.URL}}</a>
+              </div>
+              {{if .Connected}}
+              <span class="news-suggestion-done">Уже подключена</span>
+              {{else}}
+              <form class="inline-form" method="post" action="/news/sources">
+                <input type="hidden" name="title" value="{{.Title}}">
+                <input type="hidden" name="url" value="{{.URL}}">
+                <button class="btn-mini" type="submit">Добавить</button>
+              </form>
+              {{end}}
+            </li>
+            {{end}}
+          </ul>
+        </section>
+      </div>
     </div>
   </div>
+
+  <div class="schema-modal rss-modal" id="rss-modal" role="dialog" aria-modal="true" aria-labelledby="rss-modal-title" hidden>
+    <div class="schema-dialog rss-dialog">
+      <div class="schema-dialog-head">
+        <div>
+          <h2 id="rss-modal-title">RSS-лента сайта</h2>
+          <p>Собственные новости коворкинга «Место» в формате RSS 2.0. Эту ленту могут забирать другие приложения.</p>
+        </div>
+        <button class="schema-close" id="rss-close" type="button" aria-label="Закрыть окно RSS">×</button>
+      </div>
+      <div class="rss-body">
+        <pre class="rss-content" id="rss-content">Загружаем RSS-ленту…</pre>
+      </div>
+      <div class="rss-actions">
+        <a class="btn btn-primary" id="rss-download" href="{{.RSSURL}}" download="mesto-news.xml">Скачать</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/news.js" defer></script>
 </section>
-<script src="/static/js/news.js" defer></script>
 {{end}}

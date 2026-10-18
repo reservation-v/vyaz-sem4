@@ -34,12 +34,18 @@ type Feed struct {
 }
 
 // NewFeed создаёт источник с заданным названием и адресом ленты.
+// Адрес проверяется при загрузке; клиент не пускает запросы во внутреннюю сеть.
 func NewFeed(title, url string) *Feed {
-	return &Feed{
-		title:  title,
-		url:    url,
-		client: &http.Client{Timeout: 10 * time.Second},
+	return NewFeedWithClient(title, url, newHTTPClient())
+}
+
+// NewFeedWithClient создаёт источник с готовым HTTP-клиентом.
+// Нужен для тестов и для особых случаев конфигурации.
+func NewFeedWithClient(title, url string, client *http.Client) *Feed {
+	if client == nil {
+		client = newHTTPClient()
 	}
+	return &Feed{title: title, url: url, client: client}
 }
 
 // Source возвращает название источника.
@@ -48,7 +54,7 @@ func (f *Feed) Source() string {
 }
 
 // Fetch забирает ленту по сети и разбирает её.
-func (f *Feed) Fetch(ctx context.Context) ([]domain.ExternalNews, error) {
+func (f *Feed) Fetch(ctx context.Context) ([]domain.NewsItem, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, f.url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("rss %s: %w", f.title, err)
@@ -108,16 +114,16 @@ type atomLink struct {
 }
 
 // parse превращает XML-ленту в список доменных новостей.
-func parse(body []byte, source string) ([]domain.ExternalNews, error) {
+func parse(body []byte, source string) ([]domain.NewsItem, error) {
 	var doc document
 	if err := xml.Unmarshal(body, &doc); err != nil {
 		return nil, err
 	}
 
-	items := make([]domain.ExternalNews, 0, len(doc.Channel.Items)+len(doc.Entries))
+	items := make([]domain.NewsItem, 0, len(doc.Channel.Items)+len(doc.Entries))
 
 	for _, node := range doc.Channel.Items {
-		items = append(items, domain.ExternalNews{
+		items = append(items, domain.NewsItem{
 			Title:       cleanText(node.Title),
 			Link:        strings.TrimSpace(node.Link),
 			Source:      source,
@@ -127,7 +133,7 @@ func parse(body []byte, source string) ([]domain.ExternalNews, error) {
 	}
 
 	for _, node := range doc.Entries {
-		items = append(items, domain.ExternalNews{
+		items = append(items, domain.NewsItem{
 			Title:       cleanText(node.Title),
 			Link:        atomLinkHref(node.Links),
 			Source:      source,

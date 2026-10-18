@@ -40,15 +40,17 @@ func main() {
 	defer repository.Close()
 	bookings := application.NewBookingService(repository, repository)
 
-	// Внешние новости по предметной области: RSS-ленту забирает сервер.
-	newsService := application.NewNewsService(5*time.Minute,
-		rss.NewFeed("vc.ru · коворкинг", "https://vc.ru/rss/tag/coworking"),
-	)
+	// Новости (Лаба 4): свои новости из БД и внешние RSS-ленты, которые
+	// добавляются через страницу /news. Свою ленту публикуем на /news/rss.xml.
+	newsService := application.NewNewsService(repository, func(title, url string) application.ExternalNewsSource {
+		return rss.NewFeed(title, url)
+	}, 5*time.Minute)
 
 	server, err := apphttp.NewServer(catalog,
 		apphttp.WithSiteTitle("Место"),
 		apphttp.WithBookingService(bookings),
 		apphttp.WithNewsService(newsService),
+		apphttp.WithNewsPublisher(rss.NewPublisher("Место", "Новости коворкинга «Место»", "ru")),
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
