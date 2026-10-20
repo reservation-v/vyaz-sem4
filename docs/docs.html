@@ -1,0 +1,3755 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Документация · Место</title>
+  <meta name="description" content="Документация учебного проекта «Место»: сайт и приложение бронирования коворкинга.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='9' width='28' height='3' rx='1.5' fill='%23D96C3F'/%3E%3Crect x='6' y='12' width='3' height='13' rx='1.5' fill='%23D96C3F'/%3E%3Crect x='23' y='12' width='3' height='13' rx='1.5' fill='%23D96C3F'/%3E%3Ccircle cx='16' cy='26' r='2.4' fill='%23D96C3F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add("js");</script>
+  <style>
+    :root {
+      color-scheme: light;
+
+      --bg: #faf8f5;
+      --surface: #ffffff;
+      --surface-tint: #f7ede6;
+      --ink: #232019;
+      --muted: #75705f;
+      --line: #ece7de;
+      --accent: #d96c3f;
+      --accent-ink: #ffffff;
+      --accent-strong: #bf5f37;
+      --code-bg: #f7f2ea;
+      --table-head: #fbf8f3;
+      --note-warn-bg: #fbf3dc;
+      --note-warn-ink: #956400;
+
+      --radius-card: 12px;
+      --radius-btn: 6px;
+      --shadow-lift: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --font-display: "Manrope", "Segoe UI", system-ui, sans-serif;
+      --font-body: "Manrope", "Segoe UI", system-ui, sans-serif;
+      --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --header-height: 68px;
+      --rail-width: 300px;
+      --docs-max: 1320px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 88px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size</script>: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    ::selection {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 12px;
+      z-index: 100;
+      padding: 8px 14px;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: var(--radius-btn);
+      text-decoration: none;
+    }
+
+    .skip-link:focus {
+      top: 12px;
+    }
+
+    .docs-shell {
+      width: min(var(--docs-max), calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    /* ---------- Шапка ---------- */
+
+    .docs-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .docs-header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      height: var(--header-height);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      flex: none;
+      width: 30px;
+      height: 30px;
+      color: var(--accent);
+    }
+
+    .brand-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-sep {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .brand-doc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+      line-height: 1;
+      text-decoration: none;
+      cursor: pointer;
+      transition:
+        border-color 180ms,
+        background 180ms,
+        transform 180ms;
+    }
+
+    .btn:hover {
+      border-color: var(--muted);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+    }
+
+    .mobile-toc {
+      display: none;
+    }
+
+    /* ---------- Двухколоночная сетка ---------- */
+
+    .docs-layout {
+      display: grid;
+      grid-template-columns: var(--rail-width) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .docs-rail {
+      position: sticky;
+      top: var(--header-height);
+      max-height: calc(100dvh - var(--header-height));
+      overflow-y: auto;
+      padding: 28px 22px 32px 0;
+      border-right: 1px solid var(--line);
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+
+    .rail-title {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .rail-search {
+      display: block;
+      margin: 12px 0 18px;
+    }
+
+    .rail-search input {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-btn);
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.86rem;
+    }
+
+    .rail-search input::placeholder {
+      color: var(--muted);
+    }
+
+    .rail-search input:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-color: transparent;
+    }
+
+    .doc-nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .doc-nav-item {
+      min-width: 0;
+    }
+
+    .doc-nav-link {
+      display: flex;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--ink);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      text-decoration: none;
+      transition:
+        background 160ms,
+        color 160ms;
+    }
+
+    .doc-nav-link:hover {
+      background: var(--surface-tint);
+    }
+
+    .doc-nav-link.is-active {
+      background: var(--surface-tint);
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+
+    .doc-nav-num {
+      flex: none;
+      padding-top: 2px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .doc-nav-link.is-active .doc-nav-num {
+      color: var(--accent);
+    }
+
+    .doc-subnav {
+      display: grid;
+      gap: 1px;
+      margin: 2px 0 8px;
+      padding: 0 0 0 28px;
+      list-style: none;
+    }
+
+    .js .doc-subnav {
+      display: none;
+    }
+
+    .js .doc-subnav.is-open {
+      display: grid;
+    }
+
+    .doc-subnav a {
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.81rem;
+      line-height: 1.4;
+      text-decoration: none;
+      transition:
+        background 160ms,
+        color 160ms;
+    }
+
+    .doc-subnav a:hover {
+      background: var(--surface-tint);
+      color: var(--ink);
+    }
+
+    .doc-subnav a.is-current {
+      color: var(--accent-strong);
+      font-weight: 600;
+    }
+
+    .rail-empty {
+      margin: 12px 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .rail-foot {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+
+    .rail-foot p {
+      margin: 0;
+    }
+
+    .docs-main {
+      min-width: 0;
+      padding: 42px 0 80px 52px;
+    }
+
+    /* ---------- Документ ---------- */
+
+    .js .doc {
+      display: none;
+    }
+
+    .js .doc.is-active {
+      display: block;
+    }
+
+    .doc {
+      max-width: 840px;
+    }
+
+    .doc-head {
+      margin-bottom: 36px;
+    }
+
+    .doc-kicker {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .doc h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3vw, 2.55rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      text-wrap: balance;
+    }
+
+    .doc-lead {
+      margin: 16px 0 0;
+      max-width: 68ch;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.6;
+    }
+
+    .doc-section {
+      margin-top: 34px;
+      scroll-margin-top: 88px;
+    }
+
+    .doc-section + .doc-section {
+      padding-top: 30px;
+      border-top: 1px solid var(--line);
+    }
+
+    .doc h2 {
+      margin: 0 0 14px;
+      font-family: var(--font-display);
+      font-size: 1.32rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+      text-wrap: balance;
+    }
+
+    .doc h3 {
+      margin: 26px 0 8px;
+      font-size: 1.04rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .doc p {
+      margin: 0 0 14px;
+      max-width: 70ch;
+    }
+
+    .doc-section > p:last-child {
+      margin-bottom: 0;
+    }
+
+    .doc ul,
+    .doc ol {
+      display: grid;
+      gap: 6px;
+      margin: 0 0 16px;
+      padding-left: 22px;
+      max-width: 70ch;
+    }
+
+    .doc li::marker {
+      color: var(--accent);
+    }
+
+    .doc a {
+      color: var(--accent-strong);
+      text-decoration: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      padding-bottom: 1px;
+    }
+
+    .doc a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .doc strong {
+      font-weight: 700;
+    }
+
+    .doc code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #f3ece4;
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+    }
+
+    .doc pre {
+      margin: 0 0 18px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--code-bg);
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .doc pre code {
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      font-size: 1em;
+    }
+
+    .note {
+      margin: 18px 0;
+      padding: 14px 16px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      background: var(--surface-tint);
+    }
+
+    .note p {
+      margin: 0;
+      max-width: none;
+    }
+
+    .note p + p {
+      margin-top: 8px;
+    }
+
+    .note-warn {
+      border-left-color: var(--note-warn-ink);
+      background: var(--note-warn-bg);
+    }
+
+    /* ---------- Таблицы ---------- */
+
+    .table-wrap {
+      margin: 16px 0 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      overflow-x: auto;
+    }
+
+    .doc table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .doc caption {
+      padding: 12px 14px 8px;
+      color: var(--ink);
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .doc th {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--table-head);
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .doc td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .doc tr:last-child td {
+      border-bottom: none;
+    }
+
+    .doc .table-keys td:first-child {
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    .doc .table-num td:first-child {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .doc .cell-muted {
+      color: var(--muted);
+    }
+
+    /* ---------- Схемы ---------- */
+
+    .diagram {
+      margin: 20px 0 24px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+    }
+
+    .diagram-scroll {
+      overflow-x: auto;
+    }
+
+    .diagram svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-width: 720px;
+    }
+
+    .diagram figcaption {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .dg-box {
+      fill: var(--surface);
+      stroke: var(--line);
+      stroke-width: 1.5;
+    }
+
+    .dg-box-accent {
+      fill: #fdf1ea;
+      stroke: var(--accent);
+      stroke-width: 1.5;
+    }
+
+    .dg-box-muted {
+      fill: #f7f5f0;
+      stroke: #e4ddd2;
+      stroke-width: 1.5;
+    }
+
+    .dg-text {
+      fill: var(--ink);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .dg-sub {
+      fill: var(--muted);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .dg-small {
+      fill: var(--muted);
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .dg-line {
+      fill: none;
+      stroke: #b9b1a4;
+      stroke-width: 1.5;
+    }
+
+    .dg-line-accent {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.8;
+    }
+
+    .dg-dashed {
+      fill: none;
+      stroke: #b9b1a4;
+      stroke-width: 1.5;
+      stroke-dasharray: 5 4;
+    }
+
+    .dg-arrow {
+      fill: #b9b1a4;
+    }
+
+    .dg-arrow-accent {
+      fill: var(--accent);
+    }
+
+    /* ---------- Переходы между документами ---------- */
+
+    .doc-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .doc-nav-btn {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 48%;
+      padding: 12px 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--surface);
+      color: var(--ink);
+      text-decoration: none;
+      transition: border-color 180ms;
+    }
+
+    .doc-nav-btn:hover {
+      border-color: var(--muted);
+    }
+
+    .doc-nav-btn span {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .doc-nav-btn strong {
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+
+    .doc-nav-btn.is-next {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    /* ---------- Подвал ---------- */
+
+    .docs-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 18px;
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .docs-footer p {
+      margin: 0;
+    }
+
+    .docs-backdrop {
+      position: fixed;
+      inset: var(--header-height) 0 0;
+      z-index: 35;
+      background: rgba(35, 32, 25, 0.35);
+    }
+
+    /* ---------- Планшет и мобильный ---------- */
+
+    @media (max-width: 1180px) {
+      :root {
+        --rail-width: 270px;
+      }
+
+      .docs-main {
+        padding-left: 36px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .docs-shell {
+        width: min(100% - 32px, var(--docs-max));
+      }
+
+      .docs-layout {
+        display: block;
+      }
+
+      .docs-rail {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        width: min(340px, 88vw);
+        max-height: none;
+        padding: 20px 18px 32px;
+        border-right: 1px solid var(--line);
+        background: var(--bg);
+        transform: translateX(-100%);
+        transition: transform 220ms var(--ease-out);
+      }
+
+      .docs-rail.is-open {
+        transform: translateX(0);
+      }
+
+      .mobile-toc {
+        display: inline-flex;
+      }
+
+      .docs-main {
+        padding: 28px 0 64px;
+      }
+
+      .doc {
+        max-width: none;
+      }
+
+      .doc h1 {
+        font-size: 1.8rem;
+      }
+
+      .doc-footer {
+        flex-direction: column;
+      }
+
+      .doc-nav-btn {
+        max-width: 100%;
+      }
+
+      .doc-nav-btn.is-next {
+        margin-left: 0;
+        text-align: left;
+      }
+
+      body.drawer-open {
+        overflow: hidden;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .docs-header-inner {
+        gap: 12px;
+      }
+
+      .brand-sep,
+      .brand-doc {
+        display: none;
+      }
+
+      .header-actions .btn {
+        padding: 0 10px;
+        font-size: 0.8rem;
+      }
+
+      .doc h1 {
+        font-size: 1.6rem;
+      }
+
+      .doc h2 {
+        font-size: 1.18rem;
+      }
+
+      .doc table {
+        font-size: 0.84rem;
+      }
+
+      .diagram svg {
+        min-width: 640px;
+      }
+    }
+
+    /* ---------- Печать ---------- */
+
+    @page {
+      margin: 18mm 16mm;
+    }
+
+    @media print {
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --surface-tint: #f4f4f4;
+        --ink: #000000;
+        --muted: #333333;
+        --line: #bbbbbb;
+        --accent: #000000;
+        --accent-strong: #000000;
+        --code-bg: #f4f4f4;
+        --table-head: #f4f4f4;
+      }
+
+      body {
+        background: #ffffff;
+        color: #000000;
+        font-size: 11pt;
+      }
+
+      .docs-header,
+      .docs-rail,
+      .docs-backdrop,
+      .mobile-toc,
+      .doc-footer,
+      .docs-footer {
+        display: none !important;
+      }
+
+      .docs-shell {
+        width: auto;
+        margin: 0;
+      }
+
+      .docs-layout {
+        display: block;
+      }
+
+      .docs-main {
+        padding: 0;
+      }
+
+      .js .doc {
+        display: block !important;
+      }
+
+      .doc {
+        max-width: none;
+      }
+
+      .doc + .doc {
+        break-before: page;
+      }
+
+      .doc-head {
+        margin-bottom: 18px;
+      }
+
+      .doc h1 {
+        font-size: 20pt;
+      }
+
+      .doc h2 {
+        font-size: 14pt;
+      }
+
+      .doc-section {
+        break-inside: avoid;
+      }
+
+      .table-wrap {
+        overflow: visible;
+        border-color: #bbbbbb;
+      }
+
+      .doc table {
+        font-size: 9pt;
+      }
+
+      .diagram {
+        break-inside: avoid;
+        border-color: #bbbbbb;
+      }
+
+      .diagram svg {
+        min-width: 0;
+      }
+
+      .doc a {
+        color: #000000;
+        border-bottom: none;
+      }
+
+      .note {
+        background: #f4f4f4;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#doc-content">К содержанию</a>
+
+  <header class="docs-header">
+    <div class="docs-shell docs-header-inner">
+      <a class="brand" href="#doc-01" data-doc-link aria-label="Документация «Место», начало">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="9" width="28" height="3" rx="1.5" fill="currentColor"/>
+          <rect x="6" y="12" width="3" height="13" rx="1.5" fill="currentColor"/>
+          <rect x="23" y="12" width="3" height="13" rx="1.5" fill="currentColor"/>
+          <circle cx="16" cy="26" r="2.4" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">Место</span>
+        <span class="brand-sep" aria-hidden="true">/</span>
+        <span class="brand-doc">Документация</span>
+      </a>
+
+      <div class="header-actions">
+        <button class="btn btn-ghost mobile-toc" type="button" id="toc-toggle" aria-expanded="false" aria-controls="docs-rail">Содержание</button>
+        <!-- Кнопка печати скрыта. Стили @media print и вызов window.print() сохранены. -->
+        <button class="btn btn-ghost" type="button" id="print-btn" hidden>Печать</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="docs-backdrop" id="docs-backdrop" hidden></div>
+
+  <div class="docs-shell docs-layout">
+    <aside class="docs-rail" id="docs-rail" aria-label="Содержание документации">
+      <p class="rail-title">Содержание</p>
+      <label class="rail-search">
+        <span class="visually-hidden">Фильтр разделов</span>
+        <input type="search" id="rail-filter" placeholder="Фильтр разделов" autocomplete="off">
+      </label>
+
+      <nav class="doc-nav" id="doc-nav">
+        <div class="doc-nav-item" data-doc-item="01">
+          <a class="doc-nav-link is-active" href="#doc-01" data-doc-link data-doc="01" aria-current="page">
+            <span class="doc-nav-num">01</span>
+            <span>Общее описание технологии</span>
+          </a>
+          <ul class="doc-subnav is-open" data-subnav="01">
+            <li><a href="#doc-01-1" data-doc-link>1.1 Назначение</a></li>
+            <li><a href="#doc-01-2" data-doc-link>1.2 Общая схема технологии</a></li>
+            <li><a href="#doc-01-3" data-doc-link>1.3 Описание компонент</a></li>
+            <li><a href="#doc-01-4" data-doc-link>1.4 Описание применения</a></li>
+            <li><a href="#doc-01-5" data-doc-link>1.5 Документация технологии</a></li>
+            <li><a href="#doc-01-6" data-doc-link>1.6 Лист изменений</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="02">
+          <a class="doc-nav-link" href="#doc-02" data-doc-link data-doc="02">
+            <span class="doc-nav-num">02</span>
+            <span>Описание программы</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="02">
+            <li><a href="#doc-02-1" data-doc-link>2.1 Введение</a></li>
+            <li><a href="#doc-02-2" data-doc-link>2.2 Функциональное назначение</a></li>
+            <li><a href="#doc-02-3" data-doc-link>2.3 Описание логики</a></li>
+            <li><a href="#doc-02-4" data-doc-link>2.4 Использование программы</a></li>
+            <li><a href="#doc-02-5" data-doc-link>2.5 Сообщения об ошибках</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="03">
+          <a class="doc-nav-link" href="#doc-03" data-doc-link data-doc="03">
+            <span class="doc-nav-num">03</span>
+            <span>Описание организации информационной базы</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="03">
+            <li><a href="#doc-03-1" data-doc-link>3.1 Общее описание информационного обеспечения</a></li>
+            <li><a href="#doc-03-2" data-doc-link>3.2 Организация информационной базы</a></li>
+            <li><a href="#doc-03-3" data-doc-link>3.3 Система классификации и кодирования</a></li>
+            <li><a href="#doc-03-4" data-doc-link>3.4 Описание массивов информации</a></li>
+            <li><a href="#doc-03-5" data-doc-link>3.5 Организация ведения базы</a></li>
+            <li><a href="#doc-03-6" data-doc-link>3.6 Каталог базы данных</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="04">
+          <a class="doc-nav-link" href="#doc-04" data-doc-link data-doc="04">
+            <span class="doc-nav-num">04</span>
+            <span>Руководство администратора</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="04">
+            <li><a href="#doc-04-1" data-doc-link>4.1 Назначение</a></li>
+            <li><a href="#doc-04-2" data-doc-link>4.2 Подготовка к работе</a></li>
+            <li><a href="#doc-04-3" data-doc-link>4.3 Описание операций</a></li>
+            <li><a href="#doc-04-4" data-doc-link>4.4 Аварийные ситуации</a></li>
+            <li><a href="#doc-04-5" data-doc-link>4.5 Рекомендации по освоению</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="05">
+          <a class="doc-nav-link" href="#doc-05" data-doc-link data-doc="05">
+            <span class="doc-nav-num">05</span>
+            <span>Инструкция оператора. Ввод данных</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="05">
+            <li><a href="#doc-05-1" data-doc-link>5.1 Назначение</a></li>
+            <li><a href="#doc-05-2" data-doc-link>5.2 Порядок и регламент</a></li>
+            <li><a href="#doc-05-3" data-doc-link>5.3 Ввод данных и методы контроля</a></li>
+            <li><a href="#doc-05-4" data-doc-link>5.4 Реакция на аварийные ситуации</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="06">
+          <a class="doc-nav-link" href="#doc-06" data-doc-link data-doc="06">
+            <span class="doc-nav-num">06</span>
+            <span>Руководство пользователя</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="06">
+            <li><a href="#doc-06-1" data-doc-link>6.1 Введение</a></li>
+            <li><a href="#doc-06-2" data-doc-link>6.2 Назначение и условия применения</a></li>
+            <li><a href="#doc-06-3" data-doc-link>6.3 Подготовка к работе</a></li>
+            <li><a href="#doc-06-4" data-doc-link>6.4 Описание операций</a></li>
+            <li><a href="#doc-06-5" data-doc-link>6.5 Аварийные ситуации</a></li>
+          </ul>
+        </div>
+
+        <div class="doc-nav-item" data-doc-item="07">
+          <a class="doc-nav-link" href="#doc-07" data-doc-link data-doc="07">
+            <span class="doc-nav-num">07</span>
+            <span>Тексты программ</span>
+          </a>
+          <ul class="doc-subnav" data-subnav="07">
+            <li><a href="#doc-07-1" data-doc-link>7.1 Состав программного комплекса</a></li>
+            <li><a href="#doc-07-2" data-doc-link>7.2 Назначение файлов</a></li>
+            <li><a href="#doc-07-3" data-doc-link>7.3 Порядок сборки и запуска</a></li>
+            <li><a href="#doc-07-4" data-doc-link>7.4 Электронное приложение</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <p class="rail-empty" id="rail-empty" hidden>Ничего не найдено.</p>
+
+      <div class="rail-foot">
+        <p>Редакция 1.0</p>
+        <p>20.10.2026</p>
+      </div>
+    </aside>
+
+    <main class="docs-main" id="doc-content">
+      <article class="doc is-active" id="doc-01" data-doc="01" aria-labelledby="doc-01-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 1 из 7</p>
+          <h1 id="doc-01-title" tabindex="-1">Общее описание технологии</h1>
+          <p class="doc-lead">Коворкинг «Место»: сайт и приложение бронирования рабочих мест и переговорок. Технология включает веб-сайт, серверное приложение на Go, базу данных PostgreSQL и обмен новостями по RSS.</p>
+        </header>
+
+        <section class="doc-section" id="doc-01-1">
+          <h2>1.1 Назначение</h2>
+          <p>Технология автоматизирует работу коворкинга «Место». Офис расположен на 31-м этаже башни «Око» в Москва-Сити.</p>
+          <p>Технология выполняет следующие функции:</p>
+          <ul>
+            <li>показывает информацию о пространстве, тарифах, правилах и контактах;</li>
+            <li>принимает брони деск-мест, кабинетов и переговорок;</li>
+            <li>хранит клиентов и брони;</li>
+            <li>контролирует занятость пространства;</li>
+            <li>рассчитывает стоимость и депозит;</li>
+            <li>показывает свои и внешние новости;</li>
+            <li>публикует свою RSS-ленту;</li>
+            <li>ищет данные по сайту и по базе данных.</li>
+          </ul>
+
+          <p>Объекты автоматизации:</p>
+          <ul>
+            <li>офис и его пространства;</li>
+            <li>деск-места, кабинеты и переговорки;</li>
+            <li>клиенты: люди и команды;</li>
+            <li>брони с тарифом и депозитом;</li>
+            <li>новости и подключённые RSS-источники.</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 1.1. Основные функции технологии</caption>
+              <thead>
+                <tr><th>Функция</th><th>Результат</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Просмотр сайта</td><td>HTML-страницы с информацией о коворкинге</td></tr>
+                <tr><td>Бронирование</td><td>Запись в таблице <code>bookings</code></td></tr>
+                <tr><td>Учёт клиентов</td><td>Запись в таблице <code>clients</code></td></tr>
+                <tr><td>Поиск по базе</td><td>Отфильтрованный список броней</td></tr>
+                <tr><td>Сводка</td><td>Счётчики, выручка и топ-тип пространства</td></tr>
+                <tr><td>Новости</td><td>Общая лента своих и внешних новостей</td></tr>
+                <tr><td>RSS</td><td>Лента собственных новостей в формате RSS 2.0</td></tr>
+                <tr><td>Резиденты из XML</td><td>Таблица из файла <code>residents.xml</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note">
+            <p><strong>Примечание.</strong> Сайт работает без регистрации и входа. Разделение ролей на уровне приложения не реализовано. Учитывайте это при публикации персональных данных.</p>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-01-2">
+          <h2>1.2 Общая схема технологии</h2>
+          <p>Браузер запрашивает страницу у Go-сервера. Сервер вызывает сценарий, читает или записывает данные в PostgreSQL и отдаёт готовый HTML.</p>
+          <p>Внешние RSS-ленты читает сервер. Виджеты обращаются к внешним API напрямую из браузера.</p>
+
+          <figure class="diagram">
+            <div class="diagram-scroll">
+              <svg viewBox="0 0 960 560" role="img" aria-labelledby="fig-01-title fig-01-desc">
+                <title id="fig-01-title">Схема компонентов технологии</title>
+                <desc id="fig-01-desc">Браузер обращается к Go-серверу. Сервер использует PostgreSQL и внешние RSS-ленты. Виджеты обращаются к внешним API из браузера.</desc>
+                <defs>
+                  <marker id="arrow-01" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path class="dg-arrow" d="M0,0 L10,5 L0,10 z"/>
+                  </marker>
+                  <marker id="arrow-01-accent" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path class="dg-arrow-accent" d="M0,0 L10,5 L0,10 z"/>
+                  </marker>
+                </defs>
+
+                <rect class="dg-box" x="20" y="50" width="190" height="150" rx="10"/>
+                <text class="dg-text" x="115" y="82" text-anchor="middle">Браузер</text>
+                <text class="dg-sub" x="115" y="106" text-anchor="middle">HTML, CSS, JS</text>
+                <text class="dg-sub" x="115" y="128" text-anchor="middle">формы и виджеты</text>
+
+                <rect class="dg-box-accent" x="270" y="20" width="380" height="360" rx="12"/>
+                <text class="dg-text" x="460" y="52" text-anchor="middle">Go-сервер</text>
+
+                <rect class="dg-box" x="290" y="75" width="340" height="65" rx="8"/>
+                <text class="dg-text" x="460" y="100" text-anchor="middle">HTTP-слой</text>
+                <text class="dg-sub" x="460" y="120" text-anchor="middle">маршруты, обработчики, шаблоны</text>
+
+                <rect class="dg-box" x="290" y="160" width="340" height="65" rx="8"/>
+                <text class="dg-text" x="460" y="185" text-anchor="middle">Слой сценариев</text>
+                <text class="dg-sub" x="460" y="205" text-anchor="middle">бронирование, новости, каталог</text>
+
+                <rect class="dg-box" x="290" y="245" width="340" height="55" rx="8"/>
+                <text class="dg-text" x="460" y="268" text-anchor="middle">Домен</text>
+                <text class="dg-sub" x="460" y="288" text-anchor="middle">сущности и правила</text>
+
+                <rect class="dg-box" x="290" y="320" width="340" height="45" rx="8"/>
+                <text class="dg-text" x="460" y="340" text-anchor="middle">Инфраструктура</text>
+                <text class="dg-sub" x="460" y="356" text-anchor="middle">PostgreSQL, RSS</text>
+
+                <rect class="dg-box" x="710" y="75" width="220" height="110" rx="10"/>
+                <text class="dg-text" x="820" y="105" text-anchor="middle">PostgreSQL 18</text>
+                <text class="dg-sub" x="820" y="127" text-anchor="middle">7 таблиц</text>
+                <text class="dg-sub" x="820" y="147" text-anchor="middle">db/migrations</text>
+
+                <rect class="dg-box" x="710" y="220" width="220" height="90" rx="10"/>
+                <text class="dg-text" x="820" y="250" text-anchor="middle">Внешние RSS/Atom</text>
+                <text class="dg-sub" x="820" y="272" text-anchor="middle">ленты других сайтов</text>
+
+                <rect class="dg-box" x="710" y="350" width="220" height="90" rx="10"/>
+                <text class="dg-text" x="820" y="380" text-anchor="middle">Внешние API</text>
+                <text class="dg-sub" x="820" y="402" text-anchor="middle">погода, курсы, перевод</text>
+
+                <line class="dg-line" x1="210" y1="110" x2="290" y2="108" marker-end="url(#arrow-01)"/>
+                <text class="dg-small" x="250" y="98" text-anchor="middle">HTTP</text>
+
+                <line class="dg-line" x1="460" y1="140" x2="460" y2="160" marker-end="url(#arrow-01)"/>
+                <line class="dg-line" x1="460" y1="225" x2="460" y2="245" marker-end="url(#arrow-01)"/>
+                <line class="dg-line" x1="460" y1="300" x2="460" y2="320" marker-end="url(#arrow-01)"/>
+
+                <polyline class="dg-line" points="630,342 680,342 680,130 710,130" marker-end="url(#arrow-01)"/>
+                <text class="dg-small" x="690" y="240" text-anchor="middle">SQL</text>
+
+                <polyline class="dg-line" points="630,190 680,190 680,265 710,265" marker-end="url(#arrow-01)"/>
+                <text class="dg-small" x="690" y="214" text-anchor="middle">RSS</text>
+
+                <polyline class="dg-dashed" points="115,200 115,500 820,500 820,440" marker-end="url(#arrow-01)"/>
+                <text class="dg-small" x="470" y="516" text-anchor="middle">fetch из браузера</text>
+
+                <text class="dg-small" x="20" y="548">Сплошная линия - поток через сервер. Пунктир - запрос из браузера к внешнему API.</text>
+              </svg>
+            </div>
+            <figcaption>Рисунок 1. Компоненты технологии и основные потоки данных.</figcaption>
+          </figure>
+
+          <p>Основные потоки данных:</p>
+          <ul>
+            <li>браузер отправляет HTTP-запрос на сервер;</li>
+            <li>маршрут выбирает обработчик;</li>
+            <li>обработчик вызывает сценарий;</li>
+            <li>сценарий обращается к репозиторию;</li>
+            <li>репозиторий выполняет SQL-запрос;</li>
+            <li>PostgreSQL возвращает данные;</li>
+            <li>шаблон формирует HTML-страницу.</li>
+          </ul>
+
+          <p>Шаблоны, стили, скрипты и миграции встроены в бинарник через <code>embed</code>. Поэтому для запуска нужен один исполняемый файл и база данных.</p>
+          <p>Миграции применяются при старте сервера. Если миграция завершается ошибкой, сервер не начинает работу.</p>
+        </section>
+
+        <section class="doc-section" id="doc-01-3">
+          <h2>1.3 Описание компонент</h2>
+          <p>Технология состоит из восьми компонент. Каждая компонента выполняет свою задачу.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 1.2. Компоненты технологии</caption>
+              <thead>
+                <tr><th>Компонента</th><th>Назначение</th><th>Состав</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Сайт</td><td>Показ информации о коворкинге и сервисах</td><td>Шаблоны HTML, CSS, клиентские скрипты</td></tr>
+                <tr><td>Приложение бронирования</td><td>Ввод, показ, поиск и удаление броней</td><td>Страница <code>/booking</code>, формы, таблицы, сводка</td></tr>
+                <tr><td>Приложение новостей</td><td>Обмен новостями между приложениями</td><td>Страница <code>/news</code>, JSON <code>/api/news</code>, RSS <code>/news/rss.xml</code></td></tr>
+                <tr><td>XML-страница</td><td>Показ резидентов из XML-файла</td><td>Страница <code>/residents</code>, файл <code>residents.xml</code></td></tr>
+                <tr><td>База данных</td><td>Хранение каталога, клиентов, броней и новостей</td><td>PostgreSQL 18, 7 таблиц, индексы, ограничения</td></tr>
+                <tr><td>Сервер</td><td>Обработка HTTP-запросов и вызов сценариев</td><td>Go 1.24, <code>net/http</code>, <code>html/template</code></td></tr>
+                <tr><td>Внешние интеграции</td><td>Дополнительные сервисы и RSS-ленты</td><td>6 виджетов и RSS-клиент</td></tr>
+                <tr><td>Развёртывание</td><td>Запуск на сервере и локальной машине</td><td>Docker, Podman, systemd, <code>compose.yaml</code>, <code>Dockerfile</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Сайт</h3>
+          <p>Сайт содержит главную страницу, тематические страницы и общее меню. Меню «Остальное тут» открывает список всех страниц. Поиск в шапке ищет по названиям страниц и ключевым словам.</p>
+          <p>На главной странице работают семь сервисов. Один сервис - собственное приложение бронирования. Остальные шесть - интеграции с внешними API.</p>
+
+          <h3>Приложение бронирования</h3>
+          <p>Приложение работает на странице <code>/booking</code>. Оно показывает краткую сводку базы данных, формы клиента и брони, поиск и таблицу броней.</p>
+          <p>Приложение поддерживает создание, редактирование и удаление клиентов и броней. Поиск работает по одному значению и по двум связанным значениям.</p>
+
+          <h3>Приложение новостей</h3>
+          <p>Страница <code>/news</code> объединяет свои новости из базы данных и материалы подключённых RSS-лент. У каждой новости указан источник.</p>
+          <p>Сервер отдаёт общую ленту в JSON по адресу <code>/api/news</code>. Свою ленту сервер публикует в формате RSS 2.0 по адресу <code>/news/rss.xml</code>.</p>
+
+          <h3>XML-страница</h3>
+          <p>Страница <code>/residents</code> загружает файл <code>residents.xml</code>. Скрипт строит таблицу, ищет по значениям тегов и сортирует строки.</p>
+
+          <h3>База данных</h3>
+          <p>База данных хранит пять таблиц бронирования и две таблицы новостей. Схема и начальные данные задаются миграциями.</p>
+
+          <h3>Сервер</h3>
+          <p>Сервер написан на Go. Он принимает HTTP-запросы, вызывает сценарии, применяет миграции и отдаёт HTML, JSON или RSS.</p>
+
+          <h3>Внешние интеграции</h3>
+          <p>Виджеты обращаются к внешним API из браузера. RSS-клиент работает на сервере. Такое разделение нужно потому, что браузерный запрос к чужой ленте может блокироваться политикой CORS.</p>
+
+          <h3>Развёртывание</h3>
+          <p>Локальная среда запускается через Docker Compose. На сервере работают два контейнера Podman: приложение и PostgreSQL. Службы systemd запускаются от пользователя.</p>
+        </section>
+
+        <section class="doc-section" id="doc-01-4">
+          <h2>1.4 Описание применения</h2>
+          <p>Технологический процесс включает шесть шагов:</p>
+          <ol>
+            <li>Посетитель открывает сайт в браузере.</li>
+            <li>Сервер отдаёт запрошенную страницу.</li>
+            <li>Посетитель выбирает информацию или бронирование.</li>
+            <li>Сервер проверяет введённые данные.</li>
+            <li>База данных сохраняет запись.</li>
+            <li>Сервер показывает результат операции.</li>
+          </ol>
+
+          <p>Регламент работы:</p>
+          <ul>
+            <li>сайт работает круглосуточно;</li>
+            <li>бронирования принимаются на текущую и будущие даты;</li>
+            <li>отмена брони выполняется удалением записи;</li>
+            <li>внешние RSS-ленты кэшируются на 5 минут;</li>
+            <li>резервное копирование выполняет администратор;</li>
+            <li>оператор проверяет брони и новости в рабочие часы.</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 1.3. Условия применения</caption>
+              <thead>
+                <tr><th>Условие</th><th>Значение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Операционная система</td><td>Linux или контейнер</td></tr>
+                <tr><td>Среда выполнения</td><td>Go 1.24 для сборки, готовый бинарник для запуска</td></tr>
+                <tr><td>База данных</td><td>PostgreSQL 18</td></tr>
+                <tr><td>Контейнеры</td><td>Docker Compose или Podman</td></tr>
+                <tr><td>Процессор</td><td>0.5 ядра</td></tr>
+                <tr><td>Память</td><td>512 МБ</td></tr>
+                <tr><td>Порты</td><td>8081 внутри контейнера, 49254 снаружи, 49733 для базы на локальной машине</td></tr>
+                <tr><td>Браузер</td><td>Современный браузер с JavaScript</td></tr>
+                <tr><td>Сеть</td><td>Нужна для внешних RSS-лент и виджетов</td></tr>
+                <tr><td>Публичный адрес</td><td><code>http://31.129.99.35:49254/</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Организационные условия:</p>
+          <ul>
+            <li>администратор отвечает за сервер, базу данных и резервные копии;</li>
+            <li>оператор отвечает за клиентов, брони и новости;</li>
+            <li>посетитель использует сайт без регистрации;</li>
+            <li>персональные данные в учебной версии не защищены аутентификацией.</li>
+          </ul>
+
+          <div class="note note-warn">
+            <p><strong>Ограничение.</strong> Сайт опубликован по HTTP. Для постоянной эксплуатации настройте HTTPS. Не размещайте в учебной версии реальные персональные данные.</p>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-01-5">
+          <h2>1.5 Документация технологии</h2>
+          <p>Комплект документации содержит семь документов. Все документы находятся в файле <code>docs/docs.html</code>.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 1.4. Состав документации</caption>
+              <thead>
+                <tr><th>№</th><th>Документ</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Общее описание технологии</td><td>Назначение, схема, компоненты и условия применения</td></tr>
+                <tr><td>2</td><td>Описание программы</td><td>Функции, структура, логика и порядок использования</td></tr>
+                <tr><td>3</td><td>Описание организации информационной базы</td><td>Модель данных, классификаторы, таблицы и ведение базы</td></tr>
+                <tr><td>4</td><td>Руководство администратора</td><td>Установка, обновление, резервное копирование и восстановление</td></tr>
+                <tr><td>5</td><td>Инструкция оператора. Ввод данных</td><td>Регламент, ввод данных и методы контроля</td></tr>
+                <tr><td>6</td><td>Руководство пользователя</td><td>Работа со страницами, сервисами, бронированием и новостями</td></tr>
+                <tr><td>7</td><td>Тексты программ</td><td>Состав файлов, сборка и запуск</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Полные тексты программ передаются в электронном виде вместе с проектом. Документ 7 описывает состав файлов и порядок сборки.</p>
+        </section>
+
+        <section class="doc-section" id="doc-01-6">
+          <h2>1.6 Лист изменений</h2>
+          <p>Изменения вносят в таблицу после правки документа. Для первой редакции указана одна запись.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 1.5. Лист изменений</caption>
+              <thead>
+                <tr><th>№</th><th>Дата</th><th>Раздел</th><th>Содержание</th><th>Версия</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>20.10.2026</td><td>Все разделы</td><td>Первая редакция документации</td><td>1.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-01" data-doc-link>
+            <span>Начало</span>
+            <strong>Общее описание технологии</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-02" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Описание программы</strong>
+          </a>
+        </footer>
+      </article>
+      <article class="doc" id="doc-02" data-doc="02" aria-labelledby="doc-02-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 2 из 7</p>
+          <h1 id="doc-02-title" tabindex="-1">Описание программы</h1>
+          <p class="doc-lead">Назначение, функции, структура и логика работы веб-приложения «Место». Документ описывает сайт, приложение бронирования, приложение новостей и порядок использования программы.</p>
+        </header>
+
+        <section class="doc-section" id="doc-02-1">
+          <h2>2.1 Введение</h2>
+          <p>Программа «Место» - учебный веб-сервис коворкинга. Текущий статус: программа работает и опубликована по адресу <code>http://31.129.99.35:49254/</code>.</p>
+          <p>Версия программы: 1.0. Дата редакции: 20.10.2026. Разработчик: учебный проект по курсу «Веб-технологии».</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.1. Общие сведения о программе</caption>
+              <thead>
+                <tr><th>Параметр</th><th>Значение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Наименование</td><td>«Место», сайт и приложение бронирования коворкинга</td></tr>
+                <tr><td>Версия</td><td>1.0</td></tr>
+                <tr><td>Дата редакции</td><td>20.10.2026</td></tr>
+                <tr><td>Язык программирования</td><td>Go 1.24</td></tr>
+                <tr><td>Шаблоны и стили</td><td>HTML, CSS</td></tr>
+                <tr><td>Клиентские скрипты</td><td>JavaScript</td></tr>
+                <tr><td>База данных</td><td>PostgreSQL 18</td></tr>
+                <tr><td>Развёртывание</td><td>Docker Compose, Podman, systemd</td></tr>
+                <tr><td>Публичный адрес</td><td><code>http://31.129.99.35:49254/</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Программа не использует внешние фреймворки для серверной части. Маршруты, шаблоны и обработчики построены на стандартной библиотеке Go.</p>
+        </section>
+
+        <section class="doc-section" id="doc-02-2">
+          <h2>2.2 Функциональное назначение</h2>
+          <p>Программа показывает сайт коворкинга и принимает бронирования. Посетитель может изучить пространство, тарифы и правила, рассчитать стоимость и оставить бронь.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.2. Функции программы</caption>
+              <thead>
+                <tr><th>Функция</th><th>Результат</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Статические страницы</td><td>Информация о коворкинге, офисе, тарифах, правилах и контактах</td></tr>
+                <tr><td>Поиск по сайту</td><td>Список страниц и сервисов по ключевым словам</td></tr>
+                <tr><td>Сервисы</td><td>Семь виджетов: бронирование, погода, курсы, перевод, QR-код, рабочий день, время</td></tr>
+                <tr><td>Бронирование</td><td>Создание, редактирование и удаление броней</td></tr>
+                <tr><td>Клиенты</td><td>Создание, редактирование и удаление клиентов</td></tr>
+                <tr><td>Поиск по базе</td><td>Поиск по одному значению и по двум связанным значениям</td></tr>
+                <tr><td>Сводка</td><td>Счётчики, выручка и топ-тип пространства</td></tr>
+                <tr><td>Новости</td><td>Свои и внешние новости в одной ленте</td></tr>
+                <tr><td>RSS</td><td>Чтение внешних лент и публикация своей ленты</td></tr>
+                <tr><td>Резиденты из XML</td><td>Таблица, поиск и сортировка данных из XML</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Общее описание функционирования:</p>
+          <ul>
+            <li>сервер читает переменную <code>DATABASE_URL</code>;</li>
+            <li>сервер применяет встроенные миграции;</li>
+            <li>сервер подключается к PostgreSQL;</li>
+            <li>сервер регистрирует маршруты и слушает <code>HTTP_ADDR</code>;</li>
+            <li>на каждый запрос сервер выбирает шаблон и вызывает сценарий;</li>
+            <li>при сигнале завершения сервер закрывает HTTP-сервер и соединения с базой.</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.3. Условия применения программы</caption>
+              <thead>
+                <tr><th>Компонент</th><th>Требование</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Операционная система</td><td>Linux или контейнер</td></tr>
+                <tr><td>Среда сборки</td><td>Go 1.24</td></tr>
+                <tr><td>База данных</td><td>PostgreSQL 18</td></tr>
+                <tr><td>Контейнеры</td><td>Docker или Podman</td></tr>
+                <tr><td>Процессор</td><td>0.5 ядра</td></tr>
+                <tr><td>Память</td><td>512 МБ</td></tr>
+                <tr><td>Порты</td><td>8081 внутри, 49254 снаружи, 49733 для базы на локальной машине</td></tr>
+                <tr><td>Браузер</td><td>Современный браузер с JavaScript</td></tr>
+                <tr><td>Сеть</td><td>Для внешних RSS-лент и виджетов</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-02-3">
+          <h2>2.3 Описание логики</h2>
+          <p>Программа разделена на слои. Зависимости направлены внутрь: внешние слои знают о внутренних, внутренние не знают о внешних.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.4. Структура программы</caption>
+              <thead>
+                <tr><th>Каталог</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>cmd/server</code></td><td>Точка входа, чтение настроек, запуск сервера</td></tr>
+                <tr><td><code>internal/domain</code></td><td>Сущности коворкинга и их правила</td></tr>
+                <tr><td><code>internal/application</code></td><td>Сценарии работы и порты хранилищ</td></tr>
+                <tr><td><code>internal/infrastructure/postgres</code></td><td>Репозитории PostgreSQL и миграции</td></tr>
+                <tr><td><code>internal/infrastructure/rss</code></td><td>Чтение RSS/Atom и публикация своей ленты</td></tr>
+                <tr><td><code>internal/infrastructure/memory</code></td><td>Каталог сервисов в памяти</td></tr>
+                <tr><td><code>internal/interfaces/http</code></td><td>Маршруты, обработчики, шаблоны и статика</td></tr>
+                <tr><td><code>db/migrations</code></td><td>Схема базы данных и начальные данные</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Связи между слоями:</p>
+          <ul>
+            <li>HTTP-слой вызывает сценарии и передаёт данные форм;</li>
+            <li>сценарии проверяют данные и вызывают порты;</li>
+            <li>инфраструктура реализует порты и работает с PostgreSQL или RSS;</li>
+            <li>домен не зависит от базы данных и HTTP.</li>
+          </ul>
+
+          <h3>Язык и библиотеки</h3>
+          <ul>
+            <li>Go 1.24 - язык серверной части;</li>
+            <li><code>net/http</code> - HTTP-сервер и маршруты;</li>
+            <li><code>html/template</code> - шаблоны страниц;</li>
+            <li><code>pgx/v5</code> - работа с PostgreSQL;</li>
+            <li><code>golang-migrate</code> - применение миграций;</li>
+            <li><code>embed</code> - встраивание шаблонов, статики и миграций.</li>
+          </ul>
+
+          <h3>Входные данные</h3>
+          <ul>
+            <li>формы клиента, брони, новости и RSS-источника;</li>
+            <li>параметры запроса: поиск, редактирование, уведомления;</li>
+            <li>переменные окружения <code>DATABASE_URL</code> и <code>HTTP_ADDR</code>;</li>
+            <li>внешние RSS- и Atom-ленты;</li>
+            <li>XML-файл <code>residents.xml</code>.</li>
+          </ul>
+
+          <h3>Выходные данные</h3>
+          <ul>
+            <li>HTML-страницы сайта;</li>
+            <li>JSON-ответ <code>/api/news</code>;</li>
+            <li>RSS-лента <code>/news/rss.xml</code>;</li>
+            <li>перенаправления после успешных операций;</li>
+            <li>сообщения об ошибках на странице.</li>
+          </ul>
+
+          <h3>Логика бронирования</h3>
+          <p>Сценарий бронирования выполняет проверки по порядку:</p>
+          <ol>
+            <li>проверяет формат даты;</li>
+            <li>проверяет, что дата не в прошлом;</li>
+            <li>находит пространство и проверяет его активность;</li>
+            <li>находит клиента;</li>
+            <li>проверяет доступность тарифа для типа пространства;</li>
+            <li>проверяет часы и длительность;</li>
+            <li>рассчитывает цену и депозит;</li>
+            <li>проверяет пересечения с другими бронями;</li>
+            <li>сохраняет бронь в транзакции.</li>
+          </ol>
+
+          <p>Периодные тарифы доступны только для деск-мест. Почасовой тариф доступен для всех пространств.</p>
+
+          <figure class="diagram">
+            <div class="diagram-scroll">
+              <svg viewBox="0 0 1000 260" role="img" aria-labelledby="fig-02-title fig-02-desc">
+                <title id="fig-02-title">Схема логики бронирования</title>
+                <desc id="fig-02-desc">Форма передаёт данные на проверку. После проверки программа рассчитывает цену, проверяет занятость и сохраняет бронь в транзакции. При ошибке показывает сообщение.</desc>
+                <defs>
+                  <marker id="arrow-02" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path class="dg-arrow" d="M0,0 L10,5 L0,10 z"/>
+                  </marker>
+                </defs>
+
+                <rect class="dg-box" x="20" y="50" width="150" height="70" rx="8"/>
+                <text class="dg-text" x="95" y="80" text-anchor="middle">Форма брони</text>
+                <text class="dg-sub" x="95" y="102" text-anchor="middle">клиент, место, дата</text>
+
+                <rect class="dg-box" x="210" y="50" width="160" height="70" rx="8"/>
+                <text class="dg-text" x="290" y="80" text-anchor="middle">Проверка данных</text>
+                <text class="dg-sub" x="290" y="102" text-anchor="middle">дата, часы, тариф</text>
+
+                <rect class="dg-box" x="410" y="50" width="150" height="70" rx="8"/>
+                <text class="dg-text" x="485" y="80" text-anchor="middle">Расчёт цены</text>
+                <text class="dg-sub" x="485" y="102" text-anchor="middle">цена и депозит</text>
+
+                <polygon class="dg-box-accent" points="600,85 690,35 780,85 690,135"/>
+                <text class="dg-text" x="690" y="90" text-anchor="middle">Свободно?</text>
+
+                <rect class="dg-box" x="820" y="50" width="150" height="70" rx="8"/>
+                <text class="dg-text" x="895" y="80" text-anchor="middle">Сохранение</text>
+                <text class="dg-sub" x="895" y="102" text-anchor="middle">транзакция</text>
+
+                <line class="dg-line" x1="170" y1="85" x2="210" y2="85" marker-end="url(#arrow-02)"/>
+                <line class="dg-line" x1="370" y1="85" x2="410" y2="85" marker-end="url(#arrow-02)"/>
+                <line class="dg-line" x1="560" y1="85" x2="600" y2="85" marker-end="url(#arrow-02)"/>
+                <line class="dg-line" x1="780" y1="85" x2="820" y2="85" marker-end="url(#arrow-02)"/>
+
+                <text class="dg-small" x="800" y="76" text-anchor="middle">да</text>
+                <text class="dg-small" x="702" y="153" text-anchor="middle">нет</text>
+
+                <line class="dg-dashed" x1="290" y1="120" x2="290" y2="180" marker-end="url(#arrow-02)"/>
+                <rect class="dg-box-muted" x="210" y="180" width="160" height="52" rx="8"/>
+                <text class="dg-sub" x="290" y="203" text-anchor="middle">Сообщение об ошибке</text>
+                <text class="dg-small" x="290" y="220" text-anchor="middle">данные формы сохраняются</text>
+
+                <line class="dg-dashed" x1="690" y1="135" x2="690" y2="180" marker-end="url(#arrow-02)"/>
+                <rect class="dg-box-muted" x="600" y="180" width="180" height="52" rx="8"/>
+                <text class="dg-sub" x="690" y="203" text-anchor="middle">Другое время или место</text>
+                <text class="dg-small" x="690" y="220" text-anchor="middle">выбор повторяется</text>
+
+                <line class="dg-dashed" x1="895" y1="120" x2="895" y2="180" marker-end="url(#arrow-02)"/>
+                <rect class="dg-box-muted" x="820" y="180" width="150" height="52" rx="8"/>
+                <text class="dg-sub" x="895" y="203" text-anchor="middle">Ошибка базы</text>
+                <text class="dg-small" x="895" y="220" text-anchor="middle">повтор операции</text>
+
+                <text class="dg-small" x="20" y="252">Ошибки показываются над формой. Введённые данные не теряются.</text>
+              </svg>
+            </div>
+            <figcaption>Рисунок 2. Логика создания брони и обработки ошибок.</figcaption>
+          </figure>
+
+          <p>Сохранение брони защищено транзакцией. Репозиторий блокирует строку пространства командой <code>SELECT ... FOR UPDATE</code>. Затем он проверяет пересечения и вставляет запись. Это не даёт двум запросам занять одно и то же время.</p>
+
+          <h3>Логика новостей</h3>
+          <ul>
+            <li>свои новости читаются из таблицы <code>news</code>;</li>
+            <li>активные источники читаются из таблицы <code>news_sources</code>;</li>
+            <li>сервер загружает ленты параллельно, не более 8 одновременно;</li>
+            <li>каждый источник кэшируется на 5 минут;</li>
+            <li>дубли удаляются по ссылке;</li>
+            <li>лента сортируется по дате публикации;</li>
+            <li>лимиты: 30 своих новостей, 12 с одного источника, 100 всего.</li>
+          </ul>
+
+          <h3>Логика поиска</h3>
+          <p>Поиск по одному значению использует <code>ILIKE</code> по имени клиента, компании или названию пространства. Поиск по двум значениям принимает клиента и тип пространства.</p>
+          <p>SQL-запрос соединяет таблицы <code>clients</code>, <code>bookings</code>, <code>spaces</code> и <code>space_types</code>. Второй список типов сужается по выбранному клиенту.</p>
+
+          <h3>Логика XML-страницы</h3>
+          <p>Браузер загружает файл <code>residents.xml</code>. Скрипт разбирает XML, строит таблицу и выполняет поиск и сортировку без запросов к серверу.</p>
+
+          <h3>Логика сводки</h3>
+          <p>SQL-запрос считает количество офисов, типов, пространств, клиентов и броней. Он также считает подтверждённые брони, отменённые брони, выручку и самый популярный тип пространства.</p>
+        </section>
+
+        <section class="doc-section" id="doc-02-4">
+          <h2>2.4 Использование программы</h2>
+          <p>Программу можно запустить тремя способами.</p>
+
+          <h3>Локальный запуск через Docker Compose</h3>
+          <pre><code>make up</code></pre>
+          <p>Команда собирает приложение и поднимает PostgreSQL. Сайт открывается по адресу <code>http://localhost:8081/</code>.</p>
+          <p>Остановка и очистка:</p>
+          <pre><code>make down
+make clean</code></pre>
+          <p>Команда <code>make clean</code> удаляет контейнеры, том базы данных и локальный образ. Используйте её только для тестовой среды.</p>
+
+          <h3>Локальный запуск без контейнера приложения</h3>
+          <pre><code>docker compose up -d db
+DATABASE_URL='postgres://coworking:devsecret@localhost:49733/coworking?sslmode=disable' go run ./cmd/server</code></pre>
+          <p>Сервер применит миграции и начнёт слушать порт 8081. Пароль <code>devsecret</code> задан в <code>Makefile</code> для локальной среды.</p>
+
+          <h3>Сборка и проверка</h3>
+          <pre><code>go build ./...
+go vet ./...
+go test ./...</code></pre>
+          <p>Сборка создаёт исполняемый файл. Шаблоны, стили, скрипты и миграции попадают в бинарник через <code>embed</code>.</p>
+
+          <h3>Настройка</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.5. Переменные окружения</caption>
+              <thead>
+                <tr><th>Переменная</th><th>Обязательность</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>DATABASE_URL</code></td><td>Обязательна</td><td>Строка подключения к PostgreSQL</td></tr>
+                <tr><td><code>HTTP_ADDR</code></td><td>Необязательна</td><td>Адрес HTTP-сервера, по умолчанию <code>:8081</code></td></tr>
+                <tr><td><code>POSTGRES_PASSWORD</code></td><td>Для Compose</td><td>Пароль пользователя PostgreSQL</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Проверка работоспособности</h3>
+          <ol>
+            <li>Откройте главную страницу.</li>
+            <li>Откройте страницу «Бронирование».</li>
+            <li>Добавьте тестового клиента.</li>
+            <li>Создайте бронь на будущую дату.</li>
+            <li>Проверьте, что сводка изменилась.</li>
+            <li>Откройте страницу «Новости» и добавьте новость.</li>
+            <li>Проверьте ленту RSS.</li>
+            <li>Откройте страницу «Резиденты из XML».</li>
+          </ol>
+          <p>Проверка через командную строку:</p>
+          <pre><code>curl -I http://localhost:8081/
+podman exec coworking-db pg_isready -U coworking -d coworking</code></pre>
+        </section>
+
+        <section class="doc-section" id="doc-02-5">
+          <h2>2.5 Сообщения об ошибках</h2>
+          <p>Программа показывает понятное сообщение и сохраняет введённые данные. Пользователь исправляет поле и повторяет операцию.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 2.6. Основные сообщения об ошибках</caption>
+              <thead>
+                <tr><th>Сообщение</th><th>Причина</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Дата не может быть в прошлом. Формат - ГГГГ-ММ-ДД.</td><td>Выбрана прошедшая дата или неверный формат</td><td>Выберите текущую или будущую дату</td></tr>
+                <tr><td>Коворкинг работает с 8:00 до 22:00...</td><td>Начало или конец брони вне рабочих часов</td><td>Измените начало или длительность</td></tr>
+                <tr><td>Подневная, понедельная и помесячная бронь доступна только для деск-мест.</td><td>Периодный тариф выбран для кабинета или переговорки</td><td>Выберите почасовой тариф или деск-место</td></tr>
+                <tr><td>Пространство уже занято на это время.</td><td>Пересечение с действующей бронью</td><td>Выберите другое время или пространство</td></tr>
+                <tr><td>Выбранного клиента нет в списке.</td><td>Клиент удалён или страница устарела</td><td>Обновите страницу или добавьте клиента</td></tr>
+                <tr><td>Выбранного пространства нет в списке.</td><td>Пространство удалено или стало неактивным</td><td>Обновите страницу</td></tr>
+                <tr><td>Укажите имя клиента: от 1 до 80 символов.</td><td>Пустое или слишком длинное имя</td><td>Исправьте имя</td></tr>
+                <tr><td>Проверьте e-mail клиента.</td><td>Неверный формат адреса</td><td>Укажите адрес вида <code>client@example.com</code></td></tr>
+                <tr><td>Укажите корректный адрес ленты: http:// или https://.</td><td>Пустой адрес или другая схема</td><td>Исправьте адрес RSS-ленты</td></tr>
+                <tr><td>Эта RSS-лента уже подключена.</td><td>Адрес уже есть в таблице источников</td><td>Выберите другую ленту</td></tr>
+                <tr><td>Подключено слишком много лент.</td><td>Достигнут лимит 20 источников</td><td>Отключите одну из лент</td></tr>
+                <tr><td>Не удалось загрузить новости.</td><td>Ошибка базы или сети</td><td>Обновите страницу, проверьте логи</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-01" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Общее описание технологии</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-03" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Описание организации информационной базы</strong>
+          </a>
+        </footer>
+      </article>
+
+      <article class="doc" id="doc-03" data-doc="03" aria-labelledby="doc-03-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 3 из 7</p>
+          <h1 id="doc-03-title" tabindex="-1">Описание организации информационной базы</h1>
+          <p class="doc-lead">Модель данных коворкинга «Место», классификаторы, структура семи таблиц, ограничения целостности и порядок ведения базы.</p>
+        </header>
+
+        <section class="doc-section" id="doc-03-1">
+          <h2>3.1 Общее описание информационного обеспечения</h2>
+          <p>Информационная база построена на PostgreSQL 18. База данных называется <code>coworking</code>. Приложение подключается к ней по строке <code>DATABASE_URL</code>.</p>
+          <p>Принципы организации базы:</p>
+          <ul>
+            <li>реляционная модель с первичными и внешними ключами;</li>
+            <li>нормализация данных до третьей нормальной формы;</li>
+            <li>отдельные таблицы-классификаторы для типов пространств;</li>
+            <li>ограничения <code>CHECK</code>, <code>NOT NULL</code>, <code>UNIQUE</code> и <code>FOREIGN KEY</code>;</li>
+            <li>версионные миграции для схемы и начальных данных;</li>
+            <li>индексы для поиска броней и новостей.</li>
+          </ul>
+
+          <p>Источники входных данных:</p>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.1. Источники данных</caption>
+              <thead>
+                <tr><th>Источник</th><th>Данные</th><th>Способ поступления</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Формы сайта</td><td>Клиенты, брони, новости, RSS-источники</td><td>HTTP-запросы</td></tr>
+                <tr><td>Миграции</td><td>Схема и начальные данные</td><td>Применяются при старте сервера</td></tr>
+                <tr><td>Внешние RSS-ленты</td><td>Внешние новости</td><td>Читаются сервером, в базе не хранятся</td></tr>
+                <tr><td>Переменные окружения</td><td>Параметры подключения</td><td>Читаются при запуске</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Начальные данные содержат один офис, три типа пространств, 33 пространства, четырёх клиентов, три брони, три новости и один RSS-источник.</p>
+          <p>Объём базы растёт вместе с числом клиентов, броней и новостей. Точные прогнозы объёма в учебном проекте не заданы.</p>
+
+          <p>Назначение баз данных и наборов данных:</p>
+          <ul>
+            <li>хранение каталога офиса и пространств;</li>
+            <li>хранение клиентов и их контактов;</li>
+            <li>хранение броней и их стоимости;</li>
+            <li>хранение собственных новостей;</li>
+            <li>хранение реестра RSS-источников;</li>
+            <li>обеспечение поиска, сводки и контроля целостности.</li>
+          </ul>
+
+          <p>Режим обновления данных:</p>
+          <ul>
+            <li>каталог обновляется миграциями;</li>
+            <li>клиенты и брони обновляются при операциях на сайте;</li>
+            <li>новости обновляются при публикации;</li>
+            <li>источники обновляются при подключении или отключении;</li>
+            <li>внешние новости не сохраняются в базе и загружаются по запросу.</li>
+          </ul>
+
+          <div class="note">
+            <p><strong>Примечание.</strong> Таблицы новостей добавлены в лабораторной работе 4. Схема бронирования из лабораторной работы 3 не менялась.</p>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-03-2">
+          <h2>3.2 Организация информационной базы</h2>
+          <p>База содержит семь таблиц. Пять таблиц относятся к бронированию, две таблицы относятся к новостям.</p>
+          <p>Связи между таблицами:</p>
+          <ul>
+            <li>один офис имеет много пространств;</li>
+            <li>один тип пространства имеет много пространств;</li>
+            <li>одно пространство имеет много броней;</li>
+            <li>один клиент имеет много броней;</li>
+            <li>удаление клиента удаляет его брони;</li>
+            <li>удаление пространства или офиса с бронями запрещено;</li>
+            <li>таблицы новостей не связаны внешними ключами.</li>
+          </ul>
+
+          <figure class="diagram">
+            <div class="diagram-scroll">
+              <svg viewBox="0 0 1000 820" role="img" aria-labelledby="fig-03-title fig-03-desc">
+                <title id="fig-03-title">Модель данных коворкинга</title>
+                <desc id="fig-03-desc">Семь таблиц: offices, space_types, spaces, clients, bookings, news и news_sources. Показаны связи один ко многим и направления внешних ключей.</desc>
+                <defs>
+                  <marker id="arrow-03" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                    <path class="dg-arrow" d="M0,0 L10,5 L0,10 z"/>
+                  </marker>
+                </defs>
+
+                <rect class="dg-box" x="20" y="20" width="230" height="185" rx="10"/>
+                <text class="dg-text" x="34" y="45">offices</text>
+                <line class="dg-line-accent" x1="34" y1="55" x2="236" y2="55"/>
+                <text class="dg-sub" x="34" y="77">id  PK</text>
+                <text class="dg-sub" x="34" y="95">name</text>
+                <text class="dg-sub" x="34" y="113">city</text>
+                <text class="dg-sub" x="34" y="131">address</text>
+                <text class="dg-sub" x="34" y="149">floor</text>
+                <text class="dg-sub" x="34" y="167">phone</text>
+                <text class="dg-sub" x="34" y="185">email</text>
+
+                <rect class="dg-box" x="750" y="20" width="230" height="145" rx="10"/>
+                <text class="dg-text" x="764" y="45">space_types</text>
+                <line class="dg-line-accent" x1="764" y1="55" x2="966" y2="55"/>
+                <text class="dg-sub" x="764" y="77">id  PK</text>
+                <text class="dg-sub" x="764" y="95">code  UNIQUE</text>
+                <text class="dg-sub" x="764" y="113">title</text>
+                <text class="dg-sub" x="764" y="131">description</text>
+
+                <rect class="dg-box" x="370" y="250" width="260" height="215" rx="10"/>
+                <text class="dg-text" x="384" y="275">spaces</text>
+                <line class="dg-line-accent" x1="384" y1="285" x2="616" y2="285"/>
+                <text class="dg-sub" x="384" y="307">id  PK</text>
+                <text class="dg-sub" x="384" y="325">office_id  FK</text>
+                <text class="dg-sub" x="384" y="343">space_type_id  FK</text>
+                <text class="dg-sub" x="384" y="361">name</text>
+                <text class="dg-sub" x="384" y="379">capacity</text>
+                <text class="dg-sub" x="384" y="397">price_per_hour</text>
+                <text class="dg-sub" x="384" y="415">deposit</text>
+                <text class="dg-sub" x="384" y="433">is_active</text>
+
+                <rect class="dg-box" x="20" y="470" width="230" height="170" rx="10"/>
+                <text class="dg-text" x="34" y="495">clients</text>
+                <line class="dg-line-accent" x1="34" y1="505" x2="236" y2="505"/>
+                <text class="dg-sub" x="34" y="527">id  PK</text>
+                <text class="dg-sub" x="34" y="545">full_name</text>
+                <text class="dg-sub" x="34" y="563">phone</text>
+                <text class="dg-sub" x="34" y="581">email</text>
+                <text class="dg-sub" x="34" y="599">company</text>
+                <text class="dg-sub" x="34" y="617">created_at</text>
+
+                <rect class="dg-box" x="370" y="520" width="260" height="235" rx="10"/>
+                <text class="dg-text" x="384" y="545">bookings</text>
+                <line class="dg-line-accent" x1="384" y1="555" x2="616" y2="555"/>
+                <text class="dg-sub" x="384" y="577">id  PK</text>
+                <text class="dg-sub" x="384" y="595">space_id  FK</text>
+                <text class="dg-sub" x="384" y="613">client_id  FK</text>
+                <text class="dg-sub" x="384" y="631">book_date</text>
+                <text class="dg-sub" x="384" y="649">rate</text>
+                <text class="dg-sub" x="384" y="667">start_hour</text>
+                <text class="dg-sub" x="384" y="685">duration</text>
+                <text class="dg-sub" x="384" y="703">price</text>
+                <text class="dg-sub" x="384" y="721">deposit</text>
+                <text class="dg-sub" x="384" y="739">status</text>
+                <text class="dg-sub" x="384" y="757">created_at</text>
+
+                <rect class="dg-box" x="750" y="470" width="230" height="160" rx="10"/>
+                <text class="dg-text" x="764" y="495">news</text>
+                <line class="dg-line-accent" x1="764" y1="505" x2="966" y2="505"/>
+                <text class="dg-sub" x="764" y="527">id  PK</text>
+                <text class="dg-sub" x="764" y="545">title</text>
+                <text class="dg-sub" x="764" y="563">summary</text>
+                <text class="dg-sub" x="764" y="581">published_at</text>
+                <text class="dg-sub" x="764" y="599">is_published</text>
+                <text class="dg-sub" x="764" y="617">created_at</text>
+
+                <rect class="dg-box" x="750" y="660" width="230" height="130" rx="10"/>
+                <text class="dg-text" x="764" y="685">news_sources</text>
+                <line class="dg-line-accent" x1="764" y1="695" x2="966" y2="695"/>
+                <text class="dg-sub" x="764" y="717">id  PK</text>
+                <text class="dg-sub" x="764" y="735">title</text>
+                <text class="dg-sub" x="764" y="753">url  UNIQUE</text>
+                <text class="dg-sub" x="764" y="771">is_active</text>
+
+                <polyline class="dg-line" points="250,110 310,110 310,300 370,300" marker-end="url(#arrow-03)"/>
+                <text class="dg-small" x="316" y="200">1:N</text>
+
+                <polyline class="dg-line" points="750,90 690,90 690,300 630,300" marker-end="url(#arrow-03)"/>
+                <text class="dg-small" x="696" y="200">1:N</text>
+
+                <polyline class="dg-line" points="250,555 310,555 310,600 370,600" marker-end="url(#arrow-03)"/>
+                <text class="dg-small" x="316" y="580">1:N</text>
+                <text class="dg-small" x="316" y="596">CASCADE</text>
+
+                <line class="dg-line" x1="500" y1="465" x2="500" y2="520" marker-end="url(#arrow-03)"/>
+                <text class="dg-small" x="508" y="496">1:N</text>
+
+                <text class="dg-small" x="750" y="645">Связей по внешним ключам нет</text>
+
+                <text class="dg-small" x="20" y="805">PK - первичный ключ. FK - внешний ключ. CASCADE - удаление вместе с клиентом.</text>
+              </svg>
+            </div>
+            <figcaption>Рисунок 3. Модель данных и связи между таблицами.</figcaption>
+          </figure>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.2. Связи между таблицами</caption>
+              <thead>
+                <tr><th>Связь</th><th>Поле</th><th>Правило удаления</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>offices</code> 1:N <code>spaces</code></td><td><code>spaces.office_id</code></td><td><code>RESTRICT</code></td></tr>
+                <tr><td><code>space_types</code> 1:N <code>spaces</code></td><td><code>spaces.space_type_id</code></td><td><code>RESTRICT</code></td></tr>
+                <tr><td><code>spaces</code> 1:N <code>bookings</code></td><td><code>bookings.space_id</code></td><td><code>RESTRICT</code></td></tr>
+                <tr><td><code>clients</code> 1:N <code>bookings</code></td><td><code>bookings.client_id</code></td><td><code>CASCADE</code></td></tr>
+                <tr><td><code>news</code></td><td>Нет внешних ключей</td><td>Не применимо</td></tr>
+                <tr><td><code>news_sources</code></td><td>Нет внешних ключей</td><td>Не применимо</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Каждая таблица имеет первичный ключ <code>id</code> типа <code>serial</code>. Внешние ключи обеспечивают ссылочную целостность. Ограничения <code>CHECK</code> задают диапазоны и форматы.</p>
+        </section>
+
+        <section class="doc-section" id="doc-03-3">
+          <h2>3.3 Система классификации и кодирования</h2>
+          <p>В базе используются четыре классификатора: тип пространства, тариф, статус брони и признаки активности. Значения заданы ограничениями <code>CHECK</code>.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.3. Классификаторы и коды</caption>
+              <thead>
+                <tr><th>Классификатор</th><th>Поле</th><th>Значения</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Тип пространства</td><td><code>space_types.code</code></td><td><code>desk</code>, <code>cabin</code>, <code>room</code></td><td>Деск-место, кабинет, переговорка</td></tr>
+                <tr><td>Тариф</td><td><code>bookings.rate</code></td><td><code>hour</code>, <code>day</code>, <code>week</code>, <code>month</code></td><td>Час, день, неделя, месяц</td></tr>
+                <tr><td>Статус брони</td><td><code>bookings.status</code></td><td><code>confirmed</code>, <code>cancelled</code></td><td>Подтверждена или отменена</td></tr>
+                <tr><td>Активность пространства</td><td><code>spaces.is_active</code></td><td><code>true</code>, <code>false</code></td><td>Доступно для новых броней</td></tr>
+                <tr><td>Публикация новости</td><td><code>news.is_published</code></td><td><code>true</code>, <code>false</code></td><td>Показывать новость в ленте</td></tr>
+                <tr><td>Активность источника</td><td><code>news_sources.is_active</code></td><td><code>true</code>, <code>false</code></td><td>Читать RSS-ленту</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Правила кодирования:</p>
+          <ul>
+            <li>код типа состоит из латинских букв и подчёркивания;</li>
+            <li>тариф принимает одно из четырёх значений;</li>
+            <li>статус принимает одно из двух значений;</li>
+            <li>признаки активности принимают логические значения.</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.4. Правила тарифов</caption>
+              <thead>
+                <tr><th>Тариф</th><th>Длительность</th><th>Начало</th><th>Цена</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>hour</code></td><td>1-8 часов</td><td>8-21</td><td><code>price_per_hour × duration</code></td></tr>
+                <tr><td><code>day</code></td><td>1</td><td>8</td><td>900 ₽</td></tr>
+                <tr><td><code>week</code></td><td>7</td><td>8</td><td>3 500 ₽</td></tr>
+                <tr><td><code>month</code></td><td>1</td><td>8</td><td>12 000 ₽</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Периодные тарифы доступны только для деск-мест. Конец любой брони не может быть позже 22:00.</p>
+
+          <div class="note">
+            <p><strong>Примечание.</strong> Схема допускает статус <code>cancelled</code>. Текущий интерфейс отменяет бронь удалением записи. Поэтому значение <code>cancelled</code> в новых данных не появляется, а счётчик отменённых броней обычно равен нулю.</p>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-03-4">
+          <h2>3.4 Описание массивов информации</h2>
+          <p>База содержит семь массивов информации. Каждый массив соответствует таблице.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.5. Перечень массивов информации</caption>
+              <thead>
+                <tr><th>Таблица</th><th>Назначение</th><th>Ключевые поля</th><th>Режим обновления</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>offices</code></td><td>Локации коворкинга</td><td><code>id</code>, <code>name</code>, <code>city</code></td><td>При изменении каталога</td></tr>
+                <tr><td><code>space_types</code></td><td>Типы пространств</td><td><code>id</code>, <code>code</code>, <code>title</code></td><td>При изменении классификатора</td></tr>
+                <tr><td><code>spaces</code></td><td>Рабочие места и переговорки</td><td><code>id</code>, <code>office_id</code>, <code>space_type_id</code></td><td>При изменении каталога</td></tr>
+                <tr><td><code>clients</code></td><td>Клиенты коворкинга</td><td><code>id</code>, <code>full_name</code></td><td>При работе оператора</td></tr>
+                <tr><td><code>bookings</code></td><td>Брони пространств</td><td><code>id</code>, <code>space_id</code>, <code>client_id</code></td><td>При бронировании и отмене</td></tr>
+                <tr><td><code>news</code></td><td>Собственные новости</td><td><code>id</code>, <code>published_at</code></td><td>При публикации и удалении</td></tr>
+                <tr><td><code>news_sources</code></td><td>Реестр RSS-лент</td><td><code>id</code>, <code>url</code></td><td>При подключении и отключении</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.1 Таблица offices</h3>
+          <p>Таблица хранит локации коворкинга. В начальных данных одна запись.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.6. Структура offices</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор локации</td></tr>
+                <tr><td>name</td><td>text</td><td>NOT NULL</td><td>Название офиса</td></tr>
+                <tr><td>city</td><td>text</td><td>NOT NULL</td><td>Город</td></tr>
+                <tr><td>address</td><td>text</td><td>NOT NULL</td><td>Адрес</td></tr>
+                <tr><td>floor</td><td>int</td><td>NOT NULL, CHECK (floor &gt; 0)</td><td>Этаж</td></tr>
+                <tr><td>phone</td><td>text</td><td>NOT NULL</td><td>Телефон</td></tr>
+                <tr><td>email</td><td>text</td><td>NOT NULL, CHECK (формат)</td><td>Электронная почта</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.2 Таблица space_types</h3>
+          <p>Таблица-классификатор типов пространств. В начальных данных три записи.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.7. Структура space_types</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор типа</td></tr>
+                <tr><td>code</td><td>text</td><td>NOT NULL, UNIQUE, CHECK (<code>^[a-z_]+$</code>)</td><td>Код: <code>desk</code>, <code>cabin</code>, <code>room</code></td></tr>
+                <tr><td>title</td><td>text</td><td>NOT NULL, CHECK (длина &gt; 0)</td><td>Название типа</td></tr>
+                <tr><td>description</td><td>text</td><td>NOT NULL, DEFAULT ''</td><td>Описание типа</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.3 Таблица spaces</h3>
+          <p>Таблица хранит конкретные рабочие места, кабинеты и переговорки. В начальных данных 33 записи.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.8. Структура spaces</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор пространства</td></tr>
+                <tr><td>office_id</td><td>int</td><td>NOT NULL, FOREIGN KEY, ON DELETE RESTRICT</td><td>Ссылка на <code>offices.id</code></td></tr>
+                <tr><td>space_type_id</td><td>int</td><td>NOT NULL, FOREIGN KEY, ON DELETE RESTRICT</td><td>Ссылка на <code>space_types.id</code></td></tr>
+                <tr><td>name</td><td>text</td><td>NOT NULL, CHECK (длина &gt; 0)</td><td>Название пространства</td></tr>
+                <tr><td>capacity</td><td>int</td><td>NOT NULL, CHECK (capacity &gt; 0)</td><td>Количество мест</td></tr>
+                <tr><td>price_per_hour</td><td>int</td><td>NOT NULL, CHECK (&gt;= 0)</td><td>Цена за час, ₽</td></tr>
+                <tr><td>deposit</td><td>int</td><td>NOT NULL, DEFAULT 0, CHECK (&gt;= 0)</td><td>Депозит, ₽</td></tr>
+                <tr><td>is_active</td><td>boolean</td><td>NOT NULL, DEFAULT true</td><td>Доступность для брони</td></tr>
+                <tr><td>UNIQUE (office_id, name)</td><td>-</td><td>UNIQUE</td><td>Уникальность названия в офисе</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.4 Таблица clients</h3>
+          <p>Таблица хранит клиентов коворкинга. В начальных данных четыре записи.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.9. Структура clients</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор клиента</td></tr>
+                <tr><td>full_name</td><td>text</td><td>NOT NULL, CHECK (1-100 символов)</td><td>Имя или название команды</td></tr>
+                <tr><td>phone</td><td>text</td><td>NOT NULL, DEFAULT ''</td><td>Телефон</td></tr>
+                <tr><td>email</td><td>text</td><td>NOT NULL, DEFAULT '', CHECK (пусто или формат)</td><td>Электронная почта</td></tr>
+                <tr><td>company</td><td>text</td><td>NOT NULL, DEFAULT ''</td><td>Компания</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>NOT NULL, DEFAULT now()</td><td>Дата создания</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.5 Таблица bookings</h3>
+          <p>Таблица хранит брони пространств. В начальных данных три записи.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.10. Структура bookings</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор брони</td></tr>
+                <tr><td>space_id</td><td>int</td><td>NOT NULL, FOREIGN KEY, ON DELETE RESTRICT</td><td>Ссылка на <code>spaces.id</code></td></tr>
+                <tr><td>client_id</td><td>int</td><td>NOT NULL, FOREIGN KEY, ON DELETE CASCADE</td><td>Ссылка на <code>clients.id</code></td></tr>
+                <tr><td>book_date</td><td>date</td><td>NOT NULL</td><td>Дата брони</td></tr>
+                <tr><td>rate</td><td>text</td><td>NOT NULL, DEFAULT 'hour', CHECK (4 значения)</td><td>Тариф</td></tr>
+                <tr><td>start_hour</td><td>int</td><td>NOT NULL, DEFAULT 8, CHECK (8-21)</td><td>Час начала</td></tr>
+                <tr><td>duration</td><td>int</td><td>NOT NULL</td><td>Длительность</td></tr>
+                <tr><td>price</td><td>int</td><td>NOT NULL, CHECK (&gt;= 0)</td><td>Стоимость, ₽</td></tr>
+                <tr><td>deposit</td><td>int</td><td>NOT NULL, DEFAULT 0, CHECK (&gt;= 0)</td><td>Депозит, ₽</td></tr>
+                <tr><td>status</td><td>text</td><td>NOT NULL, DEFAULT 'confirmed', CHECK (2 значения)</td><td>Статус брони</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>NOT NULL, DEFAULT now()</td><td>Дата создания</td></tr>
+                <tr><td>CHECK (rate, duration)</td><td>-</td><td>CHECK</td><td>Согласование тарифа и длительности</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Ограничение согласования тарифа и длительности:</p>
+          <ul>
+            <li><code>hour</code> - длительность от 1 до 8;</li>
+            <li><code>day</code> - длительность 1;</li>
+            <li><code>week</code> - длительность 7;</li>
+            <li><code>month</code> - длительность 1.</li>
+          </ul>
+
+          <h3>3.4.6 Таблица news</h3>
+          <p>Таблица хранит собственные новости коворкинга. В начальных данных три записи.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.11. Структура news</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор новости</td></tr>
+                <tr><td>title</td><td>text</td><td>NOT NULL, CHECK (1-200 символов)</td><td>Заголовок</td></tr>
+                <tr><td>summary</td><td>text</td><td>NOT NULL, DEFAULT '', CHECK (&lt;= 2000)</td><td>Текст новости</td></tr>
+                <tr><td>published_at</td><td>timestamptz</td><td>NOT NULL, DEFAULT now()</td><td>Дата публикации</td></tr>
+                <tr><td>is_published</td><td>boolean</td><td>NOT NULL, DEFAULT true</td><td>Признак публикации</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>NOT NULL, DEFAULT now()</td><td>Дата создания</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>3.4.7 Таблица news_sources</h3>
+          <p>Таблица хранит реестр подключённых RSS-лент. В начальных данных одна запись.</p>
+          <div class="table-wrap">
+            <table class="table-keys">
+              <caption>Таблица 3.12. Структура news_sources</caption>
+              <thead>
+                <tr><th>Атрибут</th><th>Тип</th><th>Ограничение</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>id</td><td>serial</td><td>PRIMARY KEY</td><td>Идентификатор источника</td></tr>
+                <tr><td>title</td><td>text</td><td>NOT NULL, CHECK (1-100 символов)</td><td>Название источника</td></tr>
+                <tr><td>url</td><td>text</td><td>NOT NULL, UNIQUE, CHECK (http/https)</td><td>Адрес ленты</td></tr>
+                <tr><td>is_active</td><td>boolean</td><td>NOT NULL, DEFAULT true</td><td>Признак активности</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>NOT NULL, DEFAULT now()</td><td>Дата создания</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Индексы</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.13. Индексы базы данных</caption>
+              <thead>
+                <tr><th>Индекс</th><th>Таблица</th><th>Поля</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>bookings_space_date_idx</code></td><td><code>bookings</code></td><td><code>space_id, book_date, start_hour</code></td><td>Поиск пересечений</td></tr>
+                <tr><td><code>bookings_date_status_idx</code></td><td><code>bookings</code></td><td><code>book_date, status</code></td><td>Выборка броней по дате</td></tr>
+                <tr><td><code>bookings_client_idx</code></td><td><code>bookings</code></td><td><code>client_id</code></td><td>Поиск броней клиента</td></tr>
+                <tr><td><code>news_published_idx</code></td><td><code>news</code></td><td><code>is_published, published_at DESC</code></td><td>Лента опубликованных новостей</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Ограничения целостности:</p>
+          <ul>
+            <li><code>NOT NULL</code> - обязательные поля;</li>
+            <li><code>UNIQUE</code> - уникальные коды и адреса;</li>
+            <li><code>CHECK</code> - диапазоны, форматы и согласование тарифа;</li>
+            <li><code>FOREIGN KEY</code> - ссылочная целостность;</li>
+            <li><code>CASCADE</code> - удаление броней вместе с клиентом;</li>
+            <li><code>RESTRICT</code> - запрет удаления пространства с бронями.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="doc-03-5">
+          <h2>3.5 Организация ведения базы</h2>
+          <p>Схема и начальные данные задаются миграциями. Миграции встроены в бинарник и применяются при старте сервера.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.14. Миграции базы данных</caption>
+              <thead>
+                <tr><th>Миграция</th><th>Содержание</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>000001_init</code></td><td>Пять таблиц бронирования, ограничения и индексы</td></tr>
+                <tr><td><code>000002_seed_catalog_and_search</code></td><td>Офис, типы, 33 пространства, клиенты и демо-брони</td></tr>
+                <tr><td><code>000003_client_delete_cascade</code></td><td>Каскадное удаление броней вместе с клиентом</td></tr>
+                <tr><td><code>000004_remove_cancelled_bookings</code></td><td>Удаление отменённых броней из старых баз</td></tr>
+                <tr><td><code>000005_news</code></td><td>Таблицы <code>news</code> и <code>news_sources</code>, начальные новости и источник</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Порядок применения:</p>
+          <ol>
+            <li>сервер читает <code>DATABASE_URL</code>;</li>
+            <li>сервер открывает встроенный набор миграций;</li>
+            <li>сервер применяет недостающие миграции;</li>
+            <li>при ошибке сервер завершает работу;</li>
+            <li>после успешных миграций сервер подключается к базе и начинает обработку запросов.</li>
+          </ol>
+
+          <p>Отдельная команда миграции не нужна. Повторный запуск сервера не применяет уже выполненные миграции.</p>
+
+          <h3>Резервное копирование</h3>
+          <p>Администратор делает дамп базы ежедневно. Рекомендуемый срок хранения: 7 ежедневных копий и 4 недельные копии. Копию следует хранить вне сервера.</p>
+          <p>Команды резервного копирования и восстановления приведены в документе 4.</p>
+
+          <h3>Целостность при работе</h3>
+          <ul>
+            <li>сохранение брони выполняется в транзакции;</li>
+            <li>строка пространства блокируется командой <code>FOR UPDATE</code>;</li>
+            <li>пересечения проверяются в приложении и в SQL;</li>
+            <li>ограничения базы данных проверяют значения;</li>
+            <li>внешние ключи защищают связи.</li>
+          </ul>
+
+          <h3>Ограничения учебной версии</h3>
+          <ul>
+            <li>нет аутентификации и входа;</li>
+            <li>нет разграничения ролей;</li>
+            <li>нет журнала аудита операций;</li>
+            <li>счётчик посещений хранится в памяти и сбрасывается при перезапуске;</li>
+            <li>сайт работает по HTTP.</li>
+          </ul>
+          <p>Учитывайте эти ограничения при публикации реальных данных. Для учебных сценариев они допустимы.</p>
+        </section>
+
+        <section class="doc-section" id="doc-03-6">
+          <h2>3.6 Каталог базы данных</h2>
+          <p>Каталог содержит краткие сведения о каждом массиве информации. Начальные данные указаны по состоянию на 20.10.2026.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 3.15. Каталог базы данных</caption>
+              <thead>
+                <tr><th>Таблица</th><th>Назначение</th><th>Начальные записи</th><th>Режим обновления</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>offices</code></td><td>Локации коворкинга</td><td>1</td><td>При изменении каталога</td></tr>
+                <tr><td><code>space_types</code></td><td>Типы пространств</td><td>3</td><td>При изменении классификатора</td></tr>
+                <tr><td><code>spaces</code></td><td>Рабочие места и переговорки</td><td>33</td><td>При изменении каталога</td></tr>
+                <tr><td><code>clients</code></td><td>Клиенты</td><td>4</td><td>При работе оператора</td></tr>
+                <tr><td><code>bookings</code></td><td>Брони</td><td>3</td><td>При бронировании и отмене</td></tr>
+                <tr><td><code>news</code></td><td>Собственные новости</td><td>3</td><td>При публикации и удалении</td></tr>
+                <tr><td><code>news_sources</code></td><td>RSS-источники</td><td>1</td><td>При подключении и отключении</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Всего в базе семь таблиц и 46 атрибутов. Пять таблиц бронирования содержат 36 атрибутов. Две таблицы новостей содержат 10 атрибутов.</p>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-02" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Описание программы</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-04" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Руководство администратора</strong>
+          </a>
+        </footer>
+      </article>
+      <article class="doc" id="doc-04" data-doc="04" aria-labelledby="doc-04-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 4 из 7</p>
+          <h1 id="doc-04-title" tabindex="-1">Руководство администратора</h1>
+          <p class="doc-lead">Установка, настройка, эксплуатация, обновление, резервное копирование и восстановление сайта коворкинга «Место».</p>
+        </header>
+
+        <section class="doc-section" id="doc-04-1">
+          <h2>4.1 Назначение</h2>
+          <p>Руководство описывает действия администратора. Администратор отвечает за сервер, базу данных, резервные копии и обновление программы.</p>
+          <p>Администратор выполняет следующие работы:</p>
+          <ul>
+            <li>устанавливает и запускает приложение;</li>
+            <li>настраивает подключение к PostgreSQL;</li>
+            <li>проверяет работоспособность сайта;</li>
+            <li>обновляет программу и образы контейнеров;</li>
+            <li>делает резервные копии и восстанавливает базу;</li>
+            <li>читает журналы и устраняет сбои.</li>
+          </ul>
+
+          <p>Для работы нужны навыки командной строки Linux, Podman или Docker и базовые знания PostgreSQL. Знание языка Go требуется только для изменения кода.</p>
+          <p>Публичный адрес сайта: <code>http://31.129.99.35:49254/</code>.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 4.1. Службы и контейнеры</caption>
+              <thead>
+                <tr><th>Объект</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>coworking</code></td><td>Контейнер приложения и systemd-служба сайта</td></tr>
+                <tr><td><code>coworking-db</code></td><td>Контейнер PostgreSQL и systemd-служба базы</td></tr>
+                <tr><td><code>coworking-net</code></td><td>Сеть Podman для связи контейнеров</td></tr>
+                <tr><td><code>coworking.service</code></td><td>Служба приложения</td></tr>
+                <tr><td><code>coworking-db.service</code></td><td>Служба базы данных</td></tr>
+                <tr><td><code>database.env</code></td><td>Файл с паролем PostgreSQL</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-04-2">
+          <h2>4.2 Подготовка к работе</h2>
+          <p>Состав программного комплекса:</p>
+          <ul>
+            <li>исполняемый файл <code>coworking-server</code>;</li>
+            <li>образ приложения <code>localhost/coworking:latest</code>;</li>
+            <li>образ PostgreSQL <code>localhost/coworking-postgres:18-alpine</code>;</li>
+            <li>файлы служб <code>deploy/coworking.service</code> и <code>deploy/coworking-db.service</code>;</li>
+            <li>файл настроек <code>~/.config/coworking/database.env</code>;</li>
+            <li>каталог данных <code>~/projects/vyaz-sem4/data</code>.</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 4.2. Требования к серверу</caption>
+              <thead>
+                <tr><th>Параметр</th><th>Значение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Операционная система</td><td>Linux</td></tr>
+                <tr><td>Контейнеры</td><td>Podman с rootless-режимом</td></tr>
+                <tr><td>Службы</td><td>systemd с пользовательскими службами</td></tr>
+                <tr><td>Процессор</td><td>0.5 ядра на контейнер</td></tr>
+                <tr><td>Память</td><td>512 МБ на контейнер</td></tr>
+                <tr><td>Диск</td><td>Не менее 1 ГБ свободного места</td></tr>
+                <tr><td>Порт сайта</td><td>49254 снаружи, 8081 внутри контейнера</td></tr>
+                <tr><td>Порт базы</td><td>49733 на <code>127.0.0.1</code></td></tr>
+                <tr><td>Сеть</td><td>Доступ к внешним RSS-лентам и API</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Переменные окружения</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 4.3. Переменные окружения</caption>
+              <thead>
+                <tr><th>Переменная</th><th>Назначение</th><th>Где задаётся</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>POSTGRES_PASSWORD</code></td><td>Пароль пользователя PostgreSQL</td><td><code>database.env</code> или <code>.env</code></td></tr>
+                <tr><td><code>DATABASE_URL</code></td><td>Строка подключения к базе</td><td>Служба приложения или командная строка</td></tr>
+                <tr><td><code>HTTP_ADDR</code></td><td>Адрес HTTP-сервера</td><td>Служба приложения, по умолчанию <code>:8081</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Пример файла <code>~/.config/coworking/database.env</code>:</p>
+          <pre><code>POSTGRES_PASSWORD=замените-на-сложный-пароль</code></pre>
+
+          <h3>Порядок запуска на сервере</h3>
+          <ol>
+            <li>Получите образ PostgreSQL и назначьте локальное имя.</li>
+            <li>Соберите образ приложения.</li>
+            <li>Создайте файл <code>database.env</code>.</li>
+            <li>Установите файлы служб.</li>
+            <li>Запустите службу базы данных.</li>
+            <li>Проверьте готовность базы.</li>
+            <li>Запустите службу приложения.</li>
+            <li>Проверьте сайт.</li>
+          </ol>
+
+          <pre><code>podman pull docker.io/library/postgres:18-alpine
+podman tag docker.io/library/postgres:18-alpine localhost/coworking-postgres:18-alpine
+
+podman build -t localhost/coworking:latest .
+
+mkdir -p ~/.config/systemd/user ~/.config/coworking
+cp deploy/coworking.service ~/.config/systemd/user/
+cp deploy/coworking-db.service ~/.config/systemd/user/
+
+loginctl enable-linger Пользователь
+systemctl --user daemon-reload
+systemctl --user enable --now coworking-db
+systemctl --user enable --now coworking</code></pre>
+
+          <p>Служба базы данных создаёт сеть <code>coworking-net</code> и каталог данных. Служба приложения подключается к базе по имени <code>db</code> внутри сети.</p>
+
+          <div class="note">
+            <p><strong>Примечание.</strong> Сначала запускайте базу, затем приложение. Если база ещё не готова, приложение завершится с ошибкой. Служба перезапустит его через 5 секунд.</p>
+          </div>
+
+          <h3>Проверка работоспособности</h3>
+          <pre><code>curl -I http://127.0.0.1:49254/
+curl -I http://31.129.99.35:49254/
+podman exec coworking-db pg_isready -U coworking -d coworking
+podman ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'</code></pre>
+
+          <p>Ожидаемые результаты:</p>
+          <ul>
+            <li>сайт отвечает кодом 200;</li>
+            <li>база отвечает <code>accepting connections</code>;</li>
+            <li>оба контейнера находятся в состоянии <code>Up</code>;</li>
+            <li>порт 49254 опубликован, порт 49733 доступен только локально.</li>
+          </ul>
+
+          <h3>Локальный запуск</h3>
+          <pre><code>make up
+make down
+make clean</code></pre>
+          <p>Команда <code>make up</code> собирает приложение и поднимает PostgreSQL. Сайт открывается по адресу <code>http://localhost:8081/</code>.</p>
+          <p>Команда <code>make down</code> останавливает контейнеры и сохраняет данные. Команда <code>make clean</code> удаляет контейнеры, том базы и локальный образ.</p>
+
+          <p>Запуск без контейнера приложения:</p>
+          <pre><code>docker compose up -d db
+DATABASE_URL='postgres://coworking:devsecret@localhost:49733/coworking?sslmode=disable' go run ./cmd/server</code></pre>
+
+          <h3>Проверка после установки</h3>
+          <ol>
+            <li>Откройте главную страницу.</li>
+            <li>Откройте страницу «Бронирование».</li>
+            <li>Добавьте тестового клиента.</li>
+            <li>Создайте бронь на будущую дату.</li>
+            <li>Проверьте сводку базы данных.</li>
+            <li>Откройте страницу «Новости».</li>
+            <li>Добавьте тестовую новость.</li>
+            <li>Проверьте ленту <code>/news/rss.xml</code>.</li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="doc-04-3">
+          <h2>4.3 Описание операций</h2>
+          <h3>Ежедневный регламент</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 4.4. Ежедневные операции</caption>
+              <thead>
+                <tr><th>Время</th><th>Операция</th><th>Результат</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>09:00</td><td>Проверить сайт и базу</td><td>Сайт отвечает, база принимает подключения</td></tr>
+                <tr><td>09:10</td><td>Проверить журналы</td><td>Нет новых ошибок</td></tr>
+                <tr><td>09:20</td><td>Проверить свободное место</td><td>Диск заполнен менее чем на 80 процентов</td></tr>
+                <tr><td>В течение дня</td><td>Следить за обращениями оператора</td><td>Сбои зафиксированы</td></tr>
+                <tr><td>18:00</td><td>Проверить сводку и брони</td><td>Данные соответствуют ожиданиям</td></tr>
+                <tr><td>02:00</td><td>Сделать резервную копию</td><td>Дамп создан и проверен</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Обновление приложения</h3>
+          <ol>
+            <li>Сделайте резервную копию базы.</li>
+            <li>Получите новую версию проекта.</li>
+            <li>Соберите новый образ.</li>
+            <li>Перезапустите службу приложения.</li>
+            <li>Проверьте сайт и журналы.</li>
+          </ol>
+          <pre><code>cd ~/projects/vyaz-sem4
+git pull
+podman build -t localhost/coworking:latest .
+systemctl --user restart coworking
+journalctl --user -u coworking -n 100 --no-pager</code></pre>
+
+          <p>Миграции применяются автоматически при старте. Не запускайте их вручную. Если миграция завершилась ошибкой, сервер не начнёт работу.</p>
+
+          <h3>Резервное копирование</h3>
+          <p>Резервная копия содержит схему, данные и последовательности. Используйте формат custom.</p>
+          <pre><code>mkdir -p ~/backups/coworking
+podman exec coworking-db pg_dump -U coworking -d coworking -Fc > ~/backups/coworking/coworking.dump</code></pre>
+
+          <p>Проверка дампа:</p>
+          <pre><code>podman exec -i coworking-db pg_restore --list &lt; ~/backups/coworking/coworking.dump</code></pre>
+
+          <p>Рекомендуемый режим хранения:</p>
+          <ul>
+            <li>делать копию ежедневно в 02:00;</li>
+            <li>хранить 7 ежедневных копий;</li>
+            <li>хранить 4 недельные копии;</li>
+            <li>хранить копии вне сервера;</li>
+            <li>проверять дамп командой <code>pg_restore --list</code>.</li>
+          </ul>
+
+          <p>Для копии с датой в имени добавьте дату вручную или используйте планировщик. Пример имени: <code>coworking-2026-10-20.dump</code>.</p>
+
+          <h3>Восстановление базы</h3>
+          <ol>
+            <li>Остановите службу приложения.</li>
+            <li>Сохраните текущую базу отдельным дампом.</li>
+            <li>Восстановите выбранный дамп.</li>
+            <li>Запустите службу приложения.</li>
+            <li>Проверьте сайт и данные.</li>
+          </ol>
+          <pre><code>systemctl --user stop coworking
+podman exec -i coworking-db pg_restore -U coworking -d coworking --clean --if-exists &lt; ~/backups/coworking/coworking.dump
+systemctl --user start coworking</code></pre>
+
+          <div class="note note-warn">
+            <p><strong>Внимание.</strong> Ключ <code>--clean</code> удаляет текущие объекты базы. Используйте восстановление только при необходимости и только после проверки дампа.</p>
+          </div>
+
+          <p>После восстановления сервер применит недостающие миграции. Если дамп создан на новой версии схемы, сначала обновите приложение.</p>
+
+          <h3>Журналы</h3>
+          <pre><code>journalctl --user -u coworking -f
+journalctl --user -u coworking-db -f
+podman logs --tail 100 coworking
+podman logs --tail 100 coworking-db</code></pre>
+
+          <h3>Мониторинг ресурсов</h3>
+          <pre><code>podman stats --no-stream
+df -h
+du -sh ~/projects/vyaz-sem4/data
+ss -ltnp | grep -E '49254|49733'</code></pre>
+
+          <h3>Работа с базой</h3>
+          <p>Подключение к базе для проверки:</p>
+          <pre><code>podman exec -it coworking-db psql -U coworking -d coworking</code></pre>
+          <p>Перед ручной правкой данных сделайте резервную копию. Не изменяйте таблицы без необходимости.</p>
+
+          <h3>Безопасность</h3>
+          <ul>
+            <li>не публикуйте порт базы данных наружу;</li>
+            <li>используйте сложный пароль PostgreSQL;</li>
+            <li>обновляйте образы приложения и базы;</li>
+            <li>ограничьте доступ к серверу по SSH;</li>
+            <li>настройте HTTPS для публичного сайта;</li>
+            <li>не размещайте реальные персональные данные в учебной версии.</li>
+          </ul>
+          <p>Если используется файрвол, откройте только порт сайта:</p>
+          <pre><code>ufw allow 49254/tcp</code></pre>
+        </section>
+
+        <section class="doc-section" id="doc-04-4">
+          <h2>4.4 Аварийные ситуации</h2>
+          <p>При сбое сначала зафиксируйте время и сообщение. Затем проверьте журналы и состояние контейнеров. Не удаляйте данные до резервной копии.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 4.5. Аварийные ситуации и действия</caption>
+              <thead>
+                <tr><th>Ситуация</th><th>Признак</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Сайт не открывается</td><td>Соединение отклонено</td><td>Проверьте службу, контейнер, порт и файрвол</td></tr>
+                <tr><td>Ошибка 500</td><td>Страница не отрисовалась</td><td>Проверьте журнал приложения и подключение к базе</td></tr>
+                <tr><td>База недоступна</td><td><code>pg_isready</code> не отвечает</td><td>Проверьте контейнер, пароль, диск и журнал базы</td></tr>
+                <tr><td>Порт занят</td><td><code>address already in use</code></td><td>Найдите процесс командой <code>ss -ltnp</code>, измените порт</td></tr>
+                <tr><td>Миграция не применилась</td><td>Сервер завершился при старте</td><td>Прочитайте журнал, восстановите базу, исправьте миграцию</td></tr>
+                <tr><td>Диск заполнен</td><td><code>df -h</code> показывает 100 процентов</td><td>Удалите старые копии и журналы, расширьте диск</td></tr>
+                <tr><td>RSS-источник недоступен</td><td>Сообщение «источник недоступен»</td><td>Проверьте сеть и адрес, отключите источник при необходимости</td></tr>
+                <tr><td>Данные повреждены</td><td>Ошибки целостности</td><td>Остановите сайт, восстановите последний дамп, проверьте данные</td></tr>
+                <tr><td>Контейнер перезапускается</td><td>Статус <code>Restarting</code></td><td>Проверьте журнал, лимиты памяти и свободное место</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Порядок действий при потере данных</h3>
+          <ol>
+            <li>Остановите службу приложения.</li>
+            <li>Не выполняйте новые записи в базу.</li>
+            <li>Сохраните текущий дамп и журналы.</li>
+            <li>Восстановите последний проверенный дамп.</li>
+            <li>Проверьте таблицы и сводку.</li>
+            <li>Сообщите о случившемся.</li>
+          </ol>
+
+          <p>Контакт для связи: администратор проекта. Адрес сайта: <code>http://31.129.99.35:49254/</code>.</p>
+        </section>
+
+        <section class="doc-section" id="doc-04-5">
+          <h2>4.5 Рекомендации по освоению</h2>
+          <p>Осваивайте систему в таком порядке:</p>
+          <ol>
+            <li>Запустите локальную среду командой <code>make up</code>.</li>
+            <li>Проверьте главную страницу и страницу бронирования.</li>
+            <li>Добавьте клиента и бронь.</li>
+            <li>Проверьте сводку базы данных.</li>
+            <li>Добавьте новость и подключите RSS-ленту.</li>
+            <li>Сделайте резервную копию.</li>
+            <li>Проверьте дамп командой <code>pg_restore --list</code>.</li>
+            <li>Перейдите к работе на сервере.</li>
+          </ol>
+
+          <p>Правила освоения:</p>
+          <ul>
+            <li>сначала работайте с тестовой базой;</li>
+            <li>не проверяйте восстановление на рабочей базе;</li>
+            <li>перед обновлением делайте резервную копию;</li>
+            <li>читайте журналы после каждого изменения;</li>
+            <li>фиксируйте дату и содержание изменений.</li>
+          </ul>
+
+          <p>Контрольный пример:</p>
+          <ol>
+            <li>Запустите локальную среду.</li>
+            <li>Создайте клиента «Тест Тестов».</li>
+            <li>Создайте бронь на завтра с 10:00 на 2 часа.</li>
+            <li>Проверьте сумму и депозит.</li>
+            <li>Измените время на 12:00.</li>
+            <li>Найдите бронь по имени клиента.</li>
+            <li>Удалите бронь и клиента.</li>
+            <li>Сделайте дамп и проверьте его список объектов.</li>
+          </ol>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-03" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Описание организации информационной базы</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-05" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Инструкция оператора. Ввод данных</strong>
+          </a>
+        </footer>
+      </article>
+
+      <article class="doc" id="doc-05" data-doc="05" aria-labelledby="doc-05-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 5 из 7</p>
+          <h1 id="doc-05-title" tabindex="-1">Инструкция оператора. Ввод данных</h1>
+          <p class="doc-lead">Регламент ежедневных операций оператора коворкинга: клиенты, брони, новости, RSS-источники и методы контроля ввода.</p>
+        </header>
+
+        <section class="doc-section" id="doc-05-1">
+          <h2>5.1 Назначение</h2>
+          <p>Инструкция описывает ежедневную работу оператора. Оператор принимает брони, ведёт клиентов и публикует новости.</p>
+          <p>Оператор выполняет следующие виды деятельности:</p>
+          <ul>
+            <li>добавляет и редактирует клиентов;</li>
+            <li>создаёт, изменяет и отменяет брони;</li>
+            <li>проверяет занятость пространства;</li>
+            <li>ищет записи в базе данных;</li>
+            <li>добавляет собственные новости;</li>
+            <li>подключает и отключает RSS-ленты;</li>
+            <li>сообщает администратору о сбоях.</li>
+          </ul>
+
+          <p>Оператору нужны навыки работы с браузером. Знание SQL не требуется. Оператор работает на страницах <code>/booking</code> и <code>/news</code>.</p>
+          <p>Публичный адрес сайта: <code>http://31.129.99.35:49254/</code>. Учётные записи не предусмотрены: страницы доступны без входа.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.1. Связь с другими документами</caption>
+              <thead>
+                <tr><th>Документ</th><th>Что описывает</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Руководство администратора</td><td>Установка, обновление, резервное копирование и восстановление</td></tr>
+                <tr><td>Описание организации информационной базы</td><td>Структура таблиц и ограничения</td></tr>
+                <tr><td>Руководство пользователя</td><td>Работа посетителя с сайтом</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-05-2">
+          <h2>5.2 Порядок и регламент</h2>
+          <p>Оператор выполняет операции по регламенту. Время указано для рабочего дня коворкинга.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.2. Ежедневный регламент оператора</caption>
+              <thead>
+                <tr><th>Время</th><th>Операция</th><th>Контроль</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>09:00</td><td>Открыть главную, «Бронирование» и «Новости»</td><td>Страницы загружаются без ошибок</td></tr>
+                <tr><td>09:10</td><td>Проверить сводку базы данных</td><td>Количество броней и выручка соответствуют ожиданиям</td></tr>
+                <tr><td>09:15</td><td>Проверить брони на сегодня</td><td>Нет ошибочных дат и пересечений</td></tr>
+                <tr><td>В течение дня</td><td>Создавать и редактировать брони и клиентов</td><td>Каждая операция подтверждена сообщением</td></tr>
+                <tr><td>18:00</td><td>Проверить новые записи и новости</td><td>Нет дублей и ошибочных данных</td></tr>
+                <tr><td>18:10</td><td>Сообщить администратору о сбоях</td><td>Сбои зафиксированы</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Порядок выполнения операций:</p>
+          <ol>
+            <li>Откройте страницу «Бронирование».</li>
+            <li>Проверьте сводку базы данных.</li>
+            <li>Добавьте клиента, если его нет в списке.</li>
+            <li>Создайте бронь.</li>
+            <li>Проверьте запись в таблице.</li>
+            <li>При необходимости измените или удалите запись.</li>
+            <li>Откройте страницу «Новости» и обновите ленту.</li>
+            <li>Добавьте новость или подключите RSS-ленту.</li>
+          </ol>
+
+          <h3>Регистрация выполненных операций</h3>
+          <p>База данных хранит дату создания клиента, брони и новости в поле <code>created_at</code>. Отдельного журнала операций нет.</p>
+          <p>Для контроля используйте таблицу броней, сводку базы данных и ленту новостей. Печатные отчёты не предусмотрены.</p>
+
+          <h3>Завершение работы</h3>
+          <ol>
+            <li>Проверьте брони на следующий день.</li>
+            <li>Проверьте, что все новые записи сохранены.</li>
+            <li>Закройте страницы сайта.</li>
+            <li>Сообщите администратору о незакрытых ошибках.</li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="doc-05-3">
+          <h2>5.3 Ввод данных и методы контроля</h2>
+          <p>Все данные вводятся через формы сайта. Программа проверяет значения три раза: в браузере, на сервере и в базе данных.</p>
+
+          <h3>Общие правила</h3>
+          <ul>
+            <li>проверяйте данные до сохранения;</li>
+            <li>не удаляйте записи без необходимости;</li>
+            <li>читайте сообщение об ошибке;</li>
+            <li>после операции проверьте результат в таблице;</li>
+            <li>не вводите реальные персональные данные в учебную версию.</li>
+          </ul>
+
+          <h3>Клиент</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.3. Поля клиента</caption>
+              <thead>
+                <tr><th>Поле</th><th>Обязательность</th><th>Ограничение</th><th>Проверка</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Имя или команда</td><td>Да</td><td>От 1 до 80 символов в программе, до 100 в базе</td><td>Сервер и база</td></tr>
+                <tr><td>Компания</td><td>Нет</td><td>До 100 символов в форме</td><td>Браузер</td></tr>
+                <tr><td>Телефон</td><td>Нет</td><td>До 30 символов</td><td>Формат не проверяется</td></tr>
+                <tr><td>E-mail</td><td>Нет</td><td>До 120 символов</td><td>Сервер и база</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Для добавления клиента откройте вкладку «Новый клиент». Заполните поля и нажмите «Добавить клиента». Проверьте, что клиент появился в таблице.</p>
+
+          <h3>Бронь</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.4. Поля брони</caption>
+              <thead>
+                <tr><th>Поле</th><th>Обязательность</th><th>Ограничение</th><th>Проверка</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Клиент</td><td>Да</td><td>Клиент из списка</td><td>Сервер и база</td></tr>
+                <tr><td>Пространство</td><td>Да</td><td>Активное пространство</td><td>Сервер и база</td></tr>
+                <tr><td>Тариф</td><td>Да</td><td><code>hour</code>, <code>day</code>, <code>week</code>, <code>month</code></td><td>Сервер и база</td></tr>
+                <tr><td>Дата</td><td>Да</td><td>Не в прошлом, формат ГГГГ-ММ-ДД</td><td>Сервер и база</td></tr>
+                <tr><td>Начало</td><td>Для почасовой</td><td>С 8:00 до 21:00</td><td>Сервер</td></tr>
+                <tr><td>Длительность</td><td>Для почасовой</td><td>От 1 до 8 часов</td><td>Сервер</td></tr>
+                <tr><td>Стоимость</td><td>Рассчитывается</td><td>Не меньше нуля</td><td>Сервер и база</td></tr>
+                <tr><td>Депозит</td><td>Рассчитывается</td><td>Не меньше нуля</td><td>Сервер и база</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Правила бронирования:</p>
+          <ul>
+            <li>периодные тарифы доступны только для деск-мест;</li>
+            <li>конец брони не может быть позже 22:00;</li>
+            <li>пересечения с действующими бронями запрещены;</li>
+            <li>цена часа равна <code>price_per_hour × duration</code>;</li>
+            <li>цена дня, недели и месяца фиксирована;</li>
+            <li>депозит берётся из карточки пространства.</li>
+          </ul>
+
+          <h3>Новость</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.5. Поля новости</caption>
+              <thead>
+                <tr><th>Поле</th><th>Обязательность</th><th>Ограничение</th><th>Проверка</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Заголовок</td><td>Да</td><td>От 1 до 200 символов</td><td>Сервер и база</td></tr>
+                <tr><td>Текст новости</td><td>Нет</td><td>До 2000 символов</td><td>Сервер и база</td></tr>
+                <tr><td>Дата публикации</td><td>Да</td><td>Корректная дата</td><td>Сервер и база</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>RSS-источник</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.6. Поля RSS-источника</caption>
+              <thead>
+                <tr><th>Поле</th><th>Обязательность</th><th>Ограничение</th><th>Проверка</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Название источника</td><td>Нет</td><td>До 100 символов</td><td>Сервер</td></tr>
+                <tr><td>Адрес ленты</td><td>Да</td><td><code>http://</code> или <code>https://</code></td><td>Сервер</td></tr>
+                <tr><td>Количество источников</td><td>Не более 20</td><td>Ограничение программы</td><td>Сервер</td></tr>
+                <tr><td>Уникальность адреса</td><td>Да</td><td>Один адрес один раз</td><td>База</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Если название не указано, программа использует имя хоста из адреса ленты.</p>
+
+          <h3>Методы контроля</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.7. Методы контроля ввода</caption>
+              <thead>
+                <tr><th>Уровень</th><th>Метод</th><th>Что проверяет</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Браузер</td><td><code>required</code>, <code>type</code>, <code>maxlength</code></td><td>Обязательность, формат, длину</td></tr>
+                <tr><td>Сервер</td><td>Проверки сценариев</td><td>Даты, часы, тарифы, e-mail, RSS</td></tr>
+                <tr><td>База данных</td><td><code>NOT NULL</code>, <code>CHECK</code>, <code>UNIQUE</code>, <code>FOREIGN KEY</code></td><td>Целостность и диапазоны</td></tr>
+                <tr><td>Транзакция</td><td><code>FOR UPDATE</code> и проверка пересечений</td><td>Одновременные брони</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Типовые ошибки</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.8. Ошибки оператора и действия</caption>
+              <thead>
+                <tr><th>Сообщение</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Укажите имя клиента: от 1 до 80 символов.</td><td>Исправьте имя</td></tr>
+                <tr><td>Проверьте e-mail клиента.</td><td>Укажите адрес вида <code>client@example.com</code></td></tr>
+                <tr><td>Дата не может быть в прошлом.</td><td>Выберите текущую или будущую дату</td></tr>
+                <tr><td>Коворкинг работает с 8:00 до 22:00.</td><td>Измените начало или длительность</td></tr>
+                <tr><td>Периодный тариф доступен только для деск-мест.</td><td>Выберите деск-место или почасовой тариф</td></tr>
+                <tr><td>Пространство уже занято на это время.</td><td>Выберите другое время или пространство</td></tr>
+                <tr><td>Выбранного клиента нет в списке.</td><td>Добавьте клиента и обновите страницу</td></tr>
+                <tr><td>Укажите корректный адрес ленты.</td><td>Исправьте адрес RSS-ленты</td></tr>
+                <tr><td>Эта RSS-лента уже подключена.</td><td>Выберите другой источник</td></tr>
+                <tr><td>Подключено слишком много лент.</td><td>Отключите одну из лент</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Удаление записей</h3>
+          <ul>
+            <li>удаление клиента удаляет все его брони;</li>
+            <li>удаление брони необратимо;</li>
+            <li>перед удалением проверьте запись в таблице;</li>
+            <li>после удаления проверьте сводку.</li>
+          </ul>
+
+          <h3>Контрольный пример</h3>
+          <ol>
+            <li>Добавьте клиента «Тест Тестов».</li>
+            <li>Создайте бронь на завтра с 10:00 на 2 часа.</li>
+            <li>Проверьте сумму.</li>
+            <li>Измените время на 12:00.</li>
+            <li>Найдите бронь по имени клиента.</li>
+            <li>Удалите бронь.</li>
+            <li>Удалите клиента.</li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="doc-05-4">
+          <h2>5.4 Реакция на аварийные ситуации</h2>
+          <p>Оператор не перезапускает сервер и не изменяет базу вручную. Он фиксирует ситуацию и передаёт её администратору.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 5.9. Действия оператора при сбоях</caption>
+              <thead>
+                <tr><th>Ситуация</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Форма не сохраняется</td><td>Прочитайте сообщение, исправьте поле и повторите операцию</td></tr>
+                <tr><td>Пространство занято</td><td>Выберите другое время или пространство</td></tr>
+                <tr><td>Клиент не найден</td><td>Добавьте клиента и обновите страницу</td></tr>
+                <tr><td>Новость не сохраняется</td><td>Проверьте заголовок, текст и дату</td></tr>
+                <tr><td>RSS-лента не подключается</td><td>Проверьте адрес, схему и лимит источников</td></tr>
+                <tr><td>Лента не загружается</td><td>Нажмите «Обновить», проверьте источник позже</td></tr>
+                <tr><td>Сайт недоступен</td><td>Сообщите администратору</td></tr>
+                <tr><td>Ошибка базы данных</td><td>Остановите операции и сообщите администратору</td></tr>
+                <tr><td>Подозрение на потерю данных</td><td>Не вводите новые данные, сообщите администратору</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>При обращении к администратору укажите:</p>
+          <ul>
+            <li>время и страницу;</li>
+            <li>текст сообщения;</li>
+            <li>какие поля были заполнены;</li>
+            <li>что произошло после отправки формы.</li>
+          </ul>
+
+          <p>Контакт для связи: администратор проекта. Адрес сайта: <code>http://31.129.99.35:49254/</code>.</p>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-04" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Руководство администратора</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-06" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Руководство пользователя</strong>
+          </a>
+        </footer>
+      </article>
+      <article class="doc" id="doc-06" data-doc="06" aria-labelledby="doc-06-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 6 из 7</p>
+          <h1 id="doc-06-title" tabindex="-1">Руководство пользователя</h1>
+          <p class="doc-lead">Работа посетителя с сайтом коворкинга «Место»: навигация, поиск, тарифы, сервисы, бронирование, новости и XML-страница.</p>
+        </header>
+
+        <section class="doc-section" id="doc-06-1">
+          <h2>6.1 Введение</h2>
+          <p>Руководство предназначено для посетителей сайта. Посетитель может изучить коворкинг, рассчитать стоимость и оставить бронь.</p>
+          <p>Область применения: сайт коворкинга «Место». Сайт опубликован по адресу <code>http://31.129.99.35:49254/</code>.</p>
+
+          <p>Краткое описание возможностей:</p>
+          <ul>
+            <li>просмотр информации о коворкинге, офисе и тарифах;</li>
+            <li>поиск по страницам и сервисам;</li>
+            <li>семь сервисов, включая онлайн-бронирование;</li>
+            <li>создание и изменение брони;</li>
+            <li>просмотр своих и внешних новостей;</li>
+            <li>просмотр ленты RSS;</li>
+            <li>таблица резидентов из XML с поиском и сортировкой.</li>
+          </ul>
+
+          <p>Уровень подготовки: базовые навыки работы с браузером. Установка программы не требуется.</p>
+          <p>Ввод данных для оператора описан в документе 5. Установка и обслуживание описаны в документе 4.</p>
+        </section>
+
+        <section class="doc-section" id="doc-06-2">
+          <h2>6.2 Назначение и условия применения</h2>
+          <p>Сайт помогает выбрать пространство, узнать цену и оставить бронь. Сайт также показывает новости и дополнительные сервисы.</p>
+
+          <p>Условия применения:</p>
+          <ul>
+            <li>современный браузер с JavaScript;</li>
+            <li>доступ в интернет;</li>
+            <li>разрешение на загрузку изображений;</li>
+            <li>экран шириной от 320 пикселей.</li>
+          </ul>
+
+          <p>Регистрация не требуется. Личный кабинет не предусмотрен. Онлайн-оплата не реализована: оплата проходит на ресепшене.</p>
+          <p>Бронирование доступно на странице «Бронирование». Для создания брони нужен клиент из списка. Клиента можно добавить на той же странице.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 6.1. Ограничения сайта</caption>
+              <thead>
+                <tr><th>Ограничение</th><th>Пояснение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Нет входа и ролей</td><td>Страницы доступны без регистрации</td></tr>
+                <tr><td>Нет онлайн-оплаты</td><td>Оплата на ресепшене</td></tr>
+                <tr><td>Нет уведомлений</td><td>Письма и SMS не отправляются</td></tr>
+                <tr><td>Нет личного кабинета</td><td>История броней не сохраняется для посетителя</td></tr>
+                <tr><td>Внешние сервисы</td><td>Погода, курсы и перевод могут быть недоступны</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-06-3">
+          <h2>6.3 Подготовка к работе</h2>
+          <ol>
+            <li>Откройте браузер.</li>
+            <li>Введите адрес <code>http://31.129.99.35:49254/</code>.</li>
+            <li>Проверьте, что главная страница загрузилась.</li>
+            <li>Откройте меню «Остальное тут».</li>
+            <li>Проверьте поиск в шапке.</li>
+            <li>Откройте страницу «Тарифы».</li>
+            <li>Откройте страницу «Новости».</li>
+          </ol>
+
+          <p>Если страница не загружается, проверьте подключение к сети и адрес. Если ошибка повторяется, обратитесь к администратору.</p>
+          <p>Для корректной работы включите JavaScript. Без JavaScript часть страниц и сервисов работает ограниченно.</p>
+        </section>
+
+        <section class="doc-section" id="doc-06-4">
+          <h2>6.4 Описание операций</h2>
+
+          <h3>Навигация</h3>
+          <p>Логотип «Место» ведёт на главную страницу. Меню «Остальное тут» открывает список всех страниц. Меню закрывается по клику вне списка и по клавише Escape.</p>
+          <p>Подвал сайта содержит контакты, ссылки по теме и счётчик посещений. Счётчик хранится в памяти и сбрасывается при перезапуске сервера.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 6.2. Страницы сайта</caption>
+              <thead>
+                <tr><th>Страница</th><th>Адрес</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Главная</td><td><code>/</code></td><td>Описание коворкинга и список сервисов</td></tr>
+                <tr><td>О коворкинге</td><td><code>/about</code></td><td>Для кого сайт и что внутри</td></tr>
+                <tr><td>Офис</td><td><code>/office</code></td><td>План этажа, зоны и пространства</td></tr>
+                <tr><td>Тарифы</td><td><code>/tariffs</code></td><td>Цены, депозиты, опции и скидки</td></tr>
+                <tr><td>Новости</td><td><code>/news</code></td><td>Свои и внешние новости, RSS</td></tr>
+                <tr><td>Достижения</td><td><code>/achievements</code></td><td>Показатели проекта</td></tr>
+                <tr><td>Контакты</td><td><code>/contacts</code></td><td>Адрес, метро, часы работы и связь</td></tr>
+                <tr><td>Правила</td><td><code>/rules</code></td><td>Правила посещения и оплаты</td></tr>
+                <tr><td>Вопросы и ответы</td><td><code>/faq</code></td><td>Частые вопросы</td></tr>
+                <tr><td>Резиденты из XML</td><td><code>/residents</code></td><td>Таблица данных из XML</td></tr>
+                <tr><td>Бронирование</td><td><code>/booking</code></td><td>Клиенты, брони, поиск и сводка</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Поиск по сайту</h3>
+          <p>Введите слово в поле «Поиск по сайту» в шапке. Результаты появляются сразу. Поиск ищет по названиям страниц и ключевым словам.</p>
+          <p>Клавиша Enter открывает первый результат. Клавиша Escape закрывает список. Поиск не ищет по полному тексту страниц.</p>
+
+          <h3>Сервисы</h3>
+          <p>На главной странице работают семь сервисов. Один сервис использует базу данных коворкинга. Остальные шесть обращаются к внешним API.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 6.3. Сервисы сайта</caption>
+              <thead>
+                <tr><th>№</th><th>Сервис</th><th>Что делает</th><th>Источник</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Онлайн-бронирование</td><td>Создаёт и изменяет брони</td><td>База данных коворкинга</td></tr>
+                <tr><td>2</td><td>Погода у офиса</td><td>Показывает температуру, ветер и осадки</td><td>wttr.in</td></tr>
+                <tr><td>3</td><td>Курс валют</td><td>Показывает курсы доллара, евро и юаня</td><td>cbr-xml-daily.ru</td></tr>
+                <tr><td>4</td><td>Переводчик RU↔EN</td><td>Переводит фразу с русского на английский и обратно</td><td>MyMemory</td></tr>
+                <tr><td>5</td><td>QR-код</td><td>Создаёт QR-код для текста или адреса</td><td>goqr.me</td></tr>
+                <tr><td>6</td><td>Рабочий день или выходной</td><td>Показывает статус дня</td><td>isdayoff.ru</td></tr>
+                <tr><td>7</td><td>Время в филиалах</td><td>Показывает время в Москве, Пекине и Лондоне</td><td>timeapi.io</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Внешние сервисы работают без ключей API. При недоступности сервиса виджет показывает сообщение об ошибке. Повторите запрос позже.</p>
+
+          <h3>Бронирование</h3>
+          <ol>
+            <li>Откройте страницу «Бронирование».</li>
+            <li>Откройте вкладку «Новый клиент».</li>
+            <li>Укажите имя или название команды. Остальные поля необязательны.</li>
+            <li>Нажмите «Добавить клиента».</li>
+            <li>Откройте вкладку «Новая бронь».</li>
+            <li>Выберите клиента и пространство.</li>
+            <li>Выберите тариф, дату, начало и длительность.</li>
+            <li>Проверьте стоимость и депозит.</li>
+            <li>Нажмите «Забронировать».</li>
+            <li>Проверьте сообщение и строку в таблице.</li>
+          </ol>
+
+          <p>Оплата проходит на ресепшене при входе. Онлайн-платёж не предусмотрен.</p>
+          <p>Для изменения брони нажмите «Редактировать» в строке таблицы. Измените поля и нажмите «Сохранить изменения».</p>
+          <p>Для отмены брони нажмите «Удалить» в строке таблицы и подтвердите действие. Отмена удаляет запись без возможности восстановления. Депозит возвращается по правилам коворкинга.</p>
+
+          <h3>Поиск по базе</h3>
+          <p>Откройте вкладку «Поиск по базе». Поиск работает двумя способами.</p>
+          <ul>
+            <li>По одному значению: клиент, компания или пространство.</li>
+            <li>По двум значениям: клиент и тип пространства.</li>
+          </ul>
+          <p>При выборе клиента второй список показывает только типы, которые клиент бронировал. Для сброса условий нажмите «Сбросить».</p>
+
+          <h3>Схема базы данных</h3>
+          <p>На странице «Бронирование» нажмите «Показать схему БД». Откроется схема пяти таблиц бронирования. Схема закрывается по крестику, по клику вне окна и по клавише Escape.</p>
+          <p>Таблицы новостей описаны в документе 3.</p>
+
+          <h3>Новости</h3>
+          <ol>
+            <li>Откройте страницу «Новости».</li>
+            <li>Изучите общую ленту. У каждой новости указан источник.</li>
+            <li>Нажмите «Обновить», чтобы загрузить ленту без перезагрузки страницы.</li>
+            <li>Нажмите «RSS нашего сайта», чтобы открыть предпросмотр ленты.</li>
+            <li>Нажмите «Скачать», чтобы сохранить файл <code>mesto-news.xml</code>.</li>
+          </ol>
+
+          <p>Вкладка «Добавить новость» содержит поля заголовка, текста и даты. После нажатия «Опубликовать» новость появляется в общей ленте с источником «Место».</p>
+          <p>Вкладка «Подключить RSS» принимает адрес ленты формата RSS или Atom. Укажите название и адрес, затем нажмите «Подключить». Готовые ленты можно добавить в один клик.</p>
+          <p>Собственную новость можно удалить. Внешнюю новость удалить нельзя: она загружается из источника.</p>
+
+          <h3>Резиденты из XML</h3>
+          <ol>
+            <li>Откройте страницу «Резиденты из XML».</li>
+            <li>Введите текст в поле поиска.</li>
+            <li>Нажмите на заголовок столбца для сортировки.</li>
+            <li>Нажмите на заголовок повторно для обратного порядка.</li>
+            <li>Нажмите «Сбросить фильтры» для очистки.</li>
+          </ol>
+          <p>Поиск работает по фамилии, городу, профессии, компании и ключевым словам. Файл содержит 15 записей и 9 тегов.</p>
+          <p>Исходный XML можно развернуть на странице или открыть отдельно.</p>
+
+          <h3>Тарифы</h3>
+          <p>Страница «Тарифы» показывает цены за час, день, неделю и месяц. Для переговорок указаны депозиты. Дополнительные опции: проектор, кофе-брейк и гостевой доступ.</p>
+          <p>Цены указаны в рублях. Итоговая стоимость зависит от пространства, тарифа и длительности.</p>
+
+          <h3>Офис</h3>
+          <p>Страница «Офис» показывает план этажа. На плане есть четыре зоны деск-мест, шесть кабинетов, три переговорки, ресепшн, кофе-поинт и лаунж.</p>
+          <p>Свободные места и брони смотрите на странице «Бронирование».</p>
+
+          <h3>Контакты и правила</h3>
+          <p>Страница «Контакты» содержит адрес, маршрут от метро, часы работы, телефон и электронную почту. Страница «Правила» описывает бронирование, тишину, оплату, порядок и безопасность.</p>
+
+          <h3>Вопросы и ответы</h3>
+          <p>Страница «Вопросы и ответы» содержит раскрывающиеся ответы на частые вопросы. Нажмите на вопрос, чтобы открыть ответ.</p>
+
+          <h3>Типовые сообщения</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 6.4. Сообщения сайта и действия</caption>
+              <thead>
+                <tr><th>Сообщение</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Ничего не нашлось</td><td>Измените запрос или проверьте написание</td></tr>
+                <tr><td>Погода недоступна</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Курсы недоступны</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Перевод недоступен</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Время недоступно</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Пространство уже занято</td><td>Выберите другое время или пространство</td></tr>
+                <tr><td>Дата не может быть в прошлом</td><td>Выберите текущую или будущую дату</td></tr>
+                <tr><td>Не удалось загрузить новости</td><td>Обновите страницу позже</td></tr>
+                <tr><td>Источник недоступен</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Страница не найдена</td><td>Проверьте адрес страницы</td></tr>
+                <tr><td>Сайт не открывается</td><td>Обратитесь к администратору</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-06-5">
+          <h2>6.5 Аварийные ситуации</h2>
+          <p>При сбое сохраняйте спокойствие и не повторяйте операцию много раз. Сначала прочитайте сообщение на странице.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 6.5. Действия посетителя при сбоях</caption>
+              <thead>
+                <tr><th>Ситуация</th><th>Действие</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Сайт не открывается</td><td>Проверьте адрес и сеть, обратитесь к администратору</td></tr>
+                <tr><td>Страница не найдена</td><td>Вернитесь на главную и выберите страницу в меню</td></tr>
+                <tr><td>Виджет не работает</td><td>Повторите запрос позже</td></tr>
+                <tr><td>Бронь не создаётся</td><td>Прочитайте сообщение, проверьте поля и выберите другое время</td></tr>
+                <tr><td>Новости не обновляются</td><td>Нажмите «Обновить» и повторите позже</td></tr>
+                <tr><td>Форма потеряла данные</td><td>Введите данные повторно</td></tr>
+                <tr><td>Ошибка 500</td><td>Обратитесь к администратору</td></tr>
+            </tbody>
+            </table>
+          </div>
+
+          <p>Контакт для связи: <a href="mailto:hello@mesto.ru">hello@mesto.ru</a>, телефон <a href="tel:+74951234567">+7 495 123-45-67</a>.</p>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-05" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Инструкция оператора. Ввод данных</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-07" data-doc-link>
+            <span>Следующий документ</span>
+            <strong>Тексты программ</strong>
+          </a>
+        </footer>
+      </article>
+
+      <article class="doc" id="doc-07" data-doc="07" aria-labelledby="doc-07-title">
+        <header class="doc-head">
+          <p class="doc-kicker">Документ 7 из 7</p>
+          <h1 id="doc-07-title" tabindex="-1">Тексты программ</h1>
+          <p class="doc-lead">Состав программного комплекса, назначение файлов, порядок сборки и запуска. Полные исходные тексты передаются вместе с проектом в электронном виде.</p>
+        </header>
+
+        <section class="doc-section" id="doc-07-1">
+          <h2>7.1 Состав программного комплекса</h2>
+          <p>Проект называется <code>vyaz-sem4</code>. Модуль Go называется <code>coworking</code>. Для сборки нужен Go 1.24.</p>
+          <p>Программа использует две основные зависимости: <code>pgx/v5</code> для PostgreSQL и <code>golang-migrate</code> для миграций. Шаблоны, статика и миграции встроены в бинарник через <code>embed</code>.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.1. Каталоги проекта</caption>
+              <thead>
+                <tr><th>Каталог</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>cmd/server</code></td><td>Точка входа приложения</td></tr>
+                <tr><td><code>internal/domain</code></td><td>Сущности коворкинга</td></tr>
+                <tr><td><code>internal/application</code></td><td>Сценарии работы и порты</td></tr>
+                <tr><td><code>internal/infrastructure</code></td><td>PostgreSQL, RSS и каталог сервисов</td></tr>
+                <tr><td><code>internal/interfaces/http</code></td><td>HTTP-сервер, обработчики, шаблоны и статика</td></tr>
+                <tr><td><code>db/migrations</code></td><td>SQL-миграции и встроенная файловая система</td></tr>
+                <tr><td><code>deploy</code></td><td>Службы systemd и руководство по развёртыванию</td></tr>
+                <tr><td><code>docs</code></td><td>Документация и исходная методичка</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Программа содержит семь таблиц базы данных и семь сервисов на главной странице. Маршруты описаны в файле <code>internal/interfaces/http/server.go</code>.</p>
+        </section>
+
+        <section class="doc-section" id="doc-07-2">
+          <h2>7.2 Назначение файлов</h2>
+
+          <h3>Точка входа и домен</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.2. Точка входа и домен</caption>
+              <thead>
+                <tr><th>Файл</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>cmd/server/main.go</code></td><td>Чтение настроек, миграции, сборка сервисов, запуск HTTP-сервера и завершение по сигналу</td></tr>
+                <tr><td><code>internal/domain/booking.go</code></td><td>Сущности офиса, пространства, клиента, брони и тарифов</td></tr>
+                <tr><td><code>internal/domain/news.go</code></td><td>Сущности новости и RSS-источника</td></tr>
+                <tr><td><code>internal/domain/service.go</code></td><td>Сущность сервиса сайта и его статус</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Сценарии</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.3. Сценарии работы</caption>
+              <thead>
+                <tr><th>Файл</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>internal/application/booking_service.go</code></td><td>Проверка клиентов и броней, расчёт цены, поиск пересечений, сводка</td></tr>
+                <tr><td><code>internal/application/news_service.go</code></td><td>Сбор общей ленты, кэш источников, лимиты и дедупликация</td></tr>
+                <tr><td><code>internal/application/service_catalog.go</code></td><td>Каталог сервисов сайта</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Инфраструктура</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.4. Инфраструктура</caption>
+              <thead>
+                <tr><th>Файл</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>internal/infrastructure/postgres/booking_repository.go</code></td><td>SQL-запросы для пространств, клиентов, броней, поиска и сводки</td></tr>
+                <tr><td><code>internal/infrastructure/postgres/news_repository.go</code></td><td>SQL-запросы для новостей и RSS-источников</td></tr>
+                <tr><td><code>internal/infrastructure/postgres/migrations.go</code></td><td>Применение встроенных миграций</td></tr>
+                <tr><td><code>internal/infrastructure/rss/client.go</code></td><td>HTTP-клиент с защитой от SSRF и таймаутами</td></tr>
+                <tr><td><code>internal/infrastructure/rss/feed.go</code></td><td>Разбор RSS и Atom, очистка текста и дат</td></tr>
+                <tr><td><code>internal/infrastructure/rss/publisher.go</code></td><td>Публикация собственной ленты в формате RSS 2.0</td></tr>
+                <tr><td><code>internal/infrastructure/memory/service_repository.go</code></td><td>Каталог сервисов в памяти</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>HTTP-слой</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.5. HTTP-слой</caption>
+              <thead>
+                <tr><th>Файл</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>internal/interfaces/http/server.go</code></td><td>Создание сервера, маршруты и настройки</td></tr>
+                <tr><td><code>internal/interfaces/http/handlers.go</code></td><td>Главная страница, статические страницы и счётчик посещений</td></tr>
+                <tr><td><code>internal/interfaces/http/handlers_booking.go</code></td><td>Обработчики клиентов, броней, поиска и сводки</td></tr>
+                <tr><td><code>internal/interfaces/http/handlers_news.go</code></td><td>Обработчики страницы новостей, JSON и RSS</td></tr>
+                <tr><td><code>internal/interfaces/http/news_suggestions.go</code></td><td>Список рекомендуемых RSS-лент</td></tr>
+                <tr><td><code>internal/interfaces/http/templates.go</code></td><td>Загрузка шаблонов и отрисовка страниц</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Ресурсы сайта</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.6. Ресурсы сайта</caption>
+              <thead>
+                <tr><th>Файл или каталог</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>web/templates/layout.html</code></td><td>Общая шапка, подвал и подключение стилей</td></tr>
+                <tr><td><code>web/templates/*.html</code></td><td>Шаблоны страниц сайта</td></tr>
+                <tr><td><code>web/static/css/site.css</code></td><td>Стили сайта</td></tr>
+                <tr><td><code>web/static/js/site.js</code></td><td>Меню, поиск и появление секций</td></tr>
+                <tr><td><code>web/static/js/widgets.js</code></td><td>Виджеты внешних сервисов</td></tr>
+                <tr><td><code>web/static/js/booking.js</code></td><td>Вкладки, расчёт стоимости и отправка форм</td></tr>
+                <tr><td><code>web/static/js/news.js</code></td><td>Обновление ленты и предпросмотр RSS</td></tr>
+                <tr><td><code>web/static/js/residents.js</code></td><td>Загрузка, поиск и сортировка XML</td></tr>
+                <tr><td><code>web/static/data/residents.xml</code></td><td>Данные резидентов для лабораторной работы 2</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>База данных и развёртывание</h3>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.7. База данных и развёртывание</caption>
+              <thead>
+                <tr><th>Файл</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>db/migrations/000001_init.up.sql</code></td><td>Схема пяти таблиц бронирования</td></tr>
+                <tr><td><code>db/migrations/000002_seed_catalog_and_search.up.sql</code></td><td>Начальный каталог и демо-данные</td></tr>
+                <tr><td><code>db/migrations/000003_client_delete_cascade.up.sql</code></td><td>Каскадное удаление броней клиента</td></tr>
+                <tr><td><code>db/migrations/000004_remove_cancelled_bookings.up.sql</code></td><td>Очистка отменённых броней</td></tr>
+                <tr><td><code>db/migrations/000005_news.up.sql</code></td><td>Таблицы новостей и RSS-источников</td></tr>
+                <tr><td><code>db/migrations/embed.go</code></td><td>Встраивание SQL-файлов в бинарник</td></tr>
+                <tr><td><code>deploy/coworking.service</code></td><td>Служба приложения</td></tr>
+                <tr><td><code>deploy/coworking-db.service</code></td><td>Служба PostgreSQL</td></tr>
+                <tr><td><code>deploy/DEPLOY.md</code></td><td>Пошаговое развёртывание на сервере</td></tr>
+                <tr><td><code>Dockerfile</code></td><td>Многоступенчатая сборка образа</td></tr>
+                <tr><td><code>compose.yaml</code></td><td>Локальная среда из двух контейнеров</td></tr>
+                <tr><td><code>Makefile</code></td><td>Команды <code>up</code>, <code>down</code> и <code>clean</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="doc-07-3">
+          <h2>7.3 Порядок сборки и запуска</h2>
+          <p>Сборка и проверка:</p>
+          <pre><code>go build ./...
+go vet ./...
+go test ./...</code></pre>
+
+          <p>Локальный запуск через Docker Compose:</p>
+          <pre><code>make up</code></pre>
+          <p>Сайт открывается по адресу <code>http://localhost:8081/</code>.</p>
+
+          <p>Запуск без контейнера приложения:</p>
+          <pre><code>docker compose up -d db
+DATABASE_URL='postgres://coworking:devsecret@localhost:49733/coworking?sslmode=disable' go run ./cmd/server</code></pre>
+
+          <p>Сборка образа приложения:</p>
+          <pre><code>podman build -t localhost/coworking:latest .
+# или
+docker build -t coworking:latest .</code></pre>
+
+          <p>Переменные окружения:</p>
+          <div class="table-wrap">
+            <table>
+              <caption>Таблица 7.8. Переменные окружения</caption>
+              <thead>
+                <tr><th>Переменная</th><th>Назначение</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>DATABASE_URL</code></td><td>Строка подключения к PostgreSQL, обязательна</td></tr>
+                <tr><td><code>HTTP_ADDR</code></td><td>Адрес HTTP-сервера, по умолчанию <code>:8081</code></td></tr>
+                <tr><td><code>POSTGRES_PASSWORD</code></td><td>Пароль PostgreSQL для Docker Compose</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>Порядок запуска на сервере:</p>
+          <ol>
+            <li>Соберите образ приложения.</li>
+            <li>Подготовьте образ PostgreSQL.</li>
+            <li>Создайте файл <code>database.env</code>.</li>
+            <li>Установите службы systemd.</li>
+            <li>Запустите базу данных.</li>
+            <li>Запустите приложение.</li>
+            <li>Проверьте сайт командой <code>curl</code>.</li>
+          </ol>
+
+          <p>Подробные команды приведены в документе 4 и в файле <code>deploy/DEPLOY.md</code>.</p>
+        </section>
+
+        <section class="doc-section" id="doc-07-4">
+          <h2>7.4 Электронное приложение</h2>
+          <p>Полные исходные тексты программ находятся в каталоге проекта. Они передаются вместе с документацией в электронном виде.</p>
+          <p>Этот документ не дублирует код. Он описывает состав файлов и порядок сборки. Такой формат соответствует требованию передавать тексты программ на электронном носителе.</p>
+          <p>Состав файлов указан по состоянию на 20.10.2026. Изменения после этой даты в документе не отражены.</p>
+        </section>
+
+        <footer class="doc-footer">
+          <a class="doc-nav-btn" href="#doc-06" data-doc-link>
+            <span>Предыдущий документ</span>
+            <strong>Руководство пользователя</strong>
+          </a>
+          <a class="doc-nav-btn is-next" href="#doc-07" data-doc-link>
+            <span>Конец</span>
+            <strong>Тексты программ</strong>
+          </a>
+        </footer>
+      </article>
+
+      <footer class="docs-footer">
+        <p>Документация к учебному проекту «Место». Семь документов.</p>
+        <p>Редакция 1.0, 20.10.2026.</p>
+        <p>Сайт: <a href="http://31.129.99.35:49254/">http://31.129.99.35:49254/</a></p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var docs = Array.prototype.slice.call(document.querySelectorAll(".doc"));
+      if (!docs.length) {
+        return;
+      }
+
+      var navItems = Array.prototype.slice.call(document.querySelectorAll(".doc-nav-item"));
+      var filter = document.getElementById("rail-filter");
+      var rail = document.getElementById("docs-rail");
+      var tocToggle = document.getElementById("toc-toggle");
+      var backdrop = document.getElementById("docs-backdrop");
+      var printBtn = document.getElementById("print-btn");
+      var railEmpty = document.getElementById("rail-empty");
+      var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var activeId = "01";
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function docIdFromHash() {
+        var hash = window.location.hash.replace(/^#/, "");
+        if (!hash) {
+          return "";
+        }
+        var match = hash.match(/^doc-(\d{2})/);
+        return match ? match[1] : "";
+      }
+
+      function setNavState(id) {
+        navItems.forEach(function (item) {
+          var itemId = item.getAttribute("data-doc-item");
+          var on = itemId === id;
+          var link = item.querySelector(".doc-nav-link");
+          var sub = item.querySelector(".doc-subnav");
+
+          if (link) {
+            link.classList.toggle("is-active", on);
+            if (on) {
+              link.setAttribute("aria-current", "page");
+            } else {
+              link.removeAttribute("aria-current");
+            }
+          }
+
+          if (sub) {
+            sub.classList.toggle("is-open", on);
+          }
+        });
+      }
+
+      function setCurrentSubLink(sectionId) {
+        Array.prototype.forEach.call(document.querySelectorAll(".doc-subnav a"), function (link) {
+          var on = sectionId && link.getAttribute("href") === "#" + sectionId;
+          link.classList.toggle("is-current", Boolean(on));
+          if (on) {
+            link.setAttribute("aria-current", "location");
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        });
+      }
+
+      function scrollToTarget(target, focusHeading) {
+        var behavior = reduceMotion ? "auto" : "smooth";
+
+        if (target) {
+          target.scrollIntoView({ behavior: behavior, block: "start" });
+          var heading = target.querySelector("h2");
+          if (heading) {
+            heading.setAttribute("tabindex", "-1");
+            heading.focus({ preventScroll: true });
+          }
+          return;
+        }
+
+        window.scrollTo({ top: 0, behavior: behavior });
+        if (focusHeading) {
+          focusHeading.focus({ preventScroll: true });
+        }
+      }
+
+      function activate(id, targetId, focusHeading) {
+        var target = byId("doc-" + id);
+        if (!target) {
+          id = "01";
+          target = byId("doc-" + id);
+        }
+        activeId = id;
+
+        docs.forEach(function (doc) {
+          var on = doc.getAttribute("data-doc") === id;
+          doc.classList.toggle("is-active", on);
+          doc.hidden = !on;
+        });
+
+        setNavState(id);
+        setCurrentSubLink(targetId || null);
+
+        var title = target.querySelector("h1");
+        if (title) {
+          document.title = "Документ " + Number(id) + " · " + title.textContent.trim() + " · Место";
+        }
+
+        var section = targetId ? byId(targetId) : null;
+        scrollToTarget(section, focusHeading);
+      }
+
+      function route() {
+        var id = docIdFromHash();
+        var hash = window.location.hash.replace(/^#/, "");
+
+        if (!id) {
+          id = "01";
+          hash = "";
+          window.history.replaceState(null, "", "#doc-01");
+        }
+
+        var target = hash ? byId(hash) : null;
+        var targetId = target && target.id !== "doc-" + id ? hash : "";
+        activate(id, targetId, !targetId);
+      }
+
+      function openDrawer() {
+        if (!rail || !tocToggle || !backdrop) {
+          return;
+        }
+        rail.classList.add("is-open");
+        backdrop.hidden = false;
+        tocToggle.setAttribute("aria-expanded", "true");
+        document.body.classList.add("drawer-open");
+      }
+
+      function closeDrawer() {
+        if (!rail || !tocToggle || !backdrop) {
+          return;
+        }
+        rail.classList.remove("is-open");
+        backdrop.hidden = true;
+        tocToggle.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("drawer-open");
+      }
+
+      function toggleDrawer() {
+        if (rail && rail.classList.contains("is-open")) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      }
+
+      function normalize(value) {
+        return String(value).toLowerCase().replace(/ё/g, "е");
+      }
+
+      function applyFilter() {
+        if (!filter) {
+          return;
+        }
+
+        var query = normalize(filter.value.trim());
+        var visible = 0;
+
+        navItems.forEach(function (item) {
+          var link = item.querySelector(".doc-nav-link");
+          var sub = item.querySelector(".doc-subnav");
+          var title = link ? normalize(link.textContent) : "";
+          var docMatch = !query || title.indexOf(query) !== -1;
+          var subMatch = false;
+
+          if (sub) {
+            Array.prototype.forEach.call(sub.querySelectorAll("a"), function (subLink) {
+              var match = !query || docMatch || normalize(subLink.textContent).indexOf(query) !== -1;
+              subLink.parentElement.hidden = !match;
+              if (match && query) {
+                subMatch = true;
+              }
+            });
+          }
+
+          var show = !query || docMatch || subMatch;
+          item.hidden = !show;
+          if (show) {
+            visible += 1;
+          }
+
+          if (sub) {
+            if (!query) {
+              sub.classList.toggle("is-open", item.getAttribute("data-doc-item") === activeId);
+            } else {
+              sub.classList.toggle("is-open", show);
+            }
+          }
+        });
+
+        if (railEmpty) {
+          railEmpty.hidden = visible !== 0;
+        }
+      }
+
+      // Ссылка может содержать SVG. Ищем родительскую ссылку вручную,
+      // чтобы клик по логотипу работал в любом браузере.
+      function findDocLink(node) {
+        while (node && node !== document) {
+          if (node.nodeType === 1 && node.tagName && node.tagName.toLowerCase() === "a" && node.hasAttribute("data-doc-link")) {
+            return node;
+          }
+          node = node.parentNode;
+        }
+        return null;
+      }
+
+      document.addEventListener("click", function (event) {
+        var link = findDocLink(event.target);
+        if (!link) {
+          return;
+        }
+
+        var href = link.getAttribute("href") || "";
+        if (href.charAt(0) !== "#") {
+          return;
+        }
+
+        var match = href.match(/^#doc-(\d{2})/);
+        if (!match) {
+          return;
+        }
+
+        event.preventDefault();
+
+        var hash = href.slice(1);
+        window.history.pushState(null, "", href);
+
+        var target = byId(hash);
+        var targetId = target && target.id !== "doc-" + match[1] ? hash : "";
+        activate(match[1], targetId, !targetId);
+        closeDrawer();
+      });
+
+      window.addEventListener("popstate", route);
+      window.addEventListener("hashchange", route);
+
+      if (tocToggle) {
+        tocToggle.addEventListener("click", toggleDrawer);
+      }
+
+      if (backdrop) {
+        backdrop.addEventListener("click", closeDrawer);
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") {
+          return;
+        }
+
+        closeDrawer();
+
+        if (filter && document.activeElement === filter) {
+          filter.value = "";
+          applyFilter();
+          filter.blur();
+        }
+      });
+
+      if (printBtn) {
+        printBtn.addEventListener("click", function () {
+          window.print();
+        });
+      }
+
+      if (filter) {
+        filter.addEventListener("input", applyFilter);
+        filter.addEventListener("keydown", function (event) {
+          if (event.key !== "Enter") {
+            return;
+          }
+          var first = document.querySelector(".doc-nav-item:not([hidden]) .doc-nav-link");
+          if (first) {
+            first.click();
+          }
+        });
+      }
+
+      if ("IntersectionObserver" in window) {
+        var sections = Array.prototype.slice.call(document.querySelectorAll(".doc-section"));
+        var observer = new IntersectionObserver(function (entries) {
+          var visible = entries.filter(function (entry) {
+            return entry.isIntersecting;
+          });
+          if (!visible.length) {
+            return;
+          }
+          visible.sort(function (a, b) {
+            return a.boundingClientRect.top - b.boundingClientRect.top;
+          });
+          setCurrentSubLink(visible[0].target.id);
+        }, { rootMargin: "-90px 0px -62% 0px", threshold: 0 });
+
+        sections.forEach(function (section) {
+          observer.observe(section);
+        });
+      }
+
+      var mobile = window.matchMedia("(max-width: 980px)");
+      function handleViewport() {
+        if (!mobile.matches) {
+          closeDrawer();
+        }
+      }
+
+      if (mobile.addEventListener) {
+        mobile.addEventListener("change", handleViewport);
+      } else if (mobile.addListener) {
+        mobile.addListener(handleViewport);
+      }
+
+      route();
+    })();
+  </script>
+</body>
+</html>

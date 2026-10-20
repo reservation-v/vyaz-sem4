@@ -1,5 +1,5 @@
 # Многоступенчатая сборка: компиляция в golang-образе, запуск в чистом alpine.
-# Статика и шаблоны встроены в бинарник через embed — в образ попадает один файл.
+# Статика и шаблоны встроены в бинарник через embed - в образ попадает один файл.
 
 FROM golang:1.24-alpine AS build
 
@@ -7,6 +7,8 @@ WORKDIR /src
 
 COPY go.mod go.sum ./
 COPY db ./db
+COPY docs/docs.html ./docs/docs.html
+COPY docs/embed.go ./docs/embed.go
 COPY cmd ./cmd
 COPY internal ./internal
 

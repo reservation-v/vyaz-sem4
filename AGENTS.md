@@ -35,5 +35,6 @@
 
 - Проект автономен: Go-приложение (`cmd/`, `internal/`), шаблоны и статика внутри этого репозитория; БД подключена в Лабе 3 (`db/migrations`, `internal/infrastructure/postgres`)
 - Новости (Лаба 4): `internal/application/news_service.go`, `internal/infrastructure/rss`, `internal/infrastructure/postgres/news_repository.go`, страница `internal/interfaces/http/web/templates/news.html`
+- Документация: `docs/docs.html` встроена через `docs/embed.go` и отдаётся по `GET /docs`
 - `tasks.md` — план работ на семестр (5 лаб), статусы
 - `tasks-2sem.txt` — исходное ТЗ

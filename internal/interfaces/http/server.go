@@ -98,6 +98,8 @@ func (s *Server) Router() nethttp.Handler {
 	mux.HandleFunc("GET /contacts", s.staticPage("contacts", "Контакты", "contacts"))
 	mux.HandleFunc("GET /rules", s.staticPage("rules", "Правила", "rules"))
 	mux.HandleFunc("GET /faq", s.staticPage("faq", "Вопросы&Ответы", "faq"))
+	mux.HandleFunc("GET /docs", s.handleDocs)
+	mux.HandleFunc("GET /docs/{$}", s.handleDocs)
 	if s.bookings != nil {
 		mux.HandleFunc("GET /booking", s.handleBookingPage)
 		mux.HandleFunc("POST /booking", s.handleBookingCreate)
